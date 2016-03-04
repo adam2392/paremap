@@ -137,6 +137,11 @@ for i=1:length(TRIGGER_TYPES)
             error('no event trigger selected');
     end 
     
+    addpath('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/paRemap_extraction');
+
+    %%- 01b: Plot meta data for each separate trigger even
+    checkEventsCreation(tempevents, subj, i, THIS_TRIGGER);
+    
     %%- 02: PLOT SPECTROGRAM FOR EACH TRIGGER
     tempFig = figure;
     % loop through each unique trigger for a specific probeword
@@ -169,10 +174,10 @@ for i=1:length(TRIGGER_TYPES)
     
     %%- SAVE FIGURE as .mat and as png
     figname = strcat('Figures/', THIS_TRIGGER, '_WithTargets_', chanStr);
-    save(figname, 'tempFig');
-%     saveas(tempFige, figname, '.fig');
-    saveas(tempFig, figname, 'png');
-    
+%     save(figname, 'tempFig');
+% %     saveas(tempFige, figname, '.fig');
+%     saveas(tempFig, figname, 'png');
+%     
     %%- 03: COMPUTE ANOVA?
 end
 

@@ -237,7 +237,7 @@ while true
             
             %%- Section to determine response word, response time
             %%- Compare targetWord to the next vocalizedWord
-            if strcmp(targetWord, vocalizedWord{wordindex}) ...
+            if strcmp(targetWord, vocalizedWord{wordindex}) ...                 %%- Correct Vocalization within timeFrame
                && timeVocalization < timeRange, 
                 isCorrect = 1;  % make this event have field isCorrect = 1
                 
@@ -245,8 +245,8 @@ while true
                 responseTime = timeVocalization; % responseTime
                 responseWord = vocalizedWord{wordindex};
                 wordindex = wordindex + 1;              
-            %%- Either wrong word, or '<>'
-            elseif timeVocalization < timeRange
+            
+            elseif timeVocalization < timeRange                                 %%- Either wrong word, or '<>'
                 isCorrect = 0; % make this event have field isCorrect = 0
                 
                 %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
@@ -254,28 +254,13 @@ while true
                 responseTime = timeVocalization;
                 responseWord = 'none';
                 
-            else 
+            else                                                                %%- They didn't say anything
                 isCorrect = 0; % make this event have field isCorrect = 0
                 
                 %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
                 % LOG THE EVENT FIELDS
                 responseTime = 0;
                 responseWord = 'none';
-                % increment wordindex, until you reach the last one before
-%                 while timeVocalization < timeRange && wordindex ~= annindex
-%                     wordindex = wordindex+1;
-%                     try
-%                         timeVocalization = timeAfterRec(wordindex) - mstime;
-%                     catch
-%                         annindex
-%                         wordindex
-%                         timeVocalization
-%                         timeRange
-%                         vocalizedWord
-%                         timeAfterRec
-%                         error('bad index');
-%                     end
-%                 end
             end 
         case {'PROBEWORD_OFF'} % SAME TIME MATCHWORD TURNS OFF
             probeOffTime = xTOT{1}(1); % get the mstime of this line
