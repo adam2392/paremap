@@ -130,12 +130,12 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  = [50:96];            %G1, G2, LF1, AST1,
+        iChanListSub  = [46 1];            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 %%- subset channel I want to extract
-iChanListSub  = [50:96];
+iChanListSub  = [46, 1];
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
     iChanList = 1:size(chanList,1);  %all possible channels
@@ -251,6 +251,7 @@ disp(['brickevents, glassevents, pantsevents, juicevents, clockevents'])
 correctIndices = find([events.isCorrect]==1);
 trigType = trigType(correctIndices);
 eventsTrig = eventsTrig(correctIndices);
+events = events(correctIndices);
 
 %%- Now get each unique word pairings A/B, A/C, A/D, B/C, B/D
 % loop through each trigger type
@@ -359,6 +360,20 @@ for iChan=1:numChannels
     % notch filter to eliminate 60 Hz noise
     fprintf(' [%.1f sec] --> notch filt', toc); tic;
     eegWaveV = buttfilt(eegWaveV,[59.5 60.5],resampledrate,'stop',1); %-filter is overkill: order 1 --> 25 dB drop (removing 5-15dB peak)
+    
+%     fs = 1000;
+%     % robust spect parameters
+%     alpha = 10;
+%     window = 82;
+%     
+%     [xEst,freq,tWin,iter] = specPursuit(eegWaveV(1,:),fs,window,alpha);
+% %     freq(1) = 0.01;
+%     imagesc(tWin, log10(freq), 20*log10(abs(xEst)))
+%     hold on; colormap(jet)
+%     hCbar = colorbar('east');
+%     set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
+%     set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
+%     set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
 
     %%- multiphasevec3: get the phase and power
     % power, phase matrices for events x frequency x duration of time for each channel
@@ -421,7 +436,49 @@ for iChan=1:numChannels
     % x-axis of time series
     waveT = eegWaveT;
     
-    %% Finished looping through a certain Channel -> Save Data
+    %% Save Data As Frequency/ProbeToVocalization Binned
+    dataDir = 'condensed_data/';
+    buffer_powerMatZ = squeeze(powerMatZ);
+    
+    %%- Call function to bin on freq. based on wavelet freqs. we have
+    rangeFreqs = [freqBandAr.rangeF];
+    rangeFreqs = reshape(rangeFreqs, 2, 7)';
+    newPowerMatZ = freqBinSpectrogram(buffer_powerMatZ, rangeFreqs, waveletFreqs);
+    
+    buffer_powerMatZ = zeros(length(events), length(rangeFreqs));
+    %%- Average From probe on -> vocalization [0: responseTime];
+    responseTime = floor([events.responseTime]); % extract response Time's
+    
+    for i=1:length(events)
+        buffer_powerMatZ(i,:) = mean(newPowerMatZ(i,:,2500:2500+responseTime(i)+1),3);
+    end
+    newPowerMatZ = buffer_powerMatZ
+    
+    %%- plotting for each trigger
+    uniqueTrigType = unique(trigType);          % get all unique triggers (e.g. all probe words)
+    numUniqueTrig  = length(uniqueTrigType);    % get length of unique triggers
+    
+    if length(chanList) == 1
+        channel_num = chanList;
+    else,
+        channel_num = chanList(iChan);
+    end
+    
+    clear buffer_powerMatZ 
+    %%- Save this new power matrix Z
+    data.uniqueTrigType = uniqueTrigType; % store all the unique trigger types
+    data.trigType = trigType;             % store the trigger type per event
+    data.powerMatZ = newPowerMatZ;        % save the condensed power Mat
+    data.chanNum = thisChan;           % store the corresponding channel number
+    data.chanStr = thisChanStr;               % the string name of the channel
+    data.freqBandYtick = freqBandYticks;
+    data.freqBandYlabel = freqBandYtickLabels;
+    
+    filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr); 
+    save(filename, 'data');
+    
+    clear data
+    %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
     %%- Here is where I save the data
     %%- i) condense data in freq/time domain and ii) save it
     dataDir = 'condensed_data/';
