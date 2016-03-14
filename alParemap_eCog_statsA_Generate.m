@@ -22,7 +22,7 @@ THIS_REF_TYPE   = REF_TYPES{3}; % (1) noreref, (2) bipolar, (3) laplacian
 
 %% PLOTTING OPTIONS
 HIDE_FIGURES    = 0;
-USE_CHAN_SUBSET = 1; %0=all channels (not the subset); >=1 means process than many of the subset
+USE_CHAN_SUBSET = 0; %0=all channels (not the subset); >=1 means process than many of the subset
 FIG_OFFSET = 0;
 
 %%- PLOT PARAMETERS
@@ -130,12 +130,12 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  = [46 1];            %G1, G2, LF1, AST1,
+        iChanListSub  = [61:96];            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 %%- subset channel I want to extract
-iChanListSub  = [46, 1];
+iChanListSub  = [61:96];
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
     iChanList = 1:size(chanList,1);  %all possible channels
@@ -436,105 +436,40 @@ for iChan=1:numChannels
     % x-axis of time series
     waveT = eegWaveT;
     
-    %% Save Data As Frequency/ProbeToVocalization Binned
-    dataDir = 'condensed_data/';
-    buffer_powerMatZ = squeeze(powerMatZ);
     
-    %%- Call function to bin on freq. based on wavelet freqs. we have
-    rangeFreqs = [freqBandAr.rangeF];
-    rangeFreqs = reshape(rangeFreqs, 2, 7)';
-    newPowerMatZ = freqBinSpectrogram(buffer_powerMatZ, rangeFreqs, waveletFreqs);
-    
-    buffer_powerMatZ = zeros(length(events), length(rangeFreqs));
-    %%- Average From probe on -> vocalization [0: responseTime];
-    responseTime = floor([events.responseTime]); % extract response Time's
-    
-    for i=1:length(events)
-        buffer_powerMatZ(i,:) = mean(newPowerMatZ(i,:,2500:2500+responseTime(i)+1),3);
-    end
-    newPowerMatZ = buffer_powerMatZ
-    
-    %%- plotting for each trigger
-    uniqueTrigType = unique(trigType);          % get all unique triggers (e.g. all probe words)
-    numUniqueTrig  = length(uniqueTrigType);    % get length of unique triggers
-    
-    if length(chanList) == 1
-        channel_num = chanList;
-    else,
-        channel_num = chanList(iChan);
-    end
-    
-    clear buffer_powerMatZ 
-    %%- Save this new power matrix Z
-    data.uniqueTrigType = uniqueTrigType; % store all the unique trigger types
-    data.trigType = trigType;             % store the trigger type per event
-    data.powerMatZ = newPowerMatZ;        % save the condensed power Mat
-    data.chanNum = thisChan;           % store the corresponding channel number
-    data.chanStr = thisChanStr;               % the string name of the channel
-    data.freqBandYtick = freqBandYticks;
-    data.freqBandYlabel = freqBandYtickLabels;
-    
-    filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr); 
-    save(filename, 'data');
-    
-    clear data
-    %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
-    %%- Here is where I save the data
-    %%- i) condense data in freq/time domain and ii) save it
-    dataDir = 'condensed_data/';
-    if ~exist(dataDir), mkdir(dataDir); end
-    
-    %%- average data within time and within frequency
-    
-    % squeeze out the channel dimension of powerMatZ and time bin
-    buffer_powerMatZ = squeeze(powerMatZ);
-    %%- TIME BIN Before saving
-    WinLength = 100; % 100 ms
-    Overlap = 50;
-    NumWins = size(buffer_powerMatZ,3) / (WinLength-Overlap) - 1;
-    
-    %%- Call function to bin on time based on winLength and Overlap and NumWins
-    newPowerMatZ = timeBinSpectrogram(buffer_powerMatZ, NumWins, WinLength, Overlap);
+    %%- SAVE DATA IF NECESSARY
+    SAVE = 0;
+    if (SAVE)
+%         powerMatZ = squeeze(powerMatZ);
+%         data.trigType = trigType;             % store the trigger type per event
+%         data.powerMatZ = powerMatZ;        % save the condensed power Mat
+%         data.chanNum = thisChan;           % store the corresponding channel number
+%         data.chanStr = thisChanStr;               % the string name of the channel
+%         data.freqBandYtick = freqBandYticks;
+%         data.freqBandYlabel = freqBandYtickLabels;
+% 
+%         filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, '_fullData'); 
+%         save(filename, 'data', '-v7.3'); 
+%         clear data
+        %% Save Data As Frequency/ProbeToVocalization Binned
+        saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
+            trigType, thisChan, thisChanStr);
 
-    %%- Call function to bin on freq. based on 
-    rangeFreqs = [freqBandAr.rangeF];
-    rangeFreqs = reshape(rangeFreqs, 2, 7)';
-    newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
-    
-    timeZero = find(waveT==0,1)/Overlap + 1; % index of timezero in bins
-    
-    % create time vector that is binned and still centered at 0
-    binnedWaveT = 1:size(newPowerMatZ,3) - timeZero;
-    
-    %%- plotting for each trigger
-    uniqueTrigType = unique(trigType);          % get all unique triggers (e.g. all probe words)
-    numUniqueTrig  = length(uniqueTrigType);    % get length of unique triggers
-    
-    if length(chanList) == 1
-        channel_num = chanList;
-    else,
-        channel_num = chanList(iChan);
+        %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
+        WinLength = 100; % 100 ms
+        Overlap = 50;    % overlap we want to increment
+        saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
+            trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
+        
+        % ** Overlap needs to be 25/50% of WinLength for now
+        WinLength = 500; % 100 ms
+        Overlap = 125;    % overlap we want to increment
+        saveChannelANOVA(powerMatZ, freqBandAr, trigType, ...
+            thisChan, thisChanStr, WinLength, Overlap)
     end
-    
-    %% Create power mat data struct
-    %save data that can plot evoked and spectrogram
-    data.uniqueTrigType = uniqueTrigType; % store all the unique trigger types
-    data.trigType = trigType;             % store the trigger type per event
-    data.powerMatZ = newPowerMatZ;        % save the condensed power Mat
-    data.waveT = waveT;             % save the binned Wave T
-    data.waveletFreqs = waveletFreqs;     % wavelet frequencies used
-    data.chanNum = thisChan;           % store the corresponding channel number
-    data.chanStr = thisChanStr;               % the string name of the channel
-    data.freqBandYtick = freqBandYticks;
-    data.freqBandYlabel = freqBandYtickLabels;
-    data.timeZero = timeZero;
-    %%%%% ADD INDICES OF EVENTS?
-    
-    filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr); 
-    save(filename, 'data');
-    
-    %%- Clear useless vars
-    clear buffer_powerMatZ WinLength Ovelap NumWins rangeFreqs data phaseMat powerMat powerMatZ
+        dataDir = 'condensed_data/';
+
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -555,80 +490,6 @@ if length(chanList) == 1
     channel_num = chanList;
 end
 
-do_save = 0;
-if do_save
-    %%- TIME BIN Before saving
-    WinLength = 100; % 100 ms
-    Overlap = 50;
-    NumWins = size(powerMatZ,4) / (WinLength-Overlap) - 1;
-
-    timeZero = find(waveT==0,1)/Overlap + 1; % index of timezero in bins
-
-    % initialize new power matrix
-    newPowerMatZ = zeros(size(powerMatZ,1),size(powerMatZ,2),NumWins); 
-
-    % window by time
-    for i=1:size(powerMatZ,1),
-        clear avgpowermat
-        % loop through and bin the time domain into windows
-        for j=1:NumWins %1:49:size(powerMatZ,3)-1
-            % index through the time domain of the Z power matrix
-            index = 1+(j-1)*50;
-
-            if j == NumWins
-                eventpowerMat = powerMatZ(i,:,index:end);
-            else
-                eventpowerMat = powerMatZ(i,:,index:index+100);
-            end
-
-            if ~exist('avgpowermat')
-                avgpowermat = mean(eventpowerMat,3);
-            else
-                avgpowermat = [avgpowermat; mean(eventpowerMat,3)];
-            end
-        end
-        % append avgpowermat to new matrix
-        newPowerMatZ(i,:,:) = avgpowermat';
-    end
-
-    % create time vector that is binned and still centered at 0
-    binnedWaveT = 1:size(newPowerMatZ,3) - timeZero;
-    
-    data.powerMatZ = newPowerMatZ;
-    data.waveT = binnedWaveT;
-    
-    %%- Create power mat data struct
-    %save data that can plot evoked and spectrogram
-    data.uniqueTrigType = uniqueTrigType; % store all the unique trigger types
-    data.trigType = trigType;             % store the trigger type per event
-%     data.wavesSft = wavesSft;             % store teh eeg wave forms
-%     data.waveT = waveT;                   % time points for the wave form
-%     data.powerMatZ = powerMatZ;           % z-scored power
-    data.waveletFreqs = waveletFreqs;     % wavelet frequencies used
-    data.chanNum = channel_num;           % store the corresponding channel number
-    data.chanStr = chanStr;               % the string name of the channel
-    data.freqBandYtick = freqBandYticks;
-    data.freqBandYlabel = freqBandYtickLabels;
-
-    %%- Create raw data struct
-    rawdata.waveletFreqs = waveletFreqs;    % store the wavelet freqs.
-    rawdata.eegWaveV = eegWaveV;            % store the voltage time series per event
-    rawdata.resampledrate = resampledrate;  % store resampling rate
-    rawdata.waveletWidth = waveletWidth;    % width of wavelets
-    rawdata.uniqueTrigType = uniqueTrigType;% the unique trigger types (e.g. brick, clock)
-    rawdata.trigType = trigType;            % trigger per event
-    rawdata.waveT = waveT;                  % the time points per eeg voltage
-    rawdata.chanNum = channel_num;
-    rawdata.chanStr = chanStr;
-    rawdatafreqBandYtick = freqBandYticks;
-    rawdata.freqBandYlabel = freqBandYtickLabels;
-
-    chanString = chanStr{1};
-    
-    % call function to save raw data and data
-    success = saveChannelData_powerAndRaw(data, rawdata, channel_num, chanString)
-    clear data rawdata;
-end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 6: Plot Evoked and Spectrogram For each trigger-------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

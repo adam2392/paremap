@@ -16,36 +16,33 @@ function newSpect = freqBinSpectrogram(spectMat, rangeFreqs, waveletFreqs)
     % initialize new power matrix
     newSpect = zeros(size(spectMat,1),numFreqWins,size(spectMat,3)); 
     
-    % loop through the number of events 
-    for i=1:size(spectMat,1),
-        clear avgpowermat % clear so that each timewindow, creates new var
-        
-        %%- loop through numFreqWins rows
-        for j=1:numFreqWins % loop through and bin the freq domain into windows
-            lowerFreq = rangeFreqs(j, 1);
-            upperFreq = rangeFreqs(j, 2);
-            
-            %%- go through indices in waveletFreqs and average those
-            %%between lower and upper freq. -> append to eventpowerMat
-            lowerInd = waveletFreqs >= lowerFreq;
-            upperInd = waveletFreqs <= upperFreq;
-            indices = lowerInd == upperInd; % binary selector index vector
-            
-            % create buffer variable for power for each time window
-            eventpowerMat = spectMat(i, indices,:);
+    clear avgpowermat % clear so that each timewindow, creates new var
 
-            % average the power in freq. windows and append to vector
-            if ~exist('avgpowermat')
-                avgpowermat = mean(eventpowerMat,2);
-            else
-                avgpowermat = cat(2, avgpowermat, mean(eventpowerMat,2));
-            end
+    %%- loop through numFreqWins rows
+    for j=1:numFreqWins % loop through and bin the freq domain into windows
+        lowerFreq = rangeFreqs(j, 1);
+        upperFreq = rangeFreqs(j, 2);
+
+        %%- go through indices in waveletFreqs and average those
+        %%between lower and upper freq. -> append to eventpowerMat
+        lowerInd = waveletFreqs >= lowerFreq;
+        upperInd = waveletFreqs <= upperFreq;
+        indices = lowerInd == upperInd; % binary selector index vector
+
+        % create buffer variable for power for each time window
+        eventpowerMat = spectMat(:, indices,:);
+
+        % average the power in freq. windows and append to vector
+        if ~exist('avgpowermat')
+            avgpowermat = mean(eventpowerMat,2);
+        else
+            avgpowermat = cat(2, avgpowermat, mean(eventpowerMat,2));
         end
-%         size(avgpowermat)
-        % append avgpowermat to new matrix
-        newSpect(i,:,:) = avgpowermat;
     end
-    
+%         size(avgpowermat)
+    % append avgpowermat to new matrix
+    newSpect(:,:,:) = avgpowermat;
+
     % check if return array dimensions are correct
     if ~isequal(size(newSpect),[size(spectMat,1),numFreqWins, size(spectMat,3),]),
         disp('error in timeBinSpectrogram.m')
