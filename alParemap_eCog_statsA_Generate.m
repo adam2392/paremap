@@ -438,7 +438,7 @@ for iChan=1:numChannels
     
     
     %%- SAVE DATA IF NECESSARY
-    SAVE = 0;
+    SAVE = 1;
     if (SAVE)
 %         powerMatZ = squeeze(powerMatZ);
 %         data.trigType = trigType;             % store the trigger type per event
@@ -452,24 +452,23 @@ for iChan=1:numChannels
 %         save(filename, 'data', '-v7.3'); 
 %         clear data
         %% Save Data As Frequency/ProbeToVocalization Binned
-        saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
-            trigType, thisChan, thisChanStr);
-
-        %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
         WinLength = 100; % 100 ms
         Overlap = 50;    % overlap we want to increment
-        saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
-            trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
-        
-        % ** Overlap needs to be 25/50% of WinLength for now
-        WinLength = 500; % 100 ms
-        Overlap = 125;    % overlap we want to increment
-        saveChannelANOVA(powerMatZ, freqBandAr, trigType, ...
-            thisChan, thisChanStr, WinLength, Overlap)
+        saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
+            waveT, trigType, thisChan, thisChanStr);
+
+        %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
+%             trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
+%         
+%         % ** Overlap needs to be 25/50% of WinLength for now
+%         WinLength = 500; % 100 ms
+%         Overlap = 125;    % overlap we want to increment
+%         saveChannelANOVA(powerMatZ, freqBandAr, trigType, ...
+%             thisChan, thisChanStr, WinLength, Overlap)
     end
-        dataDir = 'condensed_data/';
-
-
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

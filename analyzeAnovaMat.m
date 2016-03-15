@@ -1,3 +1,5 @@
+%%%%% only for use if saved anova matrix in a separate .mat file
+
 clear
 clc
 
@@ -61,7 +63,8 @@ correctIndices = find([events.isCorrect]==1);
 events = events(correctIndices);
 clear correctIndices 
 
-anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/';
+% anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/';
+anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
 
 ext = '*.mat';
 files = dir(strcat(anovaDir, ext));
@@ -70,7 +73,7 @@ files = {files.name};
 %%% 
 file = strcat(anovaDir, files{1});
 data = load(file);
-data = data.anovaData;
+data = data.data;
 
 %%- Initialize matrices/vectors for speed
 anovaMats = zeros(length(files), size(data.anovaMat,1), size(data.anovaMat,2));
