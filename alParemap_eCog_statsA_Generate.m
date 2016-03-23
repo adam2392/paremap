@@ -316,7 +316,8 @@ end
 arrayGB = numChanPrealloc * length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
 % initialize power matrices to make sure they can be stored
 powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
+powerMatZ = zeros(numChanPrealloc, length(eventTrigger/home/adamli/paremap/NIH034/behavioral/paRemap
+), length(waveletFreqs), DurationMS);
 phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 
 clear defaultEEGfile subjDir eventEEGpath
@@ -353,6 +354,8 @@ for iChan=1:numChannels
     strStart    = sprintf('\n STEP 5.%d -- Grab %d/%d: %s', iChan, iChan, numChannels, thisChanStr );  strStart(end+1:35)=' '; %buffer length so everything lines up
     fprintf('%s', strStart);       tic;
 
+    ROBUST_SPEC = 1;
+    
     %%- gete_ms: get the eegWaveV
     % eegwaveform for each event over the duration of time for a certain channel
     eegWaveV = gete_ms(thisChan,eventTrigger,DurationMS+(2*BufferMS),OffsetMS-BufferMS,0,preFiltFreq,preFiltType,preFiltOrder,resampledrate);
@@ -361,17 +364,19 @@ for iChan=1:numChannels
     fprintf(' [%.1f sec] --> notch filt', toc); tic;
     eegWaveV = buttfilt(eegWaveV,[59.5 60.5],resampledrate,'stop',1); %-filter is overkill: order 1 --> 25 dB drop (removing 5-15dB peak)
     
+    if ~ROBUST_SPEC
+        %%- multiphasevec3: get the phase and power
+        % power, phase matrices for events x frequency x duration of time for each channel
+        fprintf(' [%.1f sec] --> freq decomp', toc); tic;
+        [rawPhase,rawPow] = multiphasevec3(waveletFreqs,eegWaveV,resampledrate,waveletWidth);
+        fprintf(' [%.1f sec] --> save', toc);  tic;
+        fprintf('\n');
+
+        % remove the leading/trailing buffer from the events we're interested in
+        rawPow   = rawPow(:,:,BufferMS+1:end-BufferMS);
+        rawPhase = rawPhase(:,:,BufferMS+1:end-BufferMS);
+    end
     
-    %%- multiphasevec3: get the phase and power
-    % power, phase matrices for events x frequency x duration of time for each channel
-    fprintf(' [%.1f sec] --> freq decomp', toc); tic;
-    [rawPhase,rawPow] = multiphasevec3(waveletFreqs,eegWaveV,resampledrate,waveletWidth);
-    fprintf(' [%.1f sec] --> save', toc);  tic;
-    fprintf('\n');
-    
-    % remove the leading/trailing buffer from the events we're interested in
-    rawPow   = rawPow(:,:,BufferMS+1:end-BufferMS);
-    rawPhase = rawPhase(:,:,BufferMS+1:end-BufferMS);
     eegWaveV = eegWaveV(:,BufferMS+1:end-BufferMS); % remove buffer area
     eegWaveT = (OffsetMS:DurationMS+OffsetMS-1)/1000; 
     if length(eegWaveT)<size(eegWaveV,2), % error check on time vs. voltage length
@@ -385,31 +390,32 @@ for iChan=1:numChannels
     iF  = 1:length(waveletFreqs); % # of freqs.
     iChanSave = 1;
 
-    % chan X event X freq X time
-    % make power 10*log(power)
-    powerMat(iChanSave,iEv,iF,iT) = 10*log10(rawPow);
-    phaseMat(iChanSave,iEv,iF,iT) = rawPhase;
+    if ~ROBUST_SPEC
+        % chan X event X freq X time
+        % make power 10*log(power)
+        powerMat(iChanSave,iEv,iF,iT) = 10*log10(rawPow);
+        phaseMat(iChanSave,iEv,iF,iT) = rawPhase;
 
-%     for each eegfile stem, z-score each channel and frequency
-    fprintf(' [%.1f sec] --> z-score', toc);  tic;
-    stemList = unique({eventTrigger.eegfile});
-    for iStem=1:length(stemList),
-        fprintf('.');
-        iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
-        for iF = 1:length(waveletFreqs),
-            allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-            mu = mean(allVal); stdev = std(allVal);
-            
-            % create the power matrix
-            powerMatZ(iChanSave,iEvStem,iF,iT) = (powerMat(iChanSave,iEvStem,iF,iT)-mu)/stdev;
-            
-            if sum(isnan(powerMatZ(iChanSave,iEvStem,iF,iT)))>0
-                keyboard;
+    %     for each eegfile stem, z-score each channel and frequency
+        fprintf(' [%.1f sec] --> z-score', toc);  tic;
+        stemList = unique({eventTrigger.eegfile});
+        for iStem=1:length(stemList),
+            fprintf('.');
+            iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
+            for iF = 1:length(waveletFreqs),
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
+                mu = mean(allVal); stdev = std(allVal);
+
+                % create the power matrix
+                powerMatZ(iChanSave,iEvStem,iF,iT) = (powerMat(iChanSave,iEvStem,iF,iT)-mu)/stdev;
+
+                if sum(isnan(powerMatZ(iChanSave,iEvStem,iF,iT)))>0
+                    keyboard;
+                end
             end
         end
+        fprintf(' [%.1f sec]', toc); tic;
     end
-    fprintf(' [%.1f sec]', toc); tic;
-    
     clear rawPow rawPhase
     disp('powerMatZ, powerMat and phaseMat are created')
     
@@ -424,10 +430,9 @@ for iChan=1:numChannels
     waveT = eegWaveT;
     
     %%- SAVE ROBUST SPEC PROCESSED DATA
-    ROBUST_SPEC = 0;
     if ROBUST_SPEC
         robustPowerMat = zeros(length(eventTrigger), 41, 91);
-        fs = 1000;
+        fs = 400; % needs to be low enough to get frequencies in low bands
         rangeFreqs = [freqBandAr.rangeF];
         rangeFreqs = reshape(rangeFreqs, 2, 7)';
 %         for i=1:10
@@ -441,6 +446,13 @@ for iChan=1:numChannels
                 [xEst,freq,tWin,iter] = specPursuit(eegWaveV(1,:),fs,window,alpha);
                 xEst = reshape(xEst, 1, size(xEst,1), size(xEst,2));
                 robustPowerMat(i,:,:) = xEst;
+%                 figure
+%                 imagesc(tWin, log10(freq), 20*log10(abs(squeeze(test))))
+%                 hold on; colormap(jet)
+%                 hCbar = colorbar('east');
+%                 set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
+%                 set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
+%                 set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
             end
             toc;
             robustPowerMat = freqBinSpectrogram(robustPowerMat, rangeFreqs, freq); 
@@ -459,18 +471,18 @@ for iChan=1:numChannels
             filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, '_robustSpec'); 
             save(filename, 'data');
     
-%             figure
-%             imagesc(tWin, log10(freq), 20*log10(abs(xEst)))
-%             hold on; colormap(jet)
-%             hCbar = colorbar('east');
-%             set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
-%             set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
-%             set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
+            figure
+            imagesc(tWin, 1:7, 20*log10(abs(xEst)))
+            hold on; colormap(jet)
+            hCbar = colorbar('east');
+            set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
+            set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
+            set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
 %         end
     end
     
     %%- SAVE DATA IF NECESSARY
-    SAVE = 1;
+    SAVE = 0;
     if (SAVE)
 %         powerMatZ = squeeze(powerMatZ);
 %         data.trigType = trigType;             % store the trigger type per event
