@@ -20,7 +20,7 @@ function saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
 
 %%- Here is where I save the data
     %%- i) condense data in freq/time domain and ii) save it
-    dataDir = 'condensed_data/';
+    dataDir = 'condensed_data/timefreq/';
     if ~exist(dataDir), mkdir(dataDir); end
     
     % Create frequency band y ticks and ylabels
@@ -45,7 +45,7 @@ function saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
     timeZero = find(waveT==0,1)/Overlap + 1; % index of timezero in bins
     
     % create time vector that is binned and still centered at 0
-    binnedWaveT = 1:size(newPowerMatZ,3) - timeZero;
+    binnedWaveT = (1:size(newPowerMatZ,3)) - timeZero;
     
     %%- plotting for each trigger
     uniqueTrigType = unique(trigType);          % get all unique triggers (e.g. all probe words)

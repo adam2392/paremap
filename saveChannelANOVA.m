@@ -1,7 +1,5 @@
-%%%%% Function: extractChannelFeature.m
-%%%%% Description: Compute a distance metric from the condensed_data
-%%%%% directory saved output. The data is in time binned and freq. binned
-%%%%% matrix.
+%%%%% Function: saveChannelANOVA.m
+%%%%% Description: saves the channel's ANOVA p-value matrix
 %%%%% 
 %%%%% Input: 
 %%%%% channel_num - the channel number we want to extract (e.g.

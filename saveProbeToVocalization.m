@@ -17,7 +17,7 @@
 function saveProbeToVocalization(events, powerMatZ, freqBandAr, ...
     waveletFreqs, waveT, trigType, thisChan, thisChanStr)
     %% Save Data As Frequency/ProbeToVocalization Binned
-    dataDir = 'condensed_data/';
+    dataDir = 'condensed_data/probetovocal/';
     
     % Create frequency band y ticks and ylabels
     freqBandYticks  = unique([freqBandAr(1:7).rangeF]);
@@ -60,7 +60,7 @@ function saveProbeToVocalization(events, powerMatZ, freqBandAr, ...
     timeZero = find(waveT==0,1)/Overlap + 1; % index of timezero in bins
     
     % create time vector that is binned and still centered at 0
-    binnedWaveT = 1:size(newPowerMatZ,3) - timeZero;
+    binnedWaveT = (1:size(newPowerMatZ,3)) - timeZero;
     
     clear buffer_powerMatZ 
     %%- Save this new power matrix Z

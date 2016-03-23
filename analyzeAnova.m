@@ -1,16 +1,15 @@
-%%%%% Function: extractChannelFeature.m
-%%%%% Description: Compute a distance metric from the condensed_data
-%%%%% directory saved output. The data is in time binned and freq. binned
-%%%%% matrix.
+%%%%% Function: analyzeANOVA.m
+%%%%% Description: Saves anova p-value matrix using precomputed data from
+%%%%% 100ms time binned data. This saves time. Then this correspondingly
+%%%%% saves a struct that contains the anova output that can be analyzed
+%%%%% using analyzeAnovaMat.m.
 %%%%% 
 %%%%% Input: 
-%%%%% channel_num - the channel number we want to extract (e.g.
-%%%%% 1-96)
-%%%%% triggers - a list of triggers for all the events 
-%%%%% powerMatZ - a power matrix, #eventsX#freqsXtime
+%%%%% data directory saved from previous running of script at 100ms/50ms
+%%%%% overlap
 %%%%% 
 %%%%% Output:
-%%%%% anovaMat - vector of datapoints (feature) for this channel
+%%%%% saves data as 'filename' variable set in script
 %%%%%
 anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
 ext = '*.mat';
