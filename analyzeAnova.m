@@ -35,8 +35,8 @@ freqBandAr(6).rangeF  = [80 160];       %[70 150]
 freqBandAr(7).name    = 'HFO';
 freqBandAr(7).rangeF  = [160 400];      %[150 400]
 
-freqBandYtick = data.freqBandYtick;
-freqBandYlabel = data.freqBandYlabel;
+freqBandYticks = data.freqBandYtick;
+freqBandYlabels = data.freqBandYlabel;
 thisChan = data.chanNum;
 thisChanStr = data.chanStr;
 
@@ -64,19 +64,24 @@ clear correctIndices
 
 % loop through each channel file
 for filei=1:length(files)
+    
     file = strcat(anovaDir, files{filei});
     data = load(file);
     data = data.data;
     
+    disp(['on file: ', file])
     %% EXTRACT DAT THAT WE WANT
+    thisChan = data.chanNum;
+    thisChanStr = data.chanStr;
     powerMatZ = data.powerMatZ;
     trigType = data.trigType;
+    responseTimes = data.responseTime;
     
     %% RUN ANOVA 
     %%- Data is already time and frequency binned
     % squeeze spectrogram into eventsXfreqsXtime if necessary
     spectMat = squeeze(powerMatZ);
-    size(spectMat)
+    size(spectMat);
     
     %% GET TRIGGERS WE WANT
     sampEventsMeta = events;  % includes assocaited + and *
@@ -85,6 +90,7 @@ for filei=1:length(files)
     TRIGGER_TYPES   = {'BRICK','CLOCK','GLASS','JUICE','PANTS'}; %-fixation and blockStart not ready for physio analysis
 
     anovaPowMat = {}; % create a cell array to store all powerMatrices for certain trigger
+    anovaGroups = {}; % create cell array to hold the groups string
     index = 0;
     %%- Loop through each probeword
     for i=1:length(TRIGGER_TYPES)
@@ -96,7 +102,7 @@ for filei=1:length(files)
             % - get the unique targetwords for that event
             case 'BRICK'
                 tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                disp(['Looking at trigger: ', THIS_TRIGGER]);
+%                 disp(['Looking at trigger: ', THIS_TRIGGER]);
                 metaYstr = 'BRICK PROBE';
 
                 tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
@@ -104,7 +110,7 @@ for filei=1:length(files)
                 targets = unique({tempevents.targetWord});
             case 'CLOCK'
                 tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                disp(['Looking at trigger: ', THIS_TRIGGER]);
+%                 disp(['Looking at trigger: ', THIS_TRIGGER]);
                 metaYstr = 'CLOCK PROBE';
 
                 tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
@@ -112,7 +118,7 @@ for filei=1:length(files)
                 targets = unique({tempevents.targetWord});
            case 'JUICE'
                 tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                disp(['Looking at trigger: ', THIS_TRIGGER]);
+%                 disp(['Looking at trigger: ', THIS_TRIGGER]);
                 metaYstr = 'JUICE PROBE';
 
                 tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
@@ -120,7 +126,7 @@ for filei=1:length(files)
                 targets = unique({tempevents.targetWord});
            case 'PANTS'
                 tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                disp(['Looking at trigger: ', THIS_TRIGGER]);
+%                 disp(['Looking at trigger: ', THIS_TRIGGER]);
                 metaYstr = 'PANTS PROBE';
 
                 tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
@@ -128,7 +134,7 @@ for filei=1:length(files)
                 targets = unique({tempevents.targetWord});
            case 'GLASS'
                 tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                disp(['Looking at trigger: ', THIS_TRIGGER]);
+%                 disp(['Looking at trigger: ', THIS_TRIGGER]);
                 metaYstr = 'GLASS PROBE';
 
                 tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
@@ -147,6 +153,7 @@ for filei=1:length(files)
             
             index = index + 1;
             %%- Create groups for ANOVA
+            anovaGroups{index} = strcat(THIS_TRIGGER, '_', targetWord);
             anovaPowMat{index} = spectMat(eventInd,:,:);
         end
         
@@ -154,21 +161,32 @@ for filei=1:length(files)
 %         anovaPowMat{i} = spectMat(tempInd,:,:);
     end
     
-    anovaPowMat
+    %%- RUN THESE 2 LINES TO DETERMINE WHICH INDICES YOU WANT IN 'Y'
+%     anovaPowMat
+%     anovaGroups
+    first = 3;
+    second = 7;
     %% Actually Run ANOVA For This Channel
     anovaMat = zeros(size(spectMat,2), size(spectMat,3));
     for freq=1:size(spectMat,2)
         for time=1:size(spectMat,3)
             y = [];
             groups = [];
-            for i=1:length(anovaPowMat)
-                % create vector of events we want to test
-                y = [y; anovaPowMat{i}(:,freq,time)];
-                
-                % set groups
-                group = ones(size(anovaPowMat{i}(:,freq,time)))*i;
-                groups = [groups; group];
-            end
+            
+            y = [anovaPowMat{first}(:,freq,time); anovaPowMat{second}(:,freq,time)];
+            group = ones(size(anovaPowMat{first}(:,freq,time)));
+            groups = [ones(size(anovaPowMat{first}(:,freq,time)));...
+                      ones(size(anovaPowMat{second}(:,freq,time)))*2];
+            
+            %%- loop through every group
+%             for i=1:length(anovaPowMat)
+%                 % create vector of events we want to test
+%                 y = [y; anovaPowMat{i}(:,freq,time)];
+%                 
+%                 % set groups
+%                 group = ones(size(anovaPowMat{i}(:,freq,time)))*i;
+%                 groups = [groups; group];
+%             end
             
             % compute p-value for ANOVA
             p = anovan(y, groups, 'display','off');
@@ -182,21 +200,20 @@ for filei=1:length(files)
 
     %% Save Data As Frequency/ProbeToVocalization Binned
     dataDir = 'condensed_data/';
-    
-    % Create frequency band y ticks and ylabels
-    freqBandYticks  = unique([freqBandAr(1:7).rangeF]);
-    for iFB=1:length(freqBandYticks), 
-        freqBandYtickLabels{iFB} = sprintf('%.0f Hz', freqBandYticks(iFB)); 
-    end
+    clear data
     
     %%- Save this new power matrix Z
-    anovaData.trigType = trigType;             % store the trigger type per event
-    anovaData.anovaMat = anovaMat;        % save the condensed power Mat
-    anovaData.chanNum = thisChan;           % store the corresponding channel number
-    anovaData.chanStr = thisChanStr;               % the string name of the channel
-    anovaData.freqBandYtick = freqBandYticks;
-    anovaData.freqBandYlabel = freqBandYtickLabels;
+    data.trigType = trigType;             % store the trigger type per event
+    data.anovaMat = anovaMat;        % save the condensed p-value matrix
+    data.chanNum = thisChan;           % store the corresponding channel number
+    data.chanStr = thisChanStr;               % the string name of the channel
+    data.freqBandYticks = freqBandYticks;
+    data.freqBandYlabels = freqBandYlabels;
+    data.responseTimes = responseTimes;
     
-    filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, '_anovaProbes'); 
-    save(filename, 'anovaData'); 
+    filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, ...
+        '_anovaProbeOnToVocalization_', anovaGroups{first}, anovaGroups{second}); 
+    save(filename, 'data'); 
+    
+    clear data
 end

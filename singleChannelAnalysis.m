@@ -43,7 +43,6 @@ fprintf('Loaded %d events from %s\n', length(events), behDir);
 correctIndices = find([events.isCorrect]==1);
 events = events(correctIndices);
 
-
 %%-array of frequency bands
 freqBandAr(1).name    = 'delta';
 freqBandAr(1).rangeF  = [2 4];          %[2 4]
