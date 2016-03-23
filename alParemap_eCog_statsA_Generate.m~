@@ -22,7 +22,7 @@ THIS_REF_TYPE   = REF_TYPES{3}; % (1) noreref, (2) bipolar, (3) laplacian
 
 %% PLOTTING OPTIONS
 HIDE_FIGURES    = 0;
-USE_CHAN_SUBSET = 1; %0=all channels (not the subset); >=1 means process than many of the subset
+USE_CHAN_SUBSET = 0; %0=all channels (not the subset); >=1 means process than many of the subset
 FIG_OFFSET = 0;
 
 %%- PLOT PARAMETERS
@@ -363,14 +363,14 @@ for iChan=1:numChannels
     
     %%- multiphasevec3: get the phase and power
     % power, phase matrices for events x frequency x duration of time for each channel
-%     fprintf(' [%.1f sec] --> freq decomp', toc); tic;
-%     [rawPhase,rawPow] = multiphasevec3(waveletFreqs,eegWaveV,resampledrate,waveletWidth);
-%     fprintf(' [%.1f sec] --> save', toc);  tic;
-%     fprintf('\n');
+    fprintf(' [%.1f sec] --> freq decomp', toc); tic;
+    [rawPhase,rawPow] = multiphasevec3(waveletFreqs,eegWaveV,resampledrate,waveletWidth);
+    fprintf(' [%.1f sec] --> save', toc);  tic;
+    fprintf('\n');
     
     % remove the leading/trailing buffer from the events we're interested in
-%     rawPow   = rawPow(:,:,BufferMS+1:end-BufferMS);
-%     rawPhase = rawPhase(:,:,BufferMS+1:end-BufferMS);
+    rawPow   = rawPow(:,:,BufferMS+1:end-BufferMS);
+    rawPhase = rawPhase(:,:,BufferMS+1:end-BufferMS);
     eegWaveV = eegWaveV(:,BufferMS+1:end-BufferMS); % remove buffer area
     eegWaveT = (OffsetMS:DurationMS+OffsetMS-1)/1000; 
     if length(eegWaveT)<size(eegWaveV,2), % error check on time vs. voltage length
