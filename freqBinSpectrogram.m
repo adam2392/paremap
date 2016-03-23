@@ -26,8 +26,8 @@ function newSpect = freqBinSpectrogram(spectMat, rangeFreqs, waveletFreqs)
         end
         upperFreq = rangeFreqs(j, 2);
 
-        lowerFreq
-        upperFreq
+%         lowerFreq
+%         upperFreq
         
         %%- go through indices in waveletFreqs and average those
         %%between lower and upper freq. -> append to eventpowerMat
