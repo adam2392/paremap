@@ -21,8 +21,14 @@ function newSpect = freqBinSpectrogram(spectMat, rangeFreqs, waveletFreqs)
     %%- loop through numFreqWins rows
     for j=1:numFreqWins % loop through and bin the freq domain into windows
         lowerFreq = rangeFreqs(j, 1);
+        if lowerFreq == 2
+            lowerFreq = 0;
+        end
         upperFreq = rangeFreqs(j, 2);
 
+        lowerFreq
+        upperFreq
+        
         %%- go through indices in waveletFreqs and average those
         %%between lower and upper freq. -> append to eventpowerMat
         lowerInd = waveletFreqs >= lowerFreq;

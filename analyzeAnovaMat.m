@@ -2,7 +2,7 @@
 
 clear
 clc
-% close all
+close all
 
 %% SUBJECT AND BLOCK SELECTION
 subj = 'NIH034'; 
@@ -64,8 +64,15 @@ correctIndices = find([events.isCorrect]==1);
 events = events(correctIndices);
 clear correctIndices 
 
+%%- get triggers for certain word match pair  
+probeone = 'BRICK';
+targetone = 'PANTS';
+probetwo = 'GLASS';
+targettwo = 'JUICE';
+
 % anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/';
-anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/brickclock_glasspants/';
+anovaDir = strcat('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/', ...
+    lower(probeone), lower(targetone), '_', lower(probetwo), lower(targettwo), '/');
 
 ext = '*.mat';
 files = dir(strcat(anovaDir, ext));
@@ -199,7 +206,7 @@ THIS_TRIGGER    = TRIGGER_TYPES{1};   %%%%%%%%%% SELECT TRIGGER TYPE FOR EXTRACT
 %% PLOTTING OPTIONS
 HIDE_FIGURES    = 0;
 USE_CHAN_SUBSET = 0; %0=all channels (not the subset); >=1 means process than many of the subset
-FIG_OFFSET = 0;
+FIG_OFFSET = 4;
 
 %%- PLOT PARAMETERS
 figFontAx       = 18;    if ispc, figFontAx = figFontAx-5; end
@@ -216,7 +223,7 @@ file = strcat(condensedDataDir, files{1});
 data = load(file);
 data = data.data;
 
-channelWeWant = '88';
+channelWeWant = num2str(maxchannel_num);
 fileindex = strfind(files, channelWeWant);
 fileindex = find(not(cellfun('isempty', fileindex)));
 filename = files{fileindex};
@@ -226,12 +233,12 @@ file = fullfile(condensedDataDir, filename);
 data = load(file);
 data = data.data;
 
-%%- get triggers for certain word match pair  
-probeone = 'BRICK';
-targetone = 'CLOCK';
-probetwo = 'GLASS';
-targettwo = 'PANTS';
-    
+% %%- get triggers for certain word match pair  
+% probeone = 'BRICK';
+% targetone = 'JUICE';
+% probetwo = 'GLASS';
+% targettwo = 'PANTS';
+
 %% GET TRIGGERS WE WANT
 sampEventsMeta = events;  % includes assocaited + and *
 probeWords = {sampEventsMeta.probeWord};
@@ -246,6 +253,11 @@ figSpect = figure(FIG_OFFSET+2); set(gcf, 'color', 'w')  % set color background 
 %%- Loop through each probeword
 for i=1:length(TRIGGER_TYPES)
     THIS_TRIGGER = TRIGGER_TYPES{i}; % set the current probeword
+    
+    % set variables for plotting and title
+    probe = TRIGGER_TYPES{i};
+    target = TARGET_TYPES{i};
+    
     %%- 01: GET TRIGGER INDICES WE WANT
     switch THIS_TRIGGER,
         %%- For each probeword:
@@ -284,20 +296,33 @@ for i=1:length(TRIGGER_TYPES)
     %%- 02: Plot Meta Data For Each Trigger
     subplotIndex = i;
     NUMSUBPLOTS = length(TRIGGER_TYPES);
-    n = plotEventMetaData(metaEvents, subplotIndex, figMeta.Number, NUMSUBPLOTS, THIS_TRIGGER);
+    triggerStr = sprintf('%s and %s', probe, target);
+    n = plotEventMetaData(metaEvents, subplotIndex, figMeta.Number, NUMSUBPLOTS, triggerStr);
     nout{i} = n;
+    xlim([0, 5])
 %     xout{i} = x;
     
     %%- 03: Plot Spectrogram For Each Trigger
     powerMatZ = data.powerMatZ(eventInd,:,:);
     size(powerMatZ)
     triggers = data.trigType;
+    
     % create time vector that is binned and still centered at 0
-    binnedWaveT = (1:size(powerMatZ,3)) - round(data.timeZero);
-    titleStr = sprintf('mean power: chan %s, %d events, %s_%s and %s_%s word pairs',...
-        data.chanStr, size(powerMatZ,1), probeone, targetone, probetwo, targettwo);
+    try
+        timeZero = data.timeZero;
+    catch
+        timeZero = 0;
+    end
+    binnedWaveT = (1:size(powerMatZ,3)) - round(timeZero);
+    titleStr = sprintf('mean power: chan %d %s, %d events, %s/%s word pair',...
+        data.chanNum, data.chanStr, size(powerMatZ,1), probe, target);
     
     plotEventSpectrogram(powerMatZ, binnedWaveT, freqBandAr, ...
         titleStr, subplotIndex, figSpect.Number, NUMSUBPLOTS, THIS_TRIGGER)
+    hCbar = colorbar('east');
+    set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
 
+    set(gca, 'CLim', [-0.15 0.15])
+    
+%     caxis([  
 end

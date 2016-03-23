@@ -65,7 +65,7 @@ events = events(correctIndices);
 clear correctIndices 
 
 % anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/';
-anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/brickclock_glasspants/';
+anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/brickclock_glasspants/';
 
 ext = '*.mat';
 files = dir(strcat(anovaDir, ext));
@@ -239,10 +239,10 @@ targetWords = {sampEventsMeta.targetWord};
 TRIGGER_TYPES   = {probeone, probetwo}; %-fixation and blockStart not ready for physio analysis
 TARGET_TYPES = {targetone, targettwo};
 
-eventoneindices = [];
-eventtwoindices = [];
+figMeta = figure(FIG_OFFSET+1); set(gcf, 'color', 'w')  % set color background to white
+figSpect = figure(FIG_OFFSET+2); set(gcf, 'color', 'w')  % set color background to white
 
-index = 0;
+%% PLOT SPECTROGRAM FOR DATA
 %%- Loop through each probeword
 for i=1:length(TRIGGER_TYPES)
     THIS_TRIGGER = TRIGGER_TYPES{i}; % set the current probeword
@@ -275,22 +275,11 @@ for i=1:length(TRIGGER_TYPES)
             error('no event trigger selected');
     end %end of switch
 
-    %%- 02: GO THROUGH EACH TARGETWORD FOR THIS PROBEWORD (THISTRIGGER)
-    for j=1:length(targets) % loop through each unique trigger for a specific probeword
-        % find event indices for this trigger matched with a specific
-        % targetword
-        targetWord = targets{j};
-        eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & strcmp({sampEventsMeta.targetWord},targetWord));
-
-        index = index + 1;
-        %%- Create groups for ANOVA
-        anovaGroups{index} = strcat(THIS_TRIGGER, '_', targetWord);
-        anovaPowMat{index} = spectMat(eventInd,:,:);
-    end
+    targetInd = find(strcmp({sampEventsMeta.targetWord}, TARGET_TYPES{i}));
     
-%     tempevents
-%     length(tempInd)
-    metaEvents = events(tempInd);
+    eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & strcmp({sampEventsMeta.targetWord}, TARGET_TYPES{i}));
+
+    metaEvents = events(eventInd);
     
     %%- 02: Plot Meta Data For Each Trigger
     subplotIndex = i;
@@ -300,12 +289,18 @@ for i=1:length(TRIGGER_TYPES)
 %     xout{i} = x;
     
     %%- 03: Plot Spectrogram For Each Trigger
-    powerMatZ = data.powerMatZ(tempInd,:,:);
+    powerMatZ = data.powerMatZ(eventInd,:,:);
     size(powerMatZ)
     triggers = data.trigType;
     % create time vector that is binned and still centered at 0
-    binnedWaveT = [1:size(powerMatZ,3)] - round(data.timeZero);
-    titleStr = sprintf('mean power: chan %s, %d events', data.chanStr, size(powerMatZ,1));
+    try
+        timeZero = data.timeZero;
+    catch
+        timeZero = 0;
+    end
+    binnedWaveT = (1:size(powerMatZ,3)) - round(timeZero);
+    titleStr = sprintf('mean power: chan %s, %d events, %s/%s and %s/%s word pairs',...
+        data.chanStr, size(powerMatZ,1), probeone, targetone, probetwo, targettwo);
     
     plotEventSpectrogram(powerMatZ, binnedWaveT, freqBandAr, ...
         titleStr, subplotIndex, figSpect.Number, NUMSUBPLOTS, THIS_TRIGGER)

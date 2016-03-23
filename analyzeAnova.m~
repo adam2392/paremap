@@ -206,12 +206,8 @@ for groupind = 1:length(firstgroups)
     %     anovaMat(anovaMat > 0.05) = 1;
 
         %% Save Data As Frequency/ProbeToVocalization Binned
-        dataDir = strcat('condensed_data/anova/robustspec/',...
-            lower(strjoin(strsplit(anovaGroups{first}, '_'), '')), '_',  lower(strjoin(strsplit(anovaGroups{second}, '_'), '')), '/');
-        if ~exist(dataDir, 'dir')
-            mkdir(dataDir)
-        end
         
+        dataDir = strcat('condensed_data/anova/robustspec/', ;
         clear data
 
         %%- Save this new power matrix Z
