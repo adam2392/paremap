@@ -10,6 +10,9 @@
 %
 clc;
 clear all;
+
+addpath('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation');
+
 % start time
 tstart=tic; tic;
 drawnow; currentFig=gcf; %- save so the control can be passed back to the current fig after execution
@@ -63,17 +66,18 @@ multCompPthresh   = 0.05;       %- significant pValue for TRUE cluter relative t
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%- DEFINE THE PERMUTATIONS,  each subject gets a +1 or -1 (randomly assigned) for each permutation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-file = 'BRICK_CLOCK_ttestMat';
+file = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/1_G1-global_probeToVocal.mat';
 data = load(file);
-fields = fieldname(data);
-data = data.(fields);
+data = data.data;
+fields = fieldnames(data);
+expXfreqXtime = data.powerMatZ;
 
-% get counts for each dimension
-numExps    = size(expXfreqXtime, 1);
-% numChans   = size(
-numFreq    = size(expXfreqXtime,2);
-numTime    = size(expXfreqXtime,3);
-numPermAll = factorial(numExps); % 2^numSubjs if doing across subjects
+%%- get counts for each dimension
+numExps    = size(expXfreqXtime, 1);    % # of events (within subjects)
+numChans   = 96; % there are 96 channels, but we will try to save them separately
+numFreq    = size(expXfreqXtime,2);     % # of frequency indices
+numTime    = size(expXfreqXtime,3);     % # of time indices
+numPermAll = 2^numChans; %factorial(numChans);        % 2^numSubjs if doing across subjects
 
 %- EXACT (EXAUSTIVE) PERMUTATION TEST -- 
 %   (1) should include all permutations including the "observed" effect and         
@@ -83,21 +87,34 @@ numPermAll = factorial(numExps); % 2^numSubjs if doing across subjects
 %   (2) permutations are drawn without replacement (Smyth & Phipson 2010)
 
 %- randomly pick a subset if "numPermMax" is less than "numPermAll"
-if numPermAll>numPermMax,
+if numPermAll>numPermMax, % RANDOM-SAMPLE PERMUTATION TEST
+    if numPermAll > 2^53
+        numPermAll = 2^52;
+    end
     iPermUse   = sort([1 1+randperm(numPermAll-1,numPermMax)],'ascend'); %- keep "true" as first index
     numPermUse = numPermMax+1;
     NumPermOut = numPermMax;
-else
+else                      % EXHAUSTIVE PERMUTATION TEST
     iPermUse   = [1:numPermAll];    % the index of permutation
     numPermUse = numPermAll;        % # of permutations to use
     NumPermOut = numPermAll;        % # of permutations used
 end
 
+%%%%%%%%%%%%%%%%% What should I implement here? Grab two unique event
+%%%%%%%%%%%%%%%%% triggers and relable?
 %- for each permutation (between 1 and numPermMax) assign each trial a +1 or -1.
 %- following method draws permutations WITHOUT REPLACEMENT 
 %   by using a unique decimal-2-binary conversion for each possible permutation
 permList = nan(numExps,numPermUse); %- initialize matrix with nan; these should all be replaced by zeroes and ones and converted to -1 or 1
 for iPerm=[1:numPermUse],
-    permList(:,iPerm) = rem(floor((numPermAll-iPermUse(iPerm))*pow2(1-numSubj:0)),2);  %- algorithm pulled from the guts of "dec2bin"
+    permList(:,iPerm) = rem(floor((numPermAll-iPermUse(iPerm))*pow2(1-numChans:0)),2);  %- algorithm pulled from the guts of "dec2bin"
 end
 permList=permList*2-1;
+
+%- OPTIONS: lump positive and negative data (just look for clusters of absolute differences), or find clusters separately for each.
+separatePosNeg  = 1;     %- 0=dont separate (lump);  1=analyze each separately (efficient version)
+
+if separatePosNeg>0, strPN = 'SepPN'; else strPN = 'LumpPN'; end
+%- create output string that defines the type of stat computed here
+StatStr = sprintf('CLUSTER: %s, pThr %.3f; %s; minClus %d; %d perm',strPval,pThreshCluster,strPN, minClustSize, NumPermOut); 
+StatStr(find(StatStr=='_'))=' ';

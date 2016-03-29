@@ -130,12 +130,12 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  = [32:96];            %G1, G2, LF1, AST1,
+        iChanListSub  = [1:31];            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 %%- subset channel I want to extract
-iChanListSub  = [32:96];
+iChanListSub  = [1:31];
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
     iChanList = 1:size(chanList,1);  %all possible channels
@@ -352,7 +352,7 @@ for iChan=1:numChannels
     strStart    = sprintf('\n STEP 5.%d -- Grab %d/%d: %s', iChan, iChan, numChannels, thisChanStr );  strStart(end+1:35)=' '; %buffer length so everything lines up
     fprintf('%s', strStart);       tic;
 
-    ROBUST_SPEC = 1;
+    ROBUST_SPEC = 0;
     
     %%- gete_ms: get the eegWaveV
     % eegwaveform for each event over the duration of time for a certain channel
@@ -480,32 +480,110 @@ for iChan=1:numChannels
     end
     
     %%- SAVE DATA IF NECESSARY
-    SAVE = 0;
+    SAVE = 1;
     if (SAVE)
-%         powerMatZ = squeeze(powerMatZ);
-%         data.trigType = trigType;             % store the trigger type per event
-%         data.powerMatZ = powerMatZ;        % save the condensed power Mat
-%         data.chanNum = thisChan;           % store the corresponding channel number
-%         data.chanStr = thisChanStr;               % the string name of the channel
-%         data.freqBandYtick = freqBandYticks;
-%         data.freqBandYlabel = freqBandYtickLabels;
-% 
-%         filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, '_fullData'); 
-%         save(filename, 'data', '-v7.3'); 
-%         clear data
-        %% Save Data As Frequency/ProbeToVocalization Binned
+        %%- Time Bin
         WinLength = 100; % 100 ms
         Overlap = 50;    % overlap we want to increment
-        saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
-            waveT, trigType, thisChan, thisChanStr);
-        % -> saves into .../freq_probeToVocal_100msbinned
+        NumWins = size(squeeze(powerMatZ),3) / (WinLength-Overlap) - 1;
+        
+        %%- Call function to bin on time based on winLength and Overlap and NumWins
+        newPowerMatZ = timeBinSpectrogram(squeeze(powerMatZ), NumWins, WinLength, Overlap);
+        %%- Call function to bin on freq. based on wavelet freqs. we have
+        rangeFreqs = [freqBandAr.rangeF];
+        rangeFreqs = reshape(rangeFreqs, 2, 7)';
+        newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
+
+        % data directory to save the data
+        dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/groups/';
+        
+        sampEventsMeta = events;  % includes assocaited + and *
+        probeWords = {sampEventsMeta.probeWord};
+        targetWords = {sampEventsMeta.targetWord};
+        %%- Loop through each probeword
+        for i=1:length(TRIGGER_TYPES)
+            THIS_TRIGGER = TRIGGER_TYPES{i}; % set the current probeword
+
+            %%- 01: GET TRIGGER INDICES WE WANT
+            switch THIS_TRIGGER,
+                %%- For each probeword:
+                % - find events with that probeword
+                % - get the unique targetwords for that event
+                case 'BRICK'
+                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));            
+                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+                    %%- get all the unique targetwords for BRICK probeword
+                    targets = unique({tempevents.targetWord});
+                case 'CLOCK'
+                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+                    %%- get all the unique targetwords for BRICK probeword
+                    targets = unique({tempevents.targetWord});
+               case 'JUICE'
+                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+                    %%- get all the unique targetwords for BRICK probeword
+                    targets = unique({tempevents.targetWord});
+               case 'PANTS'
+                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+                    %%- get all the unique targetwords for BRICK probeword
+                    targets = unique({tempevents.targetWord});
+               case 'GLASS'
+                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+                    %%- get all the unique targetwords for BRICK probeword
+                    targets = unique({tempevents.targetWord});
+                otherwise
+                    error('no event trigger selected');
+            end
+
+            %%- 02: GO THROUGH EACH TARGETWORD FOR THIS PROBEWORD (THISTRIGGER)
+            %%-> Store all unique probe/target word pairs
+            for j=1:length(targets) % loop through each unique trigger for a specific probeword
+                % find event indices for this trigger matched with a specific
+                % targetword
+                targetWord = targets{j};
+                eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & strcmp({sampEventsMeta.targetWord},targetWord));
+                metaEvents = events(eventInd);
+                 
+                %%- store each relevant power matrix
+                thisPowMat = newPowerMatZ(eventInd,:,:);
+                
+                data.powerMatZ = thisPowMat;
+                data.chanNum = thisChan;
+                data.chanStr = thisChanStr;
+                data.probeWord = THIS_TRIGGER;
+                data.targetWord = targetWord;
+                data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
+                data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
+                
+                %%- save into this dir
+                wordpair_name = strcat(THIS_TRIGGER, '_', targetWord);
+                filename = strcat(dataDir, wordpair_name, '/', num2str(thisChan), '_', thisChanStr, '_groupData');
+                
+                filedir = strcat(dataDir, wordpair_name, '/');
+                if ~exist(filedir)
+                    mkdir(filedir);
+                end
+                
+                save(filename, 'data');
+            end
+        end
+
+        %% Save Data As Frequency/ProbeToVocalization Binned
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
+%             waveT, trigType, thisChan, thisChanStr);
+%         % -> saves into .../freq_probeToVocal_100msbinned
 
         %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
-        WinLength = 100; % 100 ms
-        Overlap = 50;    % overlap we want to increment
-        saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
-            trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
-        % -> saves into .../freq_probeToVocal
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
+%             trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
+%         % -> saves into .../freq_probeToVocal
         
 %         % ** Overlap needs to be 25/50% of WinLength for now
 %         WinLength = 500; % 100 ms
