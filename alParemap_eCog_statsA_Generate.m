@@ -22,7 +22,7 @@ THIS_REF_TYPE   = REF_TYPES{3}; % (1) noreref, (2) bipolar, (3) laplacian
 
 %% PLOTTING OPTIONS
 HIDE_FIGURES    = 0;
-USE_CHAN_SUBSET = 1; %0=all channels (not the subset); >=1 means process than many of the subset
+USE_CHAN_SUBSET = 0; %0=all channels (not the subset); >=1 means process than many of the subset
 FIG_OFFSET = 0;
 
 %%- PLOT PARAMETERS
@@ -68,6 +68,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -78,12 +79,12 @@ else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 if sessNum == -1 | length(sessNum)>1, % all sessions
     disp('STEP 1: Going through all sessions')
     session = 'Meta Session [all]';
-    behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paremap/');
+    behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap');
     sessStr = '[all]';
 else                                  % one session
     disp('STEP 1: Going through one session')
     session = sprintf('session_%d',sessNum);
-    behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paremap/', session);
+    behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap/', session);
     sessStr = sprintf('[%d]',sessNum);
 end
 
@@ -315,7 +316,8 @@ end
 arrayGB = numChanPrealloc * length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
 % initialize power matrices to make sure they can be stored
 powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
+powerMatZ = zeros(numChanPrealloc, length(eventTrigger/home/adamli/paremap/NIH034/behavioral/paRemap
+), length(waveletFreqs), DurationMS);
 phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 
 clear defaultEEGfile subjDir eventEEGpath
