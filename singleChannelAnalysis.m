@@ -81,6 +81,9 @@ ext = '*.mat';
 files = dir(fullfile(condensedDataDir, ext));
 files = {files.name};
 
+% for fileI=1:length(files),
+    
+
 % 82 and 33 max min
 file = fullfile(condensedDataDir,'82_LP2-global.mat');
 data = load(file);

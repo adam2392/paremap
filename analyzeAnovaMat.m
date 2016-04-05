@@ -215,7 +215,9 @@ if ~exist('FIG_OFFSET','var'), FIG_OFFSET = 0; end %- default to 0, but if calle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load Data From Preprocessed Dir       ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-condensedDataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
+% condensedDataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
+condensedDataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/robust_spec/';
+
 ext = '*.mat';
 files = dir(fullfile(condensedDataDir, ext));
 files = {files.name};
@@ -306,6 +308,8 @@ for i=1:length(TRIGGER_TYPES)
     powerMatZ = data.powerMatZ(eventInd,:,:);
     size(powerMatZ)
     triggers = data.trigType;
+    
+    size(powerMatZ)
     
     % create time vector that is binned and still centered at 0
     try

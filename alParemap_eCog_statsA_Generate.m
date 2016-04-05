@@ -68,7 +68,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -247,12 +247,71 @@ disp('eventsTrig, trigType, eventsTriggerXlim')
 disp(['Variables to use here if looking at probe words are:'])
 disp(['brickevents, glassevents, pantsevents, juicevents, clockevents'])
 
+show = 0;
+if show = 1;
+    incorrectIndices = find([events.isCorrect]==0);
+    incorrectEvents = events(incorrectIndices);
+
+    %%- Plot meta data about the incorrect events
+    block_types = unique({incorrectEvents.blocknumber});
+    blocks = {incorrectEvents.blocknumber};
+    sessionNum = [incorrectEvents.sessionNum];
+    sessions = unique([incorrectEvents.sessionNum]);
+
+    % plot histogram of # wrong in each session
+    seshzero = sum(sessionNum(sessionNum==0));
+    seshone = sum(sessionNum(sessionNum==1));
+    seshtwo = sum(sessionNum(sessionNum==2));
+    figure()
+    bar([seshzero, seshone, seshtwo])
+    set(gca,'XTickLabel',{'session_0', 'session_1', 'session_2'})
+    ylabel('# incorrect');
+    title('Incorrect events per session');
+
+    % plot blocks
+    figure()
+    hold on
+    xlabs = {};
+    block_sum = [];
+    for i=1:length(block_types),
+        block_sum = [block_sum; length(blocks(find(strcmp(blocks, block_types{i}))))];
+        xlabs{i} = block_types{i};
+    end
+    bar(block_sum')
+    set(gca, 'XTick', [1:6])
+    set(gca,'XTickLabel',xlabs)
+    ylabel('# incorrect');
+    title('Incorrect events per block');
+
+    figure();
+    hold on
+    for i=1:3,
+        session_events = incorrectEvents(find([incorrectEvents.sessionNum]==sessions(i)));
+
+        block_sum = [];
+        blocks = {session_events.blocknumber};
+        for j=1:length(block_types), 
+            block_sum = [block_sum; length(blocks(strcmp(blocks, block_types{j})))];
+            xlabs{(i-1)*(1+length(block_types))+j} = block_types{j};
+        end
+        xlabs{(i-1)*(1+length(block_types))+j+1} = strcat('<-session',num2str(i));
+    %     hax = axes;
+        bar([1:6]+(i-1)*7, block_sum')
+    %     line([(i-1)*7,(i-1)*7], get(hax, 'YLim'))
+    end
+    set(gca, 'XTick', 1:7*3)
+    set(gca,'XTickLabel',xlabs)
+    ylabel('# incorrect');
+    title('Incorrect events per block');
+end
+
 %%- GET CORRECT EVENTS ONLY
 % POST MODIFY EVENTS based on fields we want (e.g. is it correct or not)?
 correctIndices = find([events.isCorrect]==1);
 trigType = trigType(correctIndices);
 eventsTrig = eventsTrig(correctIndices);
 events = events(correctIndices);
+
 
 %%- Now get each unique word pairings A/B, A/C, A/D, B/C, B/D
 % loop through each trigger type
@@ -316,8 +375,7 @@ end
 arrayGB = numChanPrealloc * length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
 % initialize power matrices to make sure they can be stored
 powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-powerMatZ = zeros(numChanPrealloc, length(eventTrigger/home/adamli/paremap/NIH034/behavioral/paRemap
-), length(waveletFreqs), DurationMS);
+powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 
 clear defaultEEGfile subjDir eventEEGpath
@@ -484,7 +542,6 @@ for iChan=1:numChannels
     %%- SAVE DATA IF NECESSARY
     SAVE = 1;
     if (SAVE)
-        %%- Time Bin
         WinLength = 100; % 100 ms
         Overlap = 50;    % overlap we want to increment
         NumWins = size(squeeze(powerMatZ),3) / (WinLength-Overlap) - 1;
@@ -497,81 +554,164 @@ for iChan=1:numChannels
         newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
 
         % data directory to save the data
-        dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/groups/';
+        dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/blocks/';
         
-        sampEventsMeta = events;  % includes assocaited + and *
+        sampEventsMeta = events;  % a buffer copy of the events struct
         probeWords = {sampEventsMeta.probeWord};
         targetWords = {sampEventsMeta.targetWord};
-        %%- Loop through each probeword
-        for i=1:length(TRIGGER_TYPES)
-            THIS_TRIGGER = TRIGGER_TYPES{i}; % set the current probeword
+        
+        %%- LOOP through session, block, probe word and target word
+        %%- Get indices of all session blocks
+        sessions = unique({sampEventsMeta.sessionName});    % session0-2?
+        blocks = unique({sampEventsMeta.blocknumber});      % block0-5
+        for seshI=1:length(unique(sessions)),
+            for blockI=1:length(unique(blocks)),
+                % get the event indices for this specific session block
+                session_block_indices = find(strcmp({sampEventsMeta.sessionName}, sessions(seshI)) & ...
+                    strcmp({sampEventsMeta.blocknumber}, blocks(blockI)));
+                session_block_indices = strcmp({sampEventsMeta.sessionName}, sessions(seshI)) & ...
+                    strcmp({sampEventsMeta.blocknumber}, blocks(blockI));
+                
+                %%- Loop through only probewords for this sessionblock
+                probeWords = unique({sampEventsMeta(session_block_indices).probeWord});
+                for i=1:length(probeWords)
+                    THIS_TRIGGER = probeWords{i};
+                    
+                    % get the events for this probe word and get the
+                    % corresponding targets
+                    probeInd = strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER);
+                    tempevents = sampEventsMeta(probeInd & session_block_indices);
+%                     tempevents = sampEventsMeta(strcmp({sampEventsMeta(session_block_indices).probeWord}, THIS_TRIGGER));
+                    targets = unique({tempevents.targetWord});
+                    
+                    %%- 02: GO THROUGH EACH TARGETWORD FOR THIS PROBEWORD (THISTRIGGER)
+                    %%-> Store all unique probe/target word pairs
+                    for j=1:length(targets) % loop through each unique trigger for a specific probeword
+                        % find event indices for this trigger matched with a specific
+                        % targetword
+                        targetWord = targets{j};
+                        
+                        % match probe, target and session and block
+                        eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & ...
+                            strcmp({sampEventsMeta.targetWord},targetWord) & session_block_indices);
+                        metaEvents = events(eventInd);
 
-            %%- 01: GET TRIGGER INDICES WE WANT
-            switch THIS_TRIGGER,
-                %%- For each probeword:
-                % - find events with that probeword
-                % - get the unique targetwords for that event
-                case 'BRICK'
-                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));            
-                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
-                    %%- get all the unique targetwords for BRICK probeword
-                    targets = unique({tempevents.targetWord});
-                case 'CLOCK'
-                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
-                    %%- get all the unique targetwords for BRICK probeword
-                    targets = unique({tempevents.targetWord});
-               case 'JUICE'
-                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
-                    %%- get all the unique targetwords for BRICK probeword
-                    targets = unique({tempevents.targetWord});
-               case 'PANTS'
-                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
-                    %%- get all the unique targetwords for BRICK probeword
-                    targets = unique({tempevents.targetWord});
-               case 'GLASS'
-                    tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
-                    tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
-                    %%- get all the unique targetwords for BRICK probeword
-                    targets = unique({tempevents.targetWord});
-                otherwise
-                    error('no event trigger selected');
-            end
+                        %%- store each relevant power matrix
+                        thisPowMat = newPowerMatZ(eventInd,:,:);
 
-            %%- 02: GO THROUGH EACH TARGETWORD FOR THIS PROBEWORD (THISTRIGGER)
-            %%-> Store all unique probe/target word pairs
-            for j=1:length(targets) % loop through each unique trigger for a specific probeword
-                % find event indices for this trigger matched with a specific
-                % targetword
-                targetWord = targets{j};
-                eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & strcmp({sampEventsMeta.targetWord},targetWord));
-                metaEvents = events(eventInd);
-                 
-                %%- store each relevant power matrix
-                thisPowMat = newPowerMatZ(eventInd,:,:);
-                
-                data.powerMatZ = thisPowMat;
-                data.chanNum = thisChan;
-                data.chanStr = thisChanStr;
-                data.probeWord = THIS_TRIGGER;
-                data.targetWord = targetWord;
-                data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
-                data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
-                
-                %%- save into this dir
-                wordpair_name = strcat(THIS_TRIGGER, '_', targetWord);
-                filename = strcat(dataDir, wordpair_name, '/', num2str(thisChan), '_', thisChanStr, '_groupData');
-                
-                filedir = strcat(dataDir, wordpair_name, '/');
-                if ~exist(filedir)
-                    mkdir(filedir);
+                        data.metaEvents = metaEvents;
+                        data.powerMatZ = thisPowMat;
+                        data.chanNum = thisChan;
+                        data.chanStr = thisChanStr;
+                        data.probeWord = THIS_TRIGGER;
+                        data.targetWord = targetWord;
+                        data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
+                        data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
+
+                        %%- save into this dir
+                        wordpair_name = strcat(THIS_TRIGGER, '_', targetWord);
+                        filename = strcat(dataDir, sessions{seshI}, '/', blocks{blockI}, '/', wordpair_name, '/', num2str(thisChan), '_', thisChanStr, '_groupSessionBlockData');
+
+                        filedir = strcat(dataDir, sessions{seshI}, '/', blocks{blockI}, '/', wordpair_name, '/');
+                        if ~exist(filedir)
+                            mkdir(filedir);
+                        end
+
+                        save(filename, 'data');
+                        
+                        clear data thisPowMat
+                    end
                 end
-                
-                save(filename, 'data');
             end
         end
+        %%- Time Bin
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         NumWins = size(squeeze(powerMatZ),3) / (WinLength-Overlap) - 1;
+%         
+%         %%- Call function to bin on time based on winLength and Overlap and NumWins
+%         newPowerMatZ = timeBinSpectrogram(squeeze(powerMatZ), NumWins, WinLength, Overlap);
+%         %%- Call function to bin on freq. based on wavelet freqs. we have
+%         rangeFreqs = [freqBandAr.rangeF];
+%         rangeFreqs = reshape(rangeFreqs, 2, 7)';
+%         newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
+% 
+%         % data directory to save the data
+%         dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/groups/';
+%         
+%         sampEventsMeta = events;  % includes assocaited + and *
+%         probeWords = {sampEventsMeta.probeWord};
+%         targetWords = {sampEventsMeta.targetWord};
+%         %%- Loop through each probeword
+%         for i=1:length(TRIGGER_TYPES)
+%             THIS_TRIGGER = TRIGGER_TYPES{i}; % set the current probeword
+% 
+%             %%- 01: GET TRIGGER INDICES WE WANT
+%             switch THIS_TRIGGER,
+%                 %%- For each probeword:
+%                 % - find events with that probeword
+%                 % - get the unique targetwords for that event
+%                 case 'BRICK'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));            
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                 case 'CLOCK'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                case 'JUICE'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                case 'PANTS'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                case 'GLASS'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                 otherwise
+%                     error('no event trigger selected');
+%             end
+% 
+%             %%- 02: GO THROUGH EACH TARGETWORD FOR THIS PROBEWORD (THISTRIGGER)
+%             %%-> Store all unique probe/target word pairs
+%             for j=1:length(targets) % loop through each unique trigger for a specific probeword
+%                 % find event indices for this trigger matched with a specific
+%                 % targetword
+%                 targetWord = targets{j};
+%                 eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & strcmp({sampEventsMeta.targetWord},targetWord));
+%                 metaEvents = events(eventInd);
+%                  
+%                 %%- store each relevant power matrix
+%                 thisPowMat = newPowerMatZ(eventInd,:,:);
+%                 
+%                 data.powerMatZ = thisPowMat;
+%                 data.chanNum = thisChan;
+%                 data.chanStr = thisChanStr;
+%                 data.probeWord = THIS_TRIGGER;
+%                 data.targetWord = targetWord;
+%                 data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
+%                 data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
+%                 
+%                 %%- save into this dir
+%                 wordpair_name = strcat(THIS_TRIGGER, '_', targetWord);
+%                 filename = strcat(dataDir, wordpair_name, '/', num2str(thisChan), '_', thisChanStr, '_groupData');
+%                 
+%                 filedir = strcat(dataDir, wordpair_name, '/');
+%                 if ~exist(filedir)
+%                     mkdir(filedir);
+%                 end
+%                 
+%                 save(filename, 'data');
+%             end
+%         end
 
         %% Save Data As Frequency/ProbeToVocalization Binned
 %         WinLength = 100; % 100 ms
