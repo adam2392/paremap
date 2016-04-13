@@ -203,31 +203,31 @@ for i=1:length(TRIGGER_TYPES)
             brickevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'BRICK PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'CLOCK'
             clockevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'CLOCK PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'GLASS'
             glassevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'GLASS PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'JUICE'
             juiceevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'JUICE PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'PANTS'
             pantsevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'PANTS PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         otherwise
             error('no event trigger selected');
@@ -248,7 +248,7 @@ disp(['Variables to use here if looking at probe words are:'])
 disp(['brickevents, glassevents, pantsevents, juicevents, clockevents'])
 
 show = 0;
-if show = 1;
+if show == 1;
     incorrectIndices = find([events.isCorrect]==0);
     incorrectEvents = events(incorrectIndices);
 
@@ -320,7 +320,6 @@ for itrig = 1:length(currentUniqueTrigType)
     trigger = currentUniqueTrigType(itrig); % current trigger
      
     matchTriggers = find(strcmp({eventsTrig.targetWord},trigger));
-
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
