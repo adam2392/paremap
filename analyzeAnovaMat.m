@@ -65,13 +65,13 @@ events = events(correctIndices);
 clear correctIndices 
 
 %%- get triggers for certain word match pair  
-probeone = 'BRICK';
-targetone = 'PANTS';
-probetwo = 'GLASS';
-targettwo = 'JUICE';
+probeone = 'CLOCK';
+targetone = 'BRICK';
+probetwo = 'JUICE';
+targettwo = 'BRICK';
 
 % anovaDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/';
-anovaDir = strcat('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/', ...
+anovaDir = strcat('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/anova/same_target/', ...
     lower(probeone), lower(targetone), '_', lower(probetwo), lower(targettwo), '/');
 
 ext = '*.mat';
@@ -81,7 +81,7 @@ files = {files.name};
 %%% 
 file = strcat(anovaDir, files{1});
 data = load(file);
-data = data.data;
+data = data.newdata;
 
 
 %%- Initialize matrices/vectors for speed
@@ -102,7 +102,7 @@ for i=1:length(files)
     file = strcat(anovaDir, files{i});
     data = load(file);
 %     data = data.anovaData;
-    data = data.data;
+    data = data.newdata;
 
     %%- Create spectrogram of p-values and convert to sig/non-significant
     spect = data.anovaMat;
@@ -215,7 +215,9 @@ if ~exist('FIG_OFFSET','var'), FIG_OFFSET = 0; end %- default to 0, but if calle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load Data From Preprocessed Dir       ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-condensedDataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
+% condensedDataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
+condensedDataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/robust_spec/';
+
 ext = '*.mat';
 files = dir(fullfile(condensedDataDir, ext));
 files = {files.name};
@@ -306,6 +308,8 @@ for i=1:length(TRIGGER_TYPES)
     powerMatZ = data.powerMatZ(eventInd,:,:);
     size(powerMatZ)
     triggers = data.trigType;
+    
+    size(powerMatZ)
     
     % create time vector that is binned and still centered at 0
     try

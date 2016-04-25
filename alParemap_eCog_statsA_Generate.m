@@ -68,7 +68,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -131,12 +131,20 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
+<<<<<<< HEAD
         iChanListSub  = [2:96];            %G1, G2, LF1, AST1,
+=======
+        iChanListSub  = [1:31];            %G1, G2, LF1, AST1,
+>>>>>>> 61593b7a70e16874f2a8c55bb7ea2e08c7c48d72
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 %%- subset channel I want to extract
+<<<<<<< HEAD
 iChanListSub  = [2:96];
+=======
+iChanListSub  = [1:31];
+>>>>>>> 61593b7a70e16874f2a8c55bb7ea2e08c7c48d72
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
     iChanList = 1:size(chanList,1);  %all possible channels
@@ -203,31 +211,31 @@ for i=1:length(TRIGGER_TYPES)
             brickevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'BRICK PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'CLOCK'
             clockevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'CLOCK PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'GLASS'
             glassevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'GLASS PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'JUICE'
             juiceevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'JUICE PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         case 'PANTS'
             pantsevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
             disp(['Looking at trigger: ', THIS_TRIGGER]);
             metaYstr = 'PANTS PROBE';
-            eventsTriggerXlim = [-2.25 5.25];
+            eventsTriggerXlim = [-1 5];
 %             eventsAveWindowMS = [-1000 -500; -500 0; 0 500; 500 1000; 1000 1500; 1500 2000; 2000 2500; 3500 4000]; % list of time windows over which EEG data is averaged for t-tests
         otherwise
             error('no event trigger selected');
@@ -247,12 +255,71 @@ disp('eventsTrig, trigType, eventsTriggerXlim')
 disp(['Variables to use here if looking at probe words are:'])
 disp(['brickevents, glassevents, pantsevents, juicevents, clockevents'])
 
+show = 0;
+if show == 1;
+    incorrectIndices = find([events.isCorrect]==0);
+    incorrectEvents = events(incorrectIndices);
+
+    %%- Plot meta data about the incorrect events
+    block_types = unique({incorrectEvents.blocknumber});
+    blocks = {incorrectEvents.blocknumber};
+    sessionNum = [incorrectEvents.sessionNum];
+    sessions = unique([incorrectEvents.sessionNum]);
+
+    % plot histogram of # wrong in each session
+    seshzero = sum(sessionNum(sessionNum==0));
+    seshone = sum(sessionNum(sessionNum==1));
+    seshtwo = sum(sessionNum(sessionNum==2));
+    figure()
+    bar([seshzero, seshone, seshtwo])
+    set(gca,'XTickLabel',{'session_0', 'session_1', 'session_2'})
+    ylabel('# incorrect');
+    title('Incorrect events per session');
+
+    % plot blocks
+    figure()
+    hold on
+    xlabs = {};
+    block_sum = [];
+    for i=1:length(block_types),
+        block_sum = [block_sum; length(blocks(find(strcmp(blocks, block_types{i}))))];
+        xlabs{i} = block_types{i};
+    end
+    bar(block_sum')
+    set(gca, 'XTick', [1:6])
+    set(gca,'XTickLabel',xlabs)
+    ylabel('# incorrect');
+    title('Incorrect events per block');
+
+    figure();
+    hold on
+    for i=1:3,
+        session_events = incorrectEvents(find([incorrectEvents.sessionNum]==sessions(i)));
+
+        block_sum = [];
+        blocks = {session_events.blocknumber};
+        for j=1:length(block_types), 
+            block_sum = [block_sum; length(blocks(strcmp(blocks, block_types{j})))];
+            xlabs{(i-1)*(1+length(block_types))+j} = block_types{j};
+        end
+        xlabs{(i-1)*(1+length(block_types))+j+1} = strcat('<-session',num2str(i));
+    %     hax = axes;
+        bar([1:6]+(i-1)*7, block_sum')
+    %     line([(i-1)*7,(i-1)*7], get(hax, 'YLim'))
+    end
+    set(gca, 'XTick', 1:7*3)
+    set(gca,'XTickLabel',xlabs)
+    ylabel('# incorrect');
+    title('Incorrect events per block');
+end
+
 %%- GET CORRECT EVENTS ONLY
 % POST MODIFY EVENTS based on fields we want (e.g. is it correct or not)?
 correctIndices = find([events.isCorrect]==1);
 trigType = trigType(correctIndices);
 eventsTrig = eventsTrig(correctIndices);
 events = events(correctIndices);
+
 
 %%- Now get each unique word pairings A/B, A/C, A/D, B/C, B/D
 % loop through each trigger type
@@ -261,7 +328,6 @@ for itrig = 1:length(currentUniqueTrigType)
     trigger = currentUniqueTrigType(itrig); % current trigger
      
     matchTriggers = find(strcmp({eventsTrig.targetWord},trigger));
-
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -353,7 +419,7 @@ for iChan=1:numChannels
     strStart    = sprintf('\n STEP 5.%d -- Grab %d/%d: %s', iChan, iChan, numChannels, thisChanStr );  strStart(end+1:35)=' '; %buffer length so everything lines up
     fprintf('%s', strStart);       tic;
 
-    ROBUST_SPEC = 1;
+    ROBUST_SPEC = 0;
     
     %%- gete_ms: get the eegWaveV
     % eegwaveform for each event over the duration of time for a certain channel
@@ -431,13 +497,13 @@ for iChan=1:numChannels
     %%- SAVE ROBUST SPEC PROCESSED DATA
     if ROBUST_SPEC
         robustPowerMat = zeros(length(eventTrigger), 41, 91);
-        fs = 400; % needs to be low enough to get frequencies in low bands
+        fs = 1000; % needs to be low enough to get frequencies in low bands
         rangeFreqs = [freqBandAr.rangeF];
         rangeFreqs = reshape(rangeFreqs, 2, 7)';
 %         for i=1:10
             % robust spect parameters
             alpha = 30;
-            window = 82; % to get 41 frequency windows
+            window = 150; % to get 41 frequency windows
             
             %%- Loop through each event and perform robust spect
             tic;
@@ -481,32 +547,112 @@ for iChan=1:numChannels
     end
     
     %%- SAVE DATA IF NECESSARY
-    SAVE = 0;
+    SAVE = 1;
     if (SAVE)
-%         powerMatZ = squeeze(powerMatZ);
-%         data.trigType = trigType;             % store the trigger type per event
-%         data.powerMatZ = powerMatZ;        % save the condensed power Mat
-%         data.chanNum = thisChan;           % store the corresponding channel number
-%         data.chanStr = thisChanStr;               % the string name of the channel
-%         data.freqBandYtick = freqBandYticks;
-%         data.freqBandYlabel = freqBandYtickLabels;
+        saveDataForSessionBlock;
+        
+        %%- Time Bin
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         NumWins = size(squeeze(powerMatZ),3) / (WinLength-Overlap) - 1;
+%         
+%         %%- Call function to bin on time based on winLength and Overlap and NumWins
+%         newPowerMatZ = timeBinSpectrogram(squeeze(powerMatZ), NumWins, WinLength, Overlap);
+%         %%- Call function to bin on freq. based on wavelet freqs. we have
+%         rangeFreqs = [freqBandAr.rangeF];
+%         rangeFreqs = reshape(rangeFreqs, 2, 7)';
+%         newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
 % 
-%         filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, '_fullData'); 
-%         save(filename, 'data', '-v7.3'); 
-%         clear data
+%         % data directory to save the data
+%         dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/groups/';
+%         
+%         sampEventsMeta = events;  % includes assocaited + and *
+%         probeWords = {sampEventsMeta.probeWord};
+%         targetWords = {sampEventsMeta.targetWord};
+%         %%- Loop through each probeword
+%         for i=1:length(TRIGGER_TYPES)
+%             THIS_TRIGGER = TRIGGER_TYPES{i}; % set the current probeword
+% 
+%             %%- 01: GET TRIGGER INDICES WE WANT
+%             switch THIS_TRIGGER,
+%                 %%- For each probeword:
+%                 % - find events with that probeword
+%                 % - get the unique targetwords for that event
+%                 case 'BRICK'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));            
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                 case 'CLOCK'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                case 'JUICE'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                case 'PANTS'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                case 'GLASS'
+%                     tempevents = sampEventsMeta(strcmp(probeWords, THIS_TRIGGER));
+%                     tempInd = find(strcmp({sampEventsMeta.probeWord}, THIS_TRIGGER));
+%                     %%- get all the unique targetwords for BRICK probeword
+%                     targets = unique({tempevents.targetWord});
+%                 otherwise
+%                     error('no event trigger selected');
+%             end
+% 
+%             %%- 02: GO THROUGH EACH TARGETWORD FOR THIS PROBEWORD (THISTRIGGER)
+%             %%-> Store all unique probe/target word pairs
+%             for j=1:length(targets) % loop through each unique trigger for a specific probeword
+%                 % find event indices for this trigger matched with a specific
+%                 % targetword
+%                 targetWord = targets{j};
+%                 eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & strcmp({sampEventsMeta.targetWord},targetWord));
+%                 metaEvents = events(eventInd);
+%                  
+%                 %%- store each relevant power matrix
+%                 thisPowMat = newPowerMatZ(eventInd,:,:);
+%                 
+%                 data.powerMatZ = thisPowMat;
+%                 data.chanNum = thisChan;
+%                 data.chanStr = thisChanStr;
+%                 data.probeWord = THIS_TRIGGER;
+%                 data.targetWord = targetWord;
+%                 data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
+%                 data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
+%                 
+%                 %%- save into this dir
+%                 wordpair_name = strcat(THIS_TRIGGER, '_', targetWord);
+%                 filename = strcat(dataDir, wordpair_name, '/', num2str(thisChan), '_', thisChanStr, '_groupData');
+%                 
+%                 filedir = strcat(dataDir, wordpair_name, '/');
+%                 if ~exist(filedir)
+%                     mkdir(filedir);
+%                 end
+%                 
+%                 save(filename, 'data');
+%             end
+%         end
+
         %% Save Data As Frequency/ProbeToVocalization Binned
-        WinLength = 100; % 100 ms
-        Overlap = 50;    % overlap we want to increment
-        saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
-            waveT, trigType, thisChan, thisChanStr);
-        % -> saves into .../freq_probeToVocal_100msbinned
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         saveProbeToVocalization(events, powerMatZ, freqBandAr, waveletFreqs,...
+%             waveT, trigType, thisChan, thisChanStr);
+%         % -> saves into .../freq_probeToVocal_100msbinned
 
         %% Finished looping through a certain Channel -> Save Data As Time/Frequency Binned
-        WinLength = 100; % 100 ms
-        Overlap = 50;    % overlap we want to increment
-        saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
-            trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
-        % -> saves into .../freq_probeToVocal
+%         WinLength = 100; % 100 ms
+%         Overlap = 50;    % overlap we want to increment
+%         saveTimeFreqBinned(powerMatZ, freqBandAr, waveletFreqs, ...
+%             trigType, thisChan, thisChanStr, WinLength, Overlap, waveT)
+%         % -> saves into .../freq_probeToVocal
         
 %         % ** Overlap needs to be 25/50% of WinLength for now
 %         WinLength = 500; % 100 ms

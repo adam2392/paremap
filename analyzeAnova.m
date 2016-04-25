@@ -11,8 +11,8 @@
 %%%%% Output:
 %%%%% saves data as 'filename' variable set in script
 %%%%%
-% dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
-dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/robust_spec/';
+dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/';
+% dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/robust_spec/';
 
 ext = '*.mat';
 files = dir(strcat(dataDir, ext));
@@ -40,6 +40,7 @@ freqBandYticks = data.freqBandYtick;
 freqBandYlabels = data.freqBandYlabel;
 thisChan = data.chanNum;
 thisChanStr = data.chanStr;
+responseTime = data.responseTime;
 
 subj = 'NIH034';
 
@@ -63,8 +64,12 @@ correctIndices = find([events.isCorrect]==1);
 events = events(correctIndices);
 clear correctIndices 
 
-firstgroups = [1, 1, 2, 3];
-secondgroups = [7, 8, 8, 7];
+% firstgroups = [1, 1, 2, 3];
+% secondgroups = [7, 8, 8, 7];
+% firstgroups = [7, 8, 3, 2];
+% secondgroups = [10, 12, 11, 9];
+firstgroups=[1, 2, 3, 4];  %same target words
+secondgroups=[6, 7, 8, 9];
 
 for groupind = 1:length(firstgroups)
    first = firstgroups(groupind)
@@ -169,10 +174,15 @@ for groupind = 1:length(firstgroups)
         end
 
         %%- RUN THESE 2 LINES TO DETERMINE WHICH INDICES YOU WANT IN 'Y'
-    %     anovaPowMat
-    %     anovaGroups
+%         anovaPowMat
+%         anovaGroups
     %     first = 1; %1/7, 1/8, 2/8, 3/7 (probed brick diff words completely)
     %     second = 7;
+    % 7, 8, 3, 2 % flip flopped words
+    % 10, 12, 11, 9
+    % 
+    % 1, 2, 3, 4  %same target words
+    % 6, 7, 8, 9
         %% Actually Run ANOVA For This Channel
         anovaMat = zeros(size(spectMat,2), size(spectMat,3));
         for freq=1:size(spectMat,2)
@@ -185,16 +195,6 @@ for groupind = 1:length(firstgroups)
                 groups = [ones(size(anovaPowMat{first}(:,freq,time)));...
                           ones(size(anovaPowMat{second}(:,freq,time)))*2];
 
-                %%- loop through every group
-    %             for i=1:length(anovaPowMat)
-    %                 % create vector of events we want to test
-    %                 y = [y; anovaPowMat{i}(:,freq,time)];
-    %                 
-    %                 % set groups
-    %                 group = ones(size(anovaPowMat{i}(:,freq,time)))*i;
-    %                 groups = [groups; group];
-    %             end
-
                 % compute p-value for ANOVA
                 p = anovan(y, groups, 'display','off');
                 %%%% 2nd group with target words,...
@@ -206,28 +206,26 @@ for groupind = 1:length(firstgroups)
     %     anovaMat(anovaMat > 0.05) = 1;
 
         %% Save Data As Frequency/ProbeToVocalization Binned
-        dataDir = strcat('condensed_data/anova/robustspec/',...
+        newdataDir = strcat('condensed_data/anova/',...
             lower(strjoin(strsplit(anovaGroups{first}, '_'), '')), '_',  lower(strjoin(strsplit(anovaGroups{second}, '_'), '')), '/');
-        if ~exist(dataDir, 'dir')
-            mkdir(dataDir)
+        if ~exist(newdataDir, 'dir')
+            mkdir(newdataDir)
         end
-        
-        clear data
 
         %%- Save this new power matrix Z
-        data.trigType = trigType;             % store the trigger type per event
-        data.anovaMat = anovaMat;        % save the condensed p-value matrix
-        data.chanNum = thisChan;           % store the corresponding channel number
-        data.chanStr = thisChanStr;               % the string name of the channel
-        data.freqBandYticks = freqBandYticks;
-        data.freqBandYlabels = freqBandYlabels;
-        data.responseTimes = responseTimes;
-        data.firstgroup = anovaGroups{first};
-        data.secondgroup = anovaGroups{second};
+        newdata.trigType = trigType;             % store the trigger type per event
+        newdata.anovaMat = anovaMat;        % save the condensed p-value matrix
+        newdata.chanNum = thisChan;           % store the corresponding channel number
+        newdata.chanStr = thisChanStr;               % the string name of the channel
+        newdata.freqBandYticks = freqBandYticks;
+        newdata.freqBandYlabels = freqBandYlabels;
+        newdata.responseTimes = responseTime;
+        newdata.firstgroup = anovaGroups{first};
+        newdata.secondgroup = anovaGroups{second};
 
-        filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, ...
+        filename = strcat(newdataDir, num2str(thisChan), '_', thisChanStr, ...
             '_anovaProbeOnToVocalization_', anovaGroups{first}, anovaGroups{second}); 
-        save(filename, 'data'); 
+        save(filename, 'newdata'); 
 
         clear data
     end

@@ -2,7 +2,7 @@ function plotEventSpectrogram(powerMat, binnedWaveT, freqBandAr, titleStr, subpl
     %% EXTRACT DATA FROM EVENTS
     %%%%%%%%%%%%%%%%%%%%%RECENTER THE TIMES WRT MSTIME %%%%%%%%%%%%%%%%
     powPlot = squeeze(mean(powerMat, 1));
-
+    
     freqBandYtickLabels = {freqBandAr.label};
     %% BAR CHARTS
     figure(figSpect);
