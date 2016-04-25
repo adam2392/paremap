@@ -22,7 +22,7 @@ THIS_REF_TYPE   = REF_TYPES{3}; % (1) noreref, (2) bipolar, (3) laplacian
 
 %% PLOTTING OPTIONS
 HIDE_FIGURES    = 0;
-USE_CHAN_SUBSET = 0; %0=all channels (not the subset); >=1 means process than many of the subset
+USE_CHAN_SUBSET = 1; %0=all channels (not the subset); >=1 means process than many of the subset
 FIG_OFFSET = 0;
 
 %%- PLOT PARAMETERS
@@ -131,12 +131,12 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  = [32:96];            %G1, G2, LF1, AST1,
+        iChanListSub  = [2:96];            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 %%- subset channel I want to extract
-iChanListSub  = [32:96];
+iChanListSub  = [2:96];
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
     iChanList = 1:size(chanList,1);  %all possible channels
@@ -316,8 +316,7 @@ end
 arrayGB = numChanPrealloc * length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
 % initialize power matrices to make sure they can be stored
 powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-powerMatZ = zeros(numChanPrealloc, length(eventTrigger/home/adamli/paremap/NIH034/behavioral/paRemap
-), length(waveletFreqs), DurationMS);
+powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 
 clear defaultEEGfile subjDir eventEEGpath
@@ -454,7 +453,7 @@ for iChan=1:numChannels
 %                 set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
 %                 set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
             end
-            toc;
+            fprintf(' [%.1f sec] --> robust spect pursuit', toc);
             robustPowerMat = freqBinSpectrogram(robustPowerMat, rangeFreqs, freq); 
             
             %%- Save
@@ -471,13 +470,13 @@ for iChan=1:numChannels
             filename = strcat(dataDir, num2str(thisChan), '_', thisChanStr, '_robustSpec'); 
             save(filename, 'data');
     
-            figure
-            imagesc(tWin, 1:7, 20*log10(abs(xEst)))
-            hold on; colormap(jet)
-            hCbar = colorbar('east');
-            set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
-            set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
-            set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
+%             figure
+%             imagesc(tWin, 1:7, 20*log10(abs(xEst)))
+%             hold on; colormap(jet)
+%             hCbar = colorbar('east');
+%             set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
+%             set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
+%             set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
 %         end
     end
     
