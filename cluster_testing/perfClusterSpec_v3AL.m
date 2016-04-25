@@ -10,12 +10,40 @@
 %
 clc;
 clear all;
+subj = 'NIH034';
 
 addpath('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation');
 
 % start time
 tstart=tic; tic;
 drawnow; currentFig=gcf; %- save so the control can be passed back to the current fig after execution
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
+eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+
+% Determine which directory we're working with automatically
+if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
+elseif length(dir(eegRootDirHome))>0, eegRootDir = eegRootDirHome;
+else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+
+behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paremap/');
+
+%%-Load in the Events For This Task/Patient/Session
+events = struct([]);                    %%- in functional form this is required so there is no confusion about events the function and events the variable
+load(sprintf('%s/events.mat',behDir));  %%- load the events file
+fprintf('Loaded %d events from %s\n', length(events), behDir);
+
+%%- GET CORRECT EVENTS ONLY
+% POST MODIFY EVENTS based on fields we want (e.g. is it correct or not)?
+correctIndices = find([events.isCorrect]==1);
+events = events(correctIndices);
+
+%%- Check all target words == vocalized words
+% vocalizedWords = {events.vocalizedWord};
+% targetWords = {events.targetWord};
 
 %?? questions
 % 1. What is Uncorr_clust
@@ -64,7 +92,7 @@ MULT_COMPARE_TYPE = 'CLUSTER';  %- FDR, SIMPLE_PERM, CLUSTER
 multCompPthresh   = 0.05;       %- significant pValue for TRUE cluter relative to perm clusters.  ALWAYS keep at 0.05...
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%- DEFINE THE PERMUTATIONS,  each subject gets a +1 or -1 (randomly assigned) for each permutation
+%%- DEFINE THE PERMUTATIONS,  each trial within subject gets a +1 or -1 (randomly assigned) for each permutation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 file = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/freq_probeToVocal_100msbinned/1_G1-global_probeToVocal.mat';
 data = load(file);
@@ -85,7 +113,7 @@ numPermAll = 2^numChans; %factorial(numChans);        % 2^numSubjs if doing acro
 %- RANDOM-SAMPLE PERMUTATION TEST -- 
 %   (1) should include the observed effect to implicitly compute the EXACT p-value  
 %   (2) permutations are drawn without replacement (Smyth & Phipson 2010)
-
+%%%%% ?? NumPermOut vs. numPermUse ?? %%%%%%
 %- randomly pick a subset if "numPermMax" is less than "numPermAll"
 if numPermAll>numPermMax, % RANDOM-SAMPLE PERMUTATION TEST
     if numPermAll > 2^53
