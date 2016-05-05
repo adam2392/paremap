@@ -56,7 +56,7 @@ events = events(correctIndices);
 clear correctIndices 
 
 %%- Load Robust Spect Results
-robustDir = strcat('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/robust_spec/');
+robustDir = strcat('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH034/robust_spec/');
 
 ext = '*.mat';
 files = dir(strcat(robustDir, ext));
@@ -68,15 +68,36 @@ for fileI=1:length(files),
     data = data.data;
     
     % already freq/time binned
-    newPowerMatZ = 10*log10(abs(data.powerMatZ));
+    newPowerMatZ = data.powerMatZ;
+    
+    tic;
+    %     for each eegfile stem, z-score each channel and frequency
+    fprintf(' [%.1f sec] --> z-score', toc); tic;
+    for iEvent =1:size(newPowerMatZ,1),
+        for iF = 1:size(newPowerMatZ,2),
+            fixedVal = newPowerMatZ(iEvent, iF, 1:4); %allVal for particular chan and freq
+            mu = mean(fixedVal); stdev = std(fixedVal);
+
+            % create the power matrix
+            newPowerMatZ(iEvent, iF, :) = (newPowerMatZ(iEvent, iF, :)-mu)/stdev;
+
+            if sum(isnan(newPowerMatZ(iEvent,iF,:)))>0
+                keyboard;
+            end
+        end
+    end
+    fprintf(' [%.1f sec]', toc);
     
     if sum(sum(sum(isnan(newPowerMatZ))))>0 || sum(sum(sum(isinf(newPowerMatZ))))>0
         filename
     end
     
+    thisFreq = data.freq;
+    thisTime = data.waveT;
     thisChan = data.chanNum;
     thisChanStr = data.chanStr;
-    Overlap = 50;
+    thisDescriptor = data.descriptor;
+    Overlap = 6000/30; % overlap step in milliseconds
         
     %%- Save
     %%- Call function to bin on freq. based on wavelet freqs. we have
@@ -84,7 +105,7 @@ for fileI=1:length(files),
     rangeFreqs = reshape(rangeFreqs, 2, 7)';
 
     % data directory to save the data
-    dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/robustspec_blocks/';
+    dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH034/robustspec_blocks/';
 
     sampEventsMeta = events;  % a buffer copy of the events struct
     probeWords = {sampEventsMeta.probeWord};
@@ -95,6 +116,7 @@ for fileI=1:length(files),
     sessions = unique({sampEventsMeta.sessionName});    % session0-2?
     blocks = unique({sampEventsMeta.blocknumber});      % block0-5
     for seshI=1:length(unique(sessions)),
+        sessionEventIndices = [];
         for blockI=1:length(unique(blocks)),
             disp(['Saving session ', seshI, ' and block ', blockI])
             % get the event indices for this specific session block
@@ -102,7 +124,9 @@ for fileI=1:length(files),
                 strcmp({sampEventsMeta.blocknumber}, blocks(blockI)));
             session_block_indices = strcmp({sampEventsMeta.sessionName}, sessions(seshI)) & ...
                 strcmp({sampEventsMeta.blocknumber}, blocks(blockI));
-
+            
+            eventIndices = [];
+            index = 1;
             %%- Loop through only probewords for this sessionblock
             probeWords = unique({sampEventsMeta(session_block_indices).probeWord});
             for i=1:length(probeWords)
@@ -123,17 +147,24 @@ for fileI=1:length(files),
                     eventInd = find(strcmp({sampEventsMeta.probeWord},THIS_TRIGGER) & ...
                         strcmp({sampEventsMeta.targetWord},targetWord) & session_block_indices);
                     metaEvents = events(eventInd);
-
+                    
+                    eventIndices  = [eventIndices, eventInd];
+                    index = index +1;
                     %%- store each relevant power matrix
                     thisPowMat = newPowerMatZ(eventInd,:,:);
-
+                    
+                    clear data
+                    
                     data.metaEvents = metaEvents;
                     data.powerMatZ = thisPowMat;
                     data.chanNum = thisChan;
                     data.chanStr = thisChanStr;
                     data.probeWord = THIS_TRIGGER;
                     data.targetWord = targetWord;
-                    data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
+                    data.description = thisDescriptor;
+                    data.time = thisTime;
+                    data.freq = thisFreq;
+                    data.timeZero = 5; % five 200 ms after -1 seconds of probeword on
                     data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
 
                     %%- save into this dir
@@ -148,6 +179,22 @@ for fileI=1:length(files),
                     save(filename, 'data');
                 end
             end
+             if length(unique(eventIndices)) ~= length(eventIndices)
+                 disp('bad error')
+             end
+             sessionEventIndices = [sessionEventIndices, eventIndices];
+%              for i=1:length(eventIndices),
+%                  test = eventIndices{i};
+%                  for j=i+1:length(eventIndices),
+%                      for k=1:length(eventIndices{i}),
+% 
+%                      end
+%                      
+%                  end
+%              end
         end
     end
+     if length(unique(sessionEventIndices)) ~= length(sessionEventIndices)
+         disp('bad error2')
+     end
 end
