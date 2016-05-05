@@ -10,7 +10,8 @@ rangeFreqs = reshape(rangeFreqs, 2, 7)';
 newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
 
 % data directory to save the data
-dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/blocks/';
+% dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/blocks/';
+dataDir = '/home/adamli/paremap/condensed_data/blocks/';
 
 sampEventsMeta = events;  % a buffer copy of the events struct
 probeWords = {sampEventsMeta.probeWord};
@@ -60,8 +61,9 @@ for seshI=1:length(unique(sessions)), % loop thru session
                 data.chanStr = thisChanStr;
                 data.probeWord = THIS_TRIGGER;
                 data.targetWord = targetWord;
-                data.timeZero = 45; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25
+                data.timeZero = 20; %%%%% ** MAGIC NUMBER BECAUSE 2.25-5.25 = 45; -1:5 = 20
                 data.vocalization = data.timeZero + round([metaEvents.responseTime]/Overlap);
+                data.description = '100 ms windows, 50 ms overlap. With eeg data from -1 to 5 seconds after probeWordOn.';
 
                 %%- save into this dir
                 wordpair_name = strcat(THIS_TRIGGER, '_', targetWord);

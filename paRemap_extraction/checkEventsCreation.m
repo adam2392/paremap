@@ -5,7 +5,7 @@
         % tailored for checking paremap events
 
         %% SUBJECT AND BLOCK SELECTION
-        subj = 'NIH034'; 
+        subj = 'NIH039'; 
         sessNum = [0:2];
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%

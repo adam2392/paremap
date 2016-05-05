@@ -10,8 +10,8 @@
 clear all; 
 clc;
 %% SUBJECT AND BLOCK SELECTION
-subj = 'NIH039'; 
-sessNum = [0, 1, 3];
+subj = 'NIH034'; 
+sessNum = [0:2];
 
 %% EXTRACTION OPTIONS
 TRIGGER_TYPES   = {'BRICK','CLOCK','GLASS','JUICE','PANTS'}; %-fixation and blockStart not ready for physio analysis
@@ -68,7 +68,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
+eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -365,6 +365,7 @@ end
 %%- remap event pointer from default (server) to local copy of the EEG data
 for iEvent=1:length(eventTrigger),
     eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile,defaultEEGfile,fullfileEEG(subjDir,eventEEGpath));
+
 end
 
 %%- gets the range of frequencies using eeganalparams
@@ -418,7 +419,7 @@ for iChan=1:numChannels
     strStart    = sprintf('\n STEP 5.%d -- Grab %d/%d: %s', iChan, iChan, numChannels, thisChanStr );  strStart(end+1:35)=' '; %buffer length so everything lines up
     fprintf('%s', strStart);       tic;
 
-    ROBUST_SPEC = 0;
+    ROBUST_SPEC = 1;
     
     %%- gete_ms: get the eegWaveV
     % eegwaveform for each event over the duration of time for a certain channel
@@ -463,14 +464,11 @@ for iChan=1:numChannels
     %     for each eegfile stem, z-score each channel and frequency
         fprintf(' [%.1f sec] --> z-score', toc);  tic;
         stemList = unique({eventTrigger.eegfile});
-        
-        fixOnToOff = 1:999; % -1 sec to 0 seconds probe word on
         for iStem=1:length(stemList),
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
             for iF = 1:length(waveletFreqs),
-%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
                 mu = mean(allVal); stdev = std(allVal);
 
                 % create the power matrix
@@ -481,7 +479,6 @@ for iChan=1:numChannels
                 end
             end
         end
-        
         fprintf(' [%.1f sec]', toc); tic;
     end
     clear rawPow rawPhase
@@ -552,7 +549,7 @@ for iChan=1:numChannels
     end
     
     %%- SAVE DATA IF NECESSARY
-    SAVE = 1;
+    SAVE = 0;
     if (SAVE)
         saveDataForSessionBlock;
 %         %%- Time Bin

@@ -10,11 +10,12 @@
 %----------------------  Choose the subject of interest and root EEG directory -----------------------%
 subj       = 'NIH039';
 
-
 rootEEGdirWork  = '/Volumes/JW24TB/data24TB/eeg';                        %office-local
 %rootEEGdirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg';   %office-local
 rootEEGdirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';   %home
+rootEEGdirHome = '/home/adamli/paremap';
 % rootEEGdirHome = '/Volumes/NIL_PASS';
+
 if      exist(rootEEGdirWork, 'dir'), rootEEGdir = rootEEGdirWork; 
 elseif  exist(rootEEGdirHome, 'dir'), rootEEGdir = rootEEGdirHome; 
 else    fprintf('WARNING: cant find root directory (not home or work'); end
