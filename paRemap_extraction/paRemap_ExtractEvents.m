@@ -142,25 +142,42 @@ while true
     msoffset            = msoffset  ;
 %     isCorrect           = nan;
     
+    %%- type stores the third column of session.log and loops through row
+    %%- by row
     switch type
+        %%- This case is started by every recording session and ends with
+        %%- rec_end
+        % STORES: - recStart: the absolute time in milliseconds when recording
+        % starts
+        % - wordType: number from -1, [1,5] which represents the word that
+        % was vocalized (or absence of vocalization)
+        % - timeAfterRec: the absolute time after recording start, of each word
+        % vocalization
+        % - vocalizedWord: cell array storing the actual word vocalized
+        % - annindex: the number of elements in ann file, for the vocalized
+        % words
         case {'REC_START'} % get name of .ann file and extract the contents
             annindex = 0;   % initialize going through annotation file index
-            recstartTOT=textscan(thisLine,'%f%d%s%s'); % grab the block number
-            annfilename = fullfile(sessionDir, strcat(recstartTOT{4}{1}, '.ann'));
-            
+            recstartTOT=textscan(thisLine,'%f%d%s%s'); % grab the row with REC_Start in session.log file
+            annfilename = fullfile(sessionDir, strcat(recstartTOT{4}{1}, '.ann')); % get the .ann file path
+            recStart = recstartTOT{1}(1);  % get this block's recording start time
+            %%
+%             if ~strcmp(sessionName, 'session_0b') %%- ONLY NEEDED FOR SESSIONS WITH SEPARATED SESSION (AS A/B)
+%                 %%- Error check on opening up annotation .ann file
+%                 if (annfid==-1), error('%s.ann not found: \n Exiting.',xTOT{4}(1)); end
+%             end
+            %%
             disp(['On this file: ' annfilename])
             annfid = fopen(annfilename, 'r');    % open file to read
             
-            recStart = recstartTOT{1}(1);  % get this block's recording start time
-            
-            if ~strcmp(sessionName, 'session_0b')
-                %%- Error check on opening up annotation .ann file
-                if (annfid==-1), error('%s.ann not found: \n Exiting.',xTOT{4}(1)); end
-            end
-            
             % get lines until reached annotated data
             while true  
-                tempLine = fgetl(annfid); % get new line
+                try
+                    tempLine = fgetl(annfid); % get new line
+                catch error
+                    disp(error)
+                    annfilename
+                end
                 if isempty(tempLine), break; end  % reached EOF
             end
             clear tempTot tempLine
@@ -202,66 +219,77 @@ while true
             fixationOffTime = xTOT{1}(1);
         case {'PROBEWORD_ON'}
             isProbe    = 1;
-            probeTOT=textscan(thisLine,'%f%d%s%s%s%s%s'); % grab the block number
-            probeWord   = probeTOT{4}{1};
-            targetWord  = probeTOT{6}{1};
-            mstime = probeTOT{1}(1);
-            type = type;
+            probeTOT=textscan(thisLine,'%f%d%s%s%s%s%s'); % grab the row of data for probeWordOn
+            probeWord   = probeTOT{4}{1}; % store probeWord
+            targetWord  = probeTOT{6}{1}; % store targetWord
+            mstime = probeTOT{1}(1);      % store absolute time of this row
+            type = type;                  % store type of event
+            
             %thisAnnFile = xTOT{7}{1};  %- one version has an annotation file associated with each word, eventually that was jettisoned.  
             
             probeFound = 1;
         case {'MATCHWORD_ON'}
-            matchOnTime = xTOT{1}(1); % get the mstime of this line
+            matchOnTime = xTOT{1}(1); % get the absolute mstime of matchWord coming on
             
-            %%- When matchword comes on, should have vocalized...
-            % determine timerange words can occur from 
-            % probewordon -> matchword on (0-timeRange)
-            timeRange = matchOnTime - mstime;
-            timeVocalization = timeAfterRec(wordindex) - mstime;
-
-            %%- Make sure time of vocalization happens after 
-            %%- probeword comes on
-            if timeVocalization < 0
-%                 wordindex = wordindex + 1;
-%                 timeVocalization = timeAfterRec(wordindex) - mstime;
-
-                while(timeVocalization < 0 && wordindex ~= annindex)
-                    wordindex = wordindex+1;
-                    if wordindex == annindex
-                        break
-                    else
-                        timeVocalization = timeAfterRec(wordindex) - mstime;
-                    end
-                end
-            end
-            
-            %%- Section to determine response word, response time
-            %%- Compare targetWord to the next vocalizedWord
-            if strcmp(targetWord, vocalizedWord{wordindex}) ...                 %%- Correct Vocalization within timeFrame
-               && timeVocalization < timeRange, 
-                isCorrect = 1;  % make this event have field isCorrect = 1
-                
-                % LOG THE EVENT FIELDS and increment index through ann file
-                responseTime = timeVocalization; % responseTime
-                responseWord = vocalizedWord{wordindex};
-                wordindex = wordindex + 1;              
-            
-            elseif timeVocalization < timeRange                                 %%- Either wrong word, or '<>'
-                isCorrect = 0; % make this event have field isCorrect = 0
-                
-                %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
-                % LOG THE EVENT FIELDS
-                responseTime = timeVocalization;
-                responseWord = 'none';
-                
-            else                                                                %%- They didn't say anything
-                isCorrect = 0; % make this event have field isCorrect = 0
-                
-                %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
-                % LOG THE EVENT FIELDS
+            %%- ending words did not have response
+            if (wordindex > annindex),
+                isCorrect = 0;
                 responseTime = 0;
                 responseWord = 'none';
-            end 
+            else, 
+                %%- When matchword comes on, should have vocalized...
+                % determine timerange words can occur from 
+                % probewordon -> matchword on (0-timeRange)
+                timeRange = matchOnTime - mstime;
+                timeVocalization = timeAfterRec(wordindex) - mstime;
+
+                %%- Make sure time of vocalization happens after 
+                %%- probeword comes on
+                if timeVocalization < 0 % means that next vocalized word was before word on screen -> need to move forward
+    %                 wordindex = wordindex + 1;
+    %                 timeVocalization = timeAfterRec(wordindex) - mstime;
+
+                    %%- While time vocalization is still happening before
+                    %%probeword on, and the word index is not at the total
+                    %%number of elements yet
+                    while(timeVocalization < 0 && wordindex ~= annindex)
+                        wordindex = wordindex+1;
+                        if wordindex == annindex
+                            break
+                        else
+                            timeVocalization = timeAfterRec(wordindex) - mstime;
+                        end
+                    end
+                end
+
+                %%- Section to determine response word, response time
+                %%- Compare targetWord to the next vocalizedWord
+                if strcmp(targetWord, vocalizedWord{wordindex}) ...                 %%- Correct Vocalization within timeFrame
+                   && timeVocalization < timeRange, 
+                    isCorrect = 1;  % make this event have field isCorrect = 1
+
+                    % LOG THE EVENT FIELDS and increment index through ann file
+                    responseTime = timeVocalization; % responseTime
+                    responseWord = vocalizedWord{wordindex};
+                    wordindex = wordindex + 1;              
+
+                elseif timeVocalization < timeRange                                 %%- Either wrong word, or '<>'
+                    isCorrect = 0; % make this event have field isCorrect = 0
+
+                    %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
+                    % LOG THE EVENT FIELDS
+                    responseTime = timeVocalization;
+                    responseWord = 'none';
+
+                else                                                                %%- They didn't say anything
+                    isCorrect = 0; % make this event have field isCorrect = 0
+
+                    %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
+                    % LOG THE EVENT FIELDS
+                    responseTime = 0;
+                    responseWord = 'none';
+                end 
+            end
         case {'PROBEWORD_OFF'} % SAME TIME MATCHWORD TURNS OFF
             probeOffTime = xTOT{1}(1); % get the mstime of this line
                         

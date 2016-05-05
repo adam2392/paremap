@@ -10,8 +10,7 @@ rangeFreqs = reshape(rangeFreqs, 2, 7)';
 newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
 
 % data directory to save the data
-% dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/blocks/';
-dataDir = '/home/adamli/paremap/condensed_data/blocks/';
+dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/blocks/';
 
 sampEventsMeta = events;  % a buffer copy of the events struct
 probeWords = {sampEventsMeta.probeWord};

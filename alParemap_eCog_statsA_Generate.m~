@@ -10,8 +10,8 @@
 clear all; 
 clc;
 %% SUBJECT AND BLOCK SELECTION
-subj = 'NIH039'; 
-sessNum = [0, 1, 3];
+subj = 'NIH034'; 
+sessNum = [0:2];
 
 %% EXTRACTION OPTIONS
 TRIGGER_TYPES   = {'BRICK','CLOCK','GLASS','JUICE','PANTS'}; %-fixation and blockStart not ready for physio analysis
@@ -365,6 +365,7 @@ end
 %%- remap event pointer from default (server) to local copy of the EEG data
 for iEvent=1:length(eventTrigger),
     eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile,defaultEEGfile,fullfileEEG(subjDir,eventEEGpath));
+
 end
 
 %%- gets the range of frequencies using eeganalparams
@@ -418,7 +419,7 @@ for iChan=1:numChannels
     strStart    = sprintf('\n STEP 5.%d -- Grab %d/%d: %s', iChan, iChan, numChannels, thisChanStr );  strStart(end+1:35)=' '; %buffer length so everything lines up
     fprintf('%s', strStart);       tic;
 
-    ROBUST_SPEC = 0;
+    ROBUST_SPEC = 1;
     
     %%- gete_ms: get the eegWaveV
     % eegwaveform for each event over the duration of time for a certain channel
@@ -548,7 +549,7 @@ for iChan=1:numChannels
     end
     
     %%- SAVE DATA IF NECESSARY
-    SAVE = 1;
+    SAVE = 0;
     if (SAVE)
         saveDataForSessionBlock;
 %         %%- Time Bin
