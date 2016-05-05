@@ -31,7 +31,7 @@ function [events] = paRemap_ExtractEvents(sessLogFile, subject, sessionName)
 % priorEvents = [];
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-disp(['On session: ' sessionName])
+disp(['\nOn session: ' sessionName])
 
 %- For NIH028 and NIH029, copy the session log and add the correct msoffset
 sessFolderPath  = sessLogFile(1:strfind(sessLogFile,sessionName)+length(sessionName));
@@ -203,8 +203,11 @@ while true
                 end
             end
             
+            % store total number of annotations in .ann file
+            TOTAL_ANN = annindex;
+            
             % variable to help in finding response words/times
-            wordindex = 1;
+            annwordindex = 1; % loop through the annotated words 1:TOTAL_ANN
             probeFound = 0;
             fclose(annfid); % close annotation file
         case {'BLOCK_0', 'BLOCK_1', 'BLOCK_2', 'BLOCK_3', 'BLOCK_4', 'BLOCK_5'}
@@ -231,16 +234,21 @@ while true
         case {'MATCHWORD_ON'}
             matchOnTime = xTOT{1}(1); % get the absolute mstime of matchWord coming on
             
+<<<<<<< HEAD
             %%- ending words did not have response
             if (wordindex > annindex),
                 isCorrect = 0;
                 responseTime = 0;
                 responseWord = 'none';
             else, 
+=======
+            if (annwordindex ~= TOTAL_ANN), % not looped through all the annotated words yet
+>>>>>>> dbf44b78f069cad9758117ab7a41149dced9f341
                 %%- When matchword comes on, should have vocalized...
                 % determine timerange words can occur from 
                 % probewordon -> matchword on (0-timeRange)
                 timeRange = matchOnTime - mstime;
+<<<<<<< HEAD
                 timeVocalization = timeAfterRec(wordindex) - mstime;
 
                 %%- Make sure time of vocalization happens after 
@@ -258,20 +266,45 @@ while true
                             break
                         else
                             timeVocalization = timeAfterRec(wordindex) - mstime;
+=======
+                timeVocalization = timeAfterRec(annwordindex) - mstime;
+
+                %%- Make sure time of vocalization happens after 
+                %%- probeword comes on
+                if timeVocalization < 0
+    %                 wordindex = wordindex + 1;
+    %                 timeVocalization = timeAfterRec(wordindex) - mstime;
+
+                    while(timeVocalization < 0)
+                        annwordindex = annwordindex+1;
+                        if annwordindex == annindex
+                            break
+                        else
+                            timeVocalization = timeAfterRec(annwordindex) - mstime;
+>>>>>>> dbf44b78f069cad9758117ab7a41149dced9f341
                         end
                     end
                 end
 
                 %%- Section to determine response word, response time
                 %%- Compare targetWord to the next vocalizedWord
+<<<<<<< HEAD
                 if strcmp(targetWord, vocalizedWord{wordindex}) ...                 %%- Correct Vocalization within timeFrame
+=======
+                if strcmp(targetWord, vocalizedWord{annwordindex}) ...                 %%- Correct Vocalization within timeFrame
+>>>>>>> dbf44b78f069cad9758117ab7a41149dced9f341
                    && timeVocalization < timeRange, 
                     isCorrect = 1;  % make this event have field isCorrect = 1
 
                     % LOG THE EVENT FIELDS and increment index through ann file
                     responseTime = timeVocalization; % responseTime
+<<<<<<< HEAD
                     responseWord = vocalizedWord{wordindex};
                     wordindex = wordindex + 1;              
+=======
+                    responseWord = vocalizedWord{annwordindex};
+                    annwordindex = annwordindex + 1;              
+>>>>>>> dbf44b78f069cad9758117ab7a41149dced9f341
 
                 elseif timeVocalization < timeRange                                 %%- Either wrong word, or '<>'
                     isCorrect = 0; % make this event have field isCorrect = 0
