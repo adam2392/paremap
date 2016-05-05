@@ -216,56 +216,47 @@ while true
         case {'MATCHWORD_ON'}
             matchOnTime = xTOT{1}(1); % get the mstime of this line
             
-            if (annwordindex ~= TOTAL_ANN), % not looped through all the annotated words yet
-                %%- When matchword comes on, should have vocalized...
-                % determine timerange words can occur from 
-                % probewordon -> matchword on (0-timeRange)
-                timeRange = matchOnTime - mstime;
-                timeVocalization = timeAfterRec(annwordindex) - mstime;
+            %%- When matchword comes on, should have vocalized...
+            % determine timerange words can occur from 
+            % probewordon -> matchword on (0-timeRange)
+            timeRange = matchOnTime - mstime;                          % time Range the word can come on
+            timeVocalizations = timeAfterRec(:) - mstime;              % convert all vocalizations wrt to the mstime
+            validIndices = find(timeVocalizations > 0 & timeVocalizations < timeRange); % find valid indices of word by response times
 
-                %%- Make sure time of vocalization happens after 
-                %%- probeword comes on
-                if timeVocalization < 0
-    %                 wordindex = wordindex + 1;
-    %                 timeVocalization = timeAfterRec(wordindex) - mstime;
-
-                    while(timeVocalization < 0)
-                        annwordindex = annwordindex+1;
-                        if annwordindex == annindex
-                            break
-                        else
-                            timeVocalization = timeAfterRec(annwordindex) - mstime;
-                        end
-                    end
-                end
-
-                %%- Section to determine response word, response time
-                %%- Compare targetWord to the next vocalizedWord
-                if strcmp(targetWord, vocalizedWord{annwordindex}) ...                 %%- Correct Vocalization within timeFrame
-                   && timeVocalization < timeRange, 
-                    isCorrect = 1;  % make this event have field isCorrect = 1
+            %%- found one word that was correct, no other vocalizations
+            if length(validIndices) == 1, 
+                if strcmp(targetWord, vocalizedWord{validIndices})
+                    isCorrect = 1;
 
                     % LOG THE EVENT FIELDS and increment index through ann file
-                    responseTime = timeVocalization; % responseTime
-                    responseWord = vocalizedWord{annwordindex};
-                    annwordindex = annwordindex + 1;              
+                    responseTime = timeVocalizations(validIndices); % responseTime
+                    responseWord = vocalizedWord{validIndices};
+                    annwordindex = validIndices(end);
+                else % incorrect word vocalized
+                    isCorrect = 0;
+                    responseTime = timeVocalizations(validIndices); % responseTime
+                    responseWord = vocalizedWord{validIndices};
+                    
+                    disp('Error in strcmp first if...');
+                end
+            elseif length(validIndices) == 0, %%- no word response in this frame period
+                isCorrect = 0;
+                responseTime = 0;
+                responseWord = 'none';
 
-                elseif timeVocalization < timeRange                                 %%- Either wrong word, or '<>'
-                    isCorrect = 0; % make this event have field isCorrect = 0
-
-                    %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
-                    % LOG THE EVENT FIELDS
-                    responseTime = timeVocalization;
-                    responseWord = 'none';
-
-                else                                                                %%- They didn't say anything
-                    isCorrect = 0; % make this event have field isCorrect = 0
-
-                    %%%%% MAYBE CHANGE LATER? TO FIND CORRECT WORD/IF CORRECT 
-                    % LOG THE EVENT FIELDS
-                    responseTime = 0;
-                    responseWord = 'none';
-                end 
+                annwordindex = annwordindex + 1;
+            else %%- more then 1 word vocalization found within time frame
+                isCorrect = 0; % defined since they vocalized more then 1 word
+                if strcmp(targetWord, vocalizedWord{validIndices(1)}) % first try was correct
+                    responseTime = timeVocalizations(validIndices(1));
+                    responseWord = vocalizedWord{validIndices(1)};
+                elseif strcmp(targetWord, vocalizedWord{validIndices(end)}) % last vocalization was correct
+                    responseTime = timeVocalizations(validIndices(end));
+                    responseWord = vocalizedWord{validIndices(end)};
+                else % no vocalization was correct, or it was in the middle
+                    responseTime = timeVocalizations(validIndices(1)); % get the first response word
+                    responseWord = vocalizedWord{validIndices(1)}; % get the first vocalized word
+                end
             end
         case {'PROBEWORD_OFF'} % SAME TIME MATCHWORD TURNS OFF
             probeOffTime = xTOT{1}(1); % get the mstime of this line

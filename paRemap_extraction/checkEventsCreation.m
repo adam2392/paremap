@@ -1,6 +1,6 @@
 % function checkEventsCreation(events, subj, FIG_OFFSET, titleStr)
 
-    if(~isstruct(events))
+%     if(~isstruct(events))
         %%- change for different type of expeirments
         % tailored for checking paremap events
 
@@ -37,7 +37,7 @@
         events = struct([]);                    %%- in functional form this is required so there is no confusion about events the function and events the variable
         load(sprintf('%s/events.mat',behDir));  %%- load the events file
         fprintf('Loaded %d events from %s\n', length(events), behDir);
-    end
+%     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%--------------------------------------------       plot meta event data        -------------------------------------------%%

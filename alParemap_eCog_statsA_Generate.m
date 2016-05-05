@@ -357,7 +357,6 @@ end
 %%- remap event pointer from default (server) to local copy of the EEG data
 for iEvent=1:length(eventTrigger),
     eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile,defaultEEGfile,fullfileEEG(subjDir,eventEEGpath));
-
 end
 
 %%- gets the range of frequencies using eeganalparams
@@ -456,11 +455,14 @@ for iChan=1:numChannels
     %     for each eegfile stem, z-score each channel and frequency
         fprintf(' [%.1f sec] --> z-score', toc);  tic;
         stemList = unique({eventTrigger.eegfile});
+        
+        fixOnToOff = 1:999; % -1 sec to 0 seconds probe word on
         for iStem=1:length(stemList),
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
             for iF = 1:length(waveletFreqs),
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
+%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
                 mu = mean(allVal); stdev = std(allVal);
 
                 % create the power matrix
@@ -471,6 +473,7 @@ for iChan=1:numChannels
                 end
             end
         end
+        
         fprintf(' [%.1f sec]', toc); tic;
     end
     clear rawPow rawPhase
