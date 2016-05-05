@@ -8,7 +8,7 @@
 
 %-----------------------------------------------------------------------------------------------------%
 %----------------------  Choose the subject of interest and root EEG directory -----------------------%
-subj       = 'NIH039';
+subj       = 'NIH034';
 
 rootEEGdirWork  = '/Volumes/JW24TB/data24TB/eeg';                        %office-local
 %rootEEGdirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg';   %office-local
