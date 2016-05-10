@@ -1,12 +1,11 @@
 function [xEst,freq,tWin,iter] = specPursuit(data,fs,window,alpha,tol,maxIter)
 
-%%- i) Need to fix the time window if data passed in is not starting at time =
-%%0
+%%- i) Need to fix the time window if data passed in is not starting at
+%%time = 0
 %%- ii) Need to return them binned in time, and see what happens
 
 %-----------------------------------------------------------------------------%
-% Written by: Armen Gharibans
-% Version: 20150412
+% Adam Li:
 
 % Reference: Ba, D., Babadi, B., Purdon, P. L., & Brown, E. N. (2014). 
 % Robust spectrotemporal decomposition by iteratively reweighted least squares. 
@@ -43,7 +42,7 @@ N = floor(numSamples/W);
 F = zeros(W,K);
 for l = 1:W
     for k = 1:K/2
-        
+        % diagonal matrix of fourier transformations
         F(l,k) = cos(2*pi*l*(k-1)/K);
         F(l,k+K/2) = sin(2*pi*l*(k-1)/K);
         
@@ -113,7 +112,7 @@ end
 
 xEst = xSmooth(1:K/2,:)-1i*xSmooth(K/2+1:end,:);
 freq = (0:K/2-1)*fs/K+1;
-tWin = (1:(N-1))*W/fs;
+tWin = (0:(N-1))*W/fs;
 
 % figure; imagesc(tWin,freq,20*log10(abs(xEst)));axis xy;colorbar;
 % ylabel('Frequency (Hz)');xlabel('Time (s)');
