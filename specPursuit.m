@@ -38,7 +38,7 @@ W = window;
 K = W;
 N = floor(numSamples/W);
 
-%define F matrix
+% define F matrix (Fourier Transform)
 F = zeros(W,K);
 for l = 1:W
     for k = 1:K/2
@@ -49,21 +49,20 @@ for l = 1:W
     end
 end
 
-Q = eye(K)*0.001;
+Q = eye(K)*0.001; % initialize Q noise matrix
 
 %break data up into segments of length W
 y = reshape(data(1:W*N),W,N);
 
 iter = 1;
 while iter <= maxIter
-    %disp(iter)
-    
-    %Step 1: Filter
+    %Step 1: Forward Kalman Filter
     xKalman = zeros(K,N);
     xPredict = zeros(K,N);
     sigKalman = zeros(K,K,N);
     sigPredict = zeros(K,K,N);
     
+    %%- Perform the first initialization step
     xPredict(:,1) = zeros(K,1);
     sigPredict(:,:,1) = eye(K);
     gainK = sigPredict(:,:,1)*F'/(F*sigPredict(:,:,1)*F'+eye(K));
@@ -78,7 +77,7 @@ while iter <= maxIter
         sigKalman(:,:,n) = sigPredict(:,:,n)-gainK*F*sigPredict(:,:,n);
     end
     
-    %Step 2: Smoother
+    %Step 2: Kalman Smoother
     xSmooth = zeros(K,N);
     sigSmooth = zeros(K,K,N);
     xSmooth(:,N) = xKalman(:,N);
@@ -90,12 +89,12 @@ while iter <= maxIter
         sigSmooth(:,:,n) = sigKalman(:,:,n) + B*(sigSmooth(:,:,n+1)-sigPredict(:,:,n+1))*B';
     end
     
-    %Step 4: check for convergence
+    %Step 3: check for convergence
     if iter>1 && norm(xSmooth-xPrev,'fro')/norm(xPrev,'fro')<tol
         break
     end
     
-    %Step 5: Update Q
+    %Step 4: Update Q
     Q = zeros(K,K);
     for k = 1:K
         qTemp = 0;
@@ -107,15 +106,14 @@ while iter <= maxIter
     
     xPrev = xSmooth;
     iter = iter+1;
-    
 end
 
 xEst = xSmooth(1:K/2,:)-1i*xSmooth(K/2+1:end,:);
 freq = (0:K/2-1)*fs/K+1;
 tWin = (0:(N-1))*W/fs;
 
+%%- TO PLOT
 % figure; imagesc(tWin,freq,20*log10(abs(xEst)));axis xy;colorbar;
 % ylabel('Frequency (Hz)');xlabel('Time (s)');
 % caxis([-40 10]);colorbar;colormap jet;ylim([0 20]);
-
 end
