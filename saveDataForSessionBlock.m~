@@ -1,5 +1,3 @@
-addpath('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/m_oldAnalysis(ANOVA,singleChannel');
-
 WinLength = 100; % 100 ms
 Overlap = 50;    % overlap we want to increment
 NumWins = size(squeeze(powerMatZ),3) / (WinLength-Overlap) - 1;
@@ -13,7 +11,7 @@ newPowerMatZ = freqBinSpectrogram(newPowerMatZ, rangeFreqs, waveletFreqs);
 
 % data directory to save the data
 % dataDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data/blocks/';
-dataDir = strcat('/home/adamli/paremap/condensed_data/sessions/');
+dataDir = '/home/adamli/paremap/condensed_data/sessions/';
 
 sampEventsMeta = events;  % a buffer copy of the events struct
 probeWords = {sampEventsMeta.probeWord};
@@ -57,7 +55,7 @@ for seshI=1:length(unique(sessions)), % loop thru session
                 %%- store each relevant power matrix
                 thisPowMat = newPowerMatZ(eventInd,:,:);
 
-%                 data.metaEvents = metaEvents;
+                data.metaEvents = metaEvents;
                 data.powerMatZ = thisPowMat;
                 data.chanNum = thisChan;
                 data.chanStr = thisChanStr;
