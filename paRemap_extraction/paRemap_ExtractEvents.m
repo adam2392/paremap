@@ -254,9 +254,9 @@ while true
                     responseTime = timeVocalizations(validIndices); % responseTime
                     responseWord = vocalizedWord{validIndices};
                     
-%                     disp('Error in strcmp first if...');
+
                 end
-            elseif length(validIndices) == 0, %%- no word response in this frame period
+            elseif isempty(validIndices), %%- no word response in this frame period
                 isCorrect = 0;
                 responseTime = 0;
                 responseWord = 'none';
