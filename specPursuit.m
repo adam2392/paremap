@@ -113,7 +113,7 @@ end
 
 xEst = xSmooth(1:K/2,:)-1i*xSmooth(K/2+1:end,:);
 freq = (0:K/2-1)*fs/K+1;
-tWin = (1:(N-1))*W/fs;
+tWin = (0:(N-1))*W/fs;
 
 % figure; imagesc(tWin,freq,20*log10(abs(xEst)));axis xy;colorbar;
 % ylabel('Frequency (Hz)');xlabel('Time (s)');

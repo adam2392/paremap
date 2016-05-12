@@ -10,7 +10,7 @@
 clear all; 
 clc;
 %% SUBJECT AND BLOCK SELECTION
-subj = 'NIH039'; 
+subj = 'NIH034'; 
 sessNum = [0, 1, 3];
 
 %% EXTRACTION OPTIONS
@@ -67,8 +67,8 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
-eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -132,18 +132,18 @@ switch THIS_REF_TYPE
         eventEEGpath  = '/eeg.reref/';
         
 
-        iChanListSub  = [2:96];            %G1, G2, LF1, AST1,
+        iChanListSub  = [84:96];            %G1, G2, LF1, AST1,
 
-        iChanListSub  = [1:31];            %G1, G2, LF1, AST1,
+%         iChanListSub  = [1:31];            %G1, G2, LF1, AST1,
 
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 %%- subset channel I want to extract
 
-iChanListSub  = [2:96];
+iChanListSub  = [84:96];
 
-iChanListSub  = [1:31];
+% iChanListSub  = [1:31];
 
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
@@ -499,19 +499,21 @@ for iChan=1:numChannels
     
     %%- SAVE ROBUST SPEC PROCESSED DATA
     if ROBUST_SPEC
-        robustPowerMat = zeros(length(eventTrigger), 100, 30);
+        eegWave = eegWaveV(:,1:1500);
+        robustPowerMat = zeros(length(eventTrigger), 125, 6);
         fs = 1000; % needs to be low enough to get frequencies in low bands
         rangeFreqs = [freqBandAr.rangeF];
         rangeFreqs = reshape(rangeFreqs, 2, 7)';
 %         for i=1:10
             % robust spect parameters
-            alpha = 30;
-            window = 200; % to get 41 frequency windows
+            alpha = 100;
+            window = 250; 
             
             %%- Loop through each event and perform robust spect
             tic;
             for i=1:length(eventTrigger)
-                [xEst,freq,tWin,iter] = specPursuit(eegWaveV(1,:),fs,window,alpha);
+                [xEst,freq,tWin,iter] = specPursuit(eegWave(i,:),fs,window,alpha);
+                tWin = -1.0:window/1000.0:0.25;
 %                 size(xEst)
 %                 size(freq)
 %                 size(tWin)
@@ -525,7 +527,7 @@ for iChan=1:numChannels
 %                 hCbar = colorbar('east');
 %                 set(hCbar,'ycolor',[1 1 1]*.1, 'fontsize', figFontAx-3, 'YAxisLocation', 'right')
 %                 set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
-%                 set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
+%                 set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on tmetaEventhe bottom
             end
             fprintf(' [%.1f sec] --> robust spect pursuit', toc);
 %             robustPowerMat = freqBinSpectrogram(robustPowerMat, rangeFreqs, freq); 
@@ -533,18 +535,21 @@ for iChan=1:numChannels
             %%- Save
             %%- Save this new power matrix Z
             data.trigType = trigType;             % store the trigger type per event
+            data.eegWave = eegWave;
             data.powerMatZ = robustPowerMat;        % save the condensed power Mat
             data.waveT = tWin;             % save the binned Wave T
             data.freq = freq;
             data.chanNum = thisChan;           % store the corresponding channel number
             data.chanStr = thisChanStr;               % the string name of the channel
+            data.subject = events(1).subject;
             data.freqBandYtick = freqBandYticks;
             data.freqBandYlabel = freqBandYtickLabels;
-            data.descriptor = '-1 seconds to 5 seconds after probeWordOn';
+            data.descriptor = '-1 seconds to 1 seconds after probeWordOn with 100 ms step';
+            data.freqdescriptor = '50 freq windows between 0 and 500 Hz';
 
             dataDir = 'condensed_data/';
-            filename = strcat(dataDir, 'robust_spec/', num2str(thisChan), '_', thisChanStr, '_robustSpec'); 
-            filedir = strcat(dataDir, 'robust_spec/');
+            filename = strcat(dataDir, subj, '_robust_spec/', num2str(thisChan), '_', thisChanStr, '_robustSpec'); 
+            filedir = strcat(dataDir, subj, '_robust_spec/');
             if ~exist(filedir)
                 mkdir(filedir);
             end
