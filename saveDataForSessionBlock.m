@@ -1,3 +1,5 @@
+addpath('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/m_oldAnalysis(ANOVA,singleChannel');
+
 WinLength = 100; % 100 ms
 Overlap = 50;    % overlap we want to increment
 NumWins = size(squeeze(powerMatZ),3) / (WinLength-Overlap) - 1;
