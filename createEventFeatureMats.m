@@ -95,6 +95,16 @@ for iSesh=1:length(sessions),
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
+        figure
+        imagesc(squeeze(eventSame(1, :, :)));
+        colormap('jet');
+        colorbar();
+        
+        figure
+        imagesc(squeeze(eventDiff(1, :, :)));
+        colormap('jet');
+        colorbar();
+        
     end % loop through blocks
 end % loop through sessions
 
