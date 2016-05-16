@@ -376,11 +376,10 @@ for iChan=1:numChannels
     if tWin == 0, % if not set yet
         tWin = (LOWERTIME-1-TIMEZERO)/FS :OVERLAP/FS: (UPPERTIME-TIMEZERO)/FS;
     end
-    timeZero = 10;
     
     % remake powerMatZ to the points that we want (before probe on -> 3.5
     % seconds later
-    powerMatZ = squeeze(powerMatZ); % only get the powerMatZ time points we want... (1001 - 2000+3500) = -1.0 seconds -> 3.5 seconds
+    powerMatZ = squeeze(powerMatZ); % only get the powerMatZ time points we want... (1900 - 2000+3500) = -1.1 seconds -> 3.5 seconds
     powerMatZ = powerMatZ(:,:,LOWERTIME:UPPERTIME);
 
     %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
@@ -444,7 +443,7 @@ for iChan=1:numChannels
                         % to plot the axes
 %                         set(gca, 'YTick', 1:7, 'YTickLabel', {freqBandAr.name})
                         
-                        data.timeZero = ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+                        data.timeZero = timeZero;
                         data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
                         data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
                         data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
