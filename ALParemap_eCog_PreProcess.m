@@ -12,6 +12,7 @@ clc;
 %% PARAMETERS FOR RUNNING PREPROCESS
 subj = 'NIH034';
 sessNum = [0, 1, 2];
+DEBUG = 1;
 
 REF_TYPES = {'noreref', 'bipolar', 'global'};
 THIS_REF_TYPE = REF_TYPES{3}; 
@@ -53,7 +54,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -168,7 +169,9 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%- Input to gete_ms
 %%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
-eventsTriggerXlim = [-2 5]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
+LOWERTIME = -1;
+UPPERTIME = 5;
+eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
 
@@ -368,31 +371,42 @@ for iChan=1:numChannels
     
     % create vector of the actual seconds in time axis for the powerMat
     % (since its time binned)...
-    LOWERTIME = 1001;
-    UPPERTIME = 5500;
+%     LOWERTIME = 1001;
+%     UPPERTIME = 6000;
     OVERLAP = 100;
-    FS = 1000;
-    TIMEZERO = 2000;
+%     FS = 1000;
+%     TIMEZERO = 2000;
     if tWin == 0, % if not set yet
-        tWin = (LOWERTIME-1-TIMEZERO)/FS :OVERLAP/FS: (UPPERTIME-TIMEZERO)/FS;
+        tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME);
     end
-    timeZero = 10;
-    
+    timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS);
+%     
     % remake powerMatZ to the points that we want (before probe on -> 3.5
     % seconds later
     powerMatZ = squeeze(powerMatZ); % only get the powerMatZ time points we want... (1001 - 2000+3500) = -1.0 seconds -> 3.5 seconds
-    powerMatZ = powerMatZ(:,:,LOWERTIME:UPPERTIME);
-
+%     powerMatZ = powerMatZ(:,:,LOWERTIME:UPPERTIME);
+    
+    if DEBUG,
+        size(powerMatZ)
+    end
     %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
     addpath('./m_oldAnalysis_anovaANDsinglechannel/');
     WINDOWSIZE = 500; % in milliseconds
     OVERLAP = 100;    % in milliseconds
     powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);
     
+    if DEBUG,
+        size(powerMatZ)
+    end
+    
     %% FREQUENCY BIN WITH FREQUENCY BANDS
     rangeFreqs = reshape([freqBandAr.rangeF], 2, 7)';
     waveletFreqs = waveletFreqs;
     powerMatZ = freqBinSpectrogram(powerMatZ, rangeFreqs, waveletFreqs);
+    
+    if DEBUG,
+        size(powerMatZ)
+    end
     
     %% SPLIT INTO SESSIONS AND BLOCKS
     subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
@@ -444,7 +458,7 @@ for iChan=1:numChannels
                         % to plot the axes
 %                         set(gca, 'YTick', 1:7, 'YTickLabel', {freqBandAr.name})
                         
-                        data.timeZero = ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+                        data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
                         data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
                         data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
                         data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
