@@ -96,12 +96,16 @@ for iSesh=1:length(sessions),
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
         figure
+        subplot(211)
         imagesc(squeeze(eventSame(1, :, :)));
+        hold on
         colormap('jet');
+        title(['Same Pairs for block ', blocks{iBlock}])
         colorbar();
         
-        figure
+        subplot(212);
         imagesc(squeeze(eventDiff(1, :, :)));
+        title(['Diff Pairs for block ', blocks{iBlock}])
         colormap('jet');
         colorbar();
         
