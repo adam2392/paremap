@@ -374,10 +374,11 @@ for iChan=1:numChannels
 %     LOWERTIME = 1001;
 %     UPPERTIME = 6000;
     OVERLAP = 100;
+    WINSIZE = 500;
 %     FS = 1000;
 %     TIMEZERO = 2000;
     if tWin == 0, % if not set yet
-        tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME);
+        tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
     end
     timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS);
 %     
@@ -476,7 +477,7 @@ for iChan=1:numChannels
                         
                         % data directories to save data into
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-                        homeDir = '/home/adamli/paremap/';
+%                         homeDir = '/home/adamli/paremap/';
                         dataDir = strcat('condensed_data_', subj);
                         typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);

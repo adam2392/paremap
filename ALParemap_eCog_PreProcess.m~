@@ -169,7 +169,9 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%- Input to gete_ms
 %%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
-eventsTriggerXlim = [-1 5]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
+LOWERTIME = -1;
+UPPERTIME = 5;
+eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
 
@@ -371,13 +373,14 @@ for iChan=1:numChannels
     % (since its time binned)...
 %     LOWERTIME = 1001;
 %     UPPERTIME = 6000;
-%     OVERLAP = 100;
+    OVERLAP = 100;
+    WINSIZE = 500;
 %     FS = 1000;
 %     TIMEZERO = 2000;
-%     if tWin == 0, % if not set yet
-%         tWin = (LOWERTIME-1-TIMEZERO)/FS :OVERLAP/FS: (UPPERTIME-TIMEZERO)/FS;
-%     end
-    timeZero = 10;
+    if tWin == 0, % if not set yet
+        tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
+    end
+    timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS);
 %     
     % remake powerMatZ to the points that we want (before probe on -> 3.5
     % seconds later
@@ -474,7 +477,7 @@ for iChan=1:numChannels
                         
                         % data directories to save data into
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-                        homeDir = '/home/adamli/paremap/';
+%                         homeDir = '/home/adamli/paremap/';
                         dataDir = strcat('condensed_data_', subj);
                         typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);

@@ -4,6 +4,7 @@ clc;
 %% PARAMETERS FOR RUNNING PREPROCESS
 subj = 'NIH034';
 sessNum = [0, 1, 2];
+DEBUG = 1;
 
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,11 +105,12 @@ for iSesh=1:length(sessions),
                 dataTwo = load(fileTwoPath);
                 dataTwo = dataTwo.data;
 
-                fileOnePath
-                wordone
-                dataOne
-                dataTwo
-                
+                if DEUBG,
+%                 fileOnePath
+%                 wordone
+%                 dataOne
+%                 dataTwo
+                end
 
                 % concatenate all the freq. vectors that are already 500 ms
                 % windowed and 100 ms overlap

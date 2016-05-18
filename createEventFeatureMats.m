@@ -97,7 +97,7 @@ for iSesh=1:length(sessions),
         
         figure
         subplot(211)
-        imagesc(squeeze(mean(eventSame(1, :, :),1)));
+        imagesc(squeeze(mean(eventSame(:, :, :),1)));
         hold on
         colormap('jet');
         title(['Same Pairs for block ', blocks{iBlock}])
@@ -105,11 +105,12 @@ for iSesh=1:length(sessions),
         colorbar();
         
         subplot(212);
-        imagesc(squeeze(mean(eventDiff(1, :, :),1)));
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
         title(['Diff Pairs for block ', blocks{iBlock}])
         set(gca,'tickdir','out','YDir','normal');
         colormap('jet');
         colorbar();
+        
         
     end % loop through blocks
 end % loop through sessions
