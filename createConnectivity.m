@@ -249,9 +249,12 @@ for iEvent=1:length(eventTrigger),
     % set the step size for the sub-sections
     stepsize = round(nfft/5); % overlap 25%
     
+    %%- W(j) in Welch's method
     % set window function for periodograms from Welch's method
     convwin = 0.54-0.46 * cos((2*pi*(1:nfft))/(nfft-1));
     convwin = convwin(:); %vectorize this 
+    
+    
     % set range of frequencies for periodigrams
     frq = (Fs/2) .* linspace(0, 1, nfft/2);
     

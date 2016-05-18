@@ -54,7 +54,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
+eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -454,7 +454,7 @@ for iChan=1:numChannels
                         data.chanStr = thisChanStr;                     % the string name of the channel
                         data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
                         data.freqBandYlabel = {freqBandAr.name};
-                        data.descriptor = 'Initial processing -2 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap from -1.1 seconds -> 3.5 seconds';
+                        data.descriptor = 'Initial processing -1 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap';
                         
                         % to plot the axes
 %                         set(gca, 'YTick', 1:7, 'YTickLabel', {freqBandAr.name})
@@ -477,7 +477,7 @@ for iChan=1:numChannels
                         
                         % data directories to save data into
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-%                         homeDir = '/home/adamli/paremap/';
+                        homeDir = '/home/adamli/paremap/';
                         dataDir = strcat('condensed_data_', subj);
                         typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
