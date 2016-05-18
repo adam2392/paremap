@@ -20,7 +20,7 @@ function spect = timeBinSpectrogram(spectMat, WinLength, Overlap)
     % loop through number of time windows
     for iTime=1:numTimeWindows-1,
         % get the window in that spectrogram and average it
-        spect(:,:,iTime) = mean(spectMat(:,:,iTime*Overlap+1:iTime*Overlap+WinLength),3);
+        spect(:,:,iTime+1) = mean(spectMat(:,:,iTime*Overlap+1:iTime*Overlap+WinLength),3);
     end
     
     % check if return array dimensions are correct

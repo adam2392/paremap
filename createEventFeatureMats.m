@@ -54,7 +54,7 @@ dataDir = strcat('condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSF);
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-sessions = sessions(3:end)
+sessions = sessions(3:end);
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
 
@@ -96,14 +96,21 @@ for iSesh=1:length(sessions),
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
         figure
-        imagesc(squeeze(eventSame(1, :, :)));
+        subplot(211)
+        imagesc(squeeze(mean(eventSame(:, :, :),1)));
+        hold on
+        colormap('jet');
+        title(['Same Pairs for block ', blocks{iBlock}])
+        set(gca,'tickdir','out','YDir','normal');
+        colorbar();
+        
+        subplot(212);
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
+        title(['Diff Pairs for block ', blocks{iBlock}])
+        set(gca,'tickdir','out','YDir','normal');
         colormap('jet');
         colorbar();
         
-        figure
-        imagesc(squeeze(eventDiff(1, :, :)));
-        colormap('jet');
-        colorbar();
         
     end % loop through blocks
 end % loop through sessions
