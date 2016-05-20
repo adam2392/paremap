@@ -1,3 +1,9 @@
+%         -- Creating matrices that are eventsXtimeXfeatures, which can be
+%         fed into compute_reinstatement.m
+%         -- This is done for within blocks analysis of the paremap task
+%        
+%
+
 clear all;
 clc;
 
@@ -5,6 +11,7 @@ clc;
 subj = 'NIH034';
 sessNum = [0, 1, 2];
 
+addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
