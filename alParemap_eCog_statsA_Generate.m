@@ -820,7 +820,7 @@ if numUniqueTrig>1,
         set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
         set(gca,'fontsize',figFontAx+3)
         set(gca,'XTick',[],'Box','off');
-        title(uniqueTrigType(thisTrig), 'fontsize',20)
+        
 %         set(gca,'clim',[-1 1]*0.5)      
     end % end of loop through unique triggers  
 end

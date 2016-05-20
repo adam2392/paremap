@@ -80,10 +80,10 @@ for iSesh=1:length(sessions),
         size(diffPairFeatureMat2)
         
         % reshape matrix to events X time X features
-        samePairFeatureMat1 = reshape(samePairFeatureMat1, size(samePairFeatureMat1,1), size(samePairFeatureMat1,3), size(samePairFeatureMat1,2)); 
-        samePairFeatureMat2 = reshape(samePairFeatureMat2, size(samePairFeatureMat2,1), size(samePairFeatureMat2,3), size(samePairFeatureMat2,2)); 
-        diffPairFeatureMat1 = reshape(diffPairFeatureMat1, size(diffPairFeatureMat1,1), size(diffPairFeatureMat1,3), size(diffPairFeatureMat1,2)); 
-        diffPairFeatureMat2 = reshape(diffPairFeatureMat2, size(diffPairFeatureMat2,1), size(diffPairFeatureMat2,3), size(diffPairFeatureMat2,2)); 
+        samePairFeatureMat1 = permute(samePairFeatureMat1, [1 3 2]);
+        samePairFeatureMat2 = permute(samePairFeatureMat2, [1 3 2]);
+        diffPairFeatureMat1 = permute(diffPairFeatureMat1, [1 3 2]);
+        diffPairFeatureMat2 = permute(diffPairFeatureMat2, [1 3 2]);
         
         size(samePairFeatureMat1)
         size(samePairFeatureMat2)
@@ -95,23 +95,91 @@ for iSesh=1:length(sessions),
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
+        size(squeeze(mean(eventDiff(:, :, :),1)))
+        
+        % rand sample down the different word pair feature mat -> match
+        % size
+        randIndices = randsample(size(eventDiff,1), size(eventSame,1));
+        tempDiff = eventDiff(randIndices,:,:);
+        
+        % set linethickness
+        LT = 1.5;
+        
+        %%- Plotting
         figure
-        subplot(211)
+        subplot(311)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
+        title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
+            ' with ', num2str(size(tempDiff,1)), ' events'])
         hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = [0:10:55];
+        ax.YTickLabel = [-1:1:5];
+        ax.XTick = [0:10:55];
+        ax.XTickLabel = [-1:1:4];
         colormap('jet');
-        title(['Same Pairs for block ', blocks{iBlock}])
         set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
         colorbar();
-        
-        subplot(212);
-        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
-        title(['Diff Pairs for block ', blocks{iBlock}])
-        set(gca,'tickdir','out','YDir','normal');
+        clim = get(gca, 'clim');
+        hold on
+        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
+        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+       
+        subplot(312);
+        imagesc(squeeze(mean(tempDiff(:, :, :),1)));
+        title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = [0:10:55];
+        ax.YTickLabel = [-1:1:5];
+        ax.XTick = [0:10:55];
+        ax.XTickLabel = [-1:1:4];
         colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
         colorbar();
+        set(gca, 'clim', clim);
+        hold on
+        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
+        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+        subplot(313);
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
+        title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = [0:10:55];
+        ax.YTickLabel = [-1:1:5];
+        ax.XTick = [0:10:55];
+        ax.XTickLabel = [-1:1:4];
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        hold on
+        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
+        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+        %%- Save Image
+        figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks/');
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
+        if ~exist(figureDir)
+            mkdir(figureDir)
+        end
+        saveas(gca, figureFile, 'png')
+        
+        pause(0.1);
+%         set(gca, 'clim', clim);  
     end % loop through blocks
 end % loop through sessions
 

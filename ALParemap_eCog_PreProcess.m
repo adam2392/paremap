@@ -54,7 +54,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -112,7 +112,7 @@ iChanListSub = []; % list of the subset of channels we want to analyze (e.g. [48
 switch THIS_REF_TYPE
     case 'noreref'  
     case 'bipolar'
-    case 'global' % look at global electrodes
+    case 'global' % look at global electrodes / monopolar
         fprintf('STEP 1: Using Global referencing\n');
         chanFile      = [talDir '/leads.txt'];
         chanList      = textread(chanFile,'%d'); % read in the list of channels nums
@@ -281,6 +281,8 @@ for iChan=1:numChannels
             fprintf('wave time length off'); 
             eegWaveT = (OffsetMS:DurationMS+OffsetMS)/1000;  
         end
+        % x-axis of time series
+        waveT = eegWaveT;
 
         % temp indicies
         iEv = 1:length(eventTrigger); % # of events
@@ -371,8 +373,8 @@ for iChan=1:numChannels
     
     % create vector of the actual seconds in time axis for the powerMat
     % (since its time binned)...
-%     LOWERTIME = 1001;
-%     UPPERTIME = 6000;
+    LOWERTIME = 1001;
+    UPPERTIME = 6000;
     OVERLAP = 100;
     WINSIZE = 500;
 %     FS = 1000;
@@ -409,7 +411,7 @@ for iChan=1:numChannels
         size(powerMatZ)
     end
     
-    %% SPLIT INTO SESSIONS AND BLOCKS
+    % SPLIT INTO SESSIONS AND BLOCKS
     subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
     subjBlocks = unique({events.blocknumber});   % e.g. blocks 0,1,2,3,4,5
     
