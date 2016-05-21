@@ -177,9 +177,9 @@ end
 LOWERTIME = -4;
 UPPERTIME = 2;
 
-% Settings for probewordon synchronization
-% LOWERTIME = -1;
-% UPPERTIME = 5;
+% Settings for probewordon sy
+LOWERTIME = -1;
+UPPERTIME = 5;
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
@@ -382,8 +382,8 @@ for iChan=1:numChannels
     
     % create vector of the actual seconds in time axis for the powerMat
     % (since its time binned)...
-%     LOWERTIME = 1001;
-%     UPPERTIME = 6000;
+    LOWERTIME = 1001;
+    UPPERTIME = 6000;
     OVERLAP = 100;
     WINSIZE = 500;
 %     FS = 1000;
@@ -480,7 +480,7 @@ for iChan=1:numChannels
                         if ROBUST_SPEC,
                             TYPE_SPECT = 'robust_spec';
                         else
-                            TYPE_SPECT = 'morlet_spec_vocalization';
+                            TYPE_SPECT = 'morlet_spec';
                         end
                         
                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
