@@ -1,10 +1,16 @@
+%         -- Creating matrices that are eventsXtimeXfeatures, which can be
+%         fed into compute_reinstatement.m
+%         -- This is done for ACROSS blocks analysis of the paremap task
+
 clear all;
+close all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
 subj = 'NIH034';
 sessNum = [0, 1, 2];
 
+addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
@@ -61,39 +67,48 @@ blocks = {blocks(3:end).name};
 %%- LOOP THROUGH SESSIONS
 for iSesh=1:length(sessions),
     %%- LOOP THROUGH BLOCKS
-    for iBlock=1:length(blocks),
-        % get word pairs in this session-block
-        wordpairs = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock}));
-        wordpairs = {wordpairs(3:end).name};
+    for iBlock=1:length(blocks)-1,
+        % get word pairs in this session-block (i)
+        firstwordpairs = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock}));
+        firstwordpairs = {firstwordpairs(3:end).name};
+        % get the word pairs in the next block (i+1)
+        secondwordpairs = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1}));
+        secondwordpairs = {secondwordpairs(3:end).name};
         
-        %%- CREATE WITHIN WORD PAIRS GROUPS 
-        [sameWordGroup, reverseWordGroup, diffWordGroup] = createWithinWordGroups(wordpairs);
+        firstwordpairs
+        secondwordpairs
         
-        %%- BUILD FEATURE MATRIX 
-        sessionBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
-        [samePairFeatureMat1, samePairFeatureMat2] = buildSamePairFeatureMat(sameWordGroup, sessionBlockDir);
-        [diffPairFeatureMat1, diffPairFeatureMat2] = buildDiffPairFeatureMat(diffWordGroup, sessionBlockDir);
-
-        size(samePairFeatureMat1)
-        size(samePairFeatureMat2)
-        size(diffPairFeatureMat1)
-        size(diffPairFeatureMat2)
+        %%- CREATE ACROSS WORD PAIRS GROUPS 
+        [sameWordGroup, reverseWordGroup, probeWordGroup, targetWordGroup, diffWordGroup] = createAcrossWordGroups(firstwordpairs, secondwordpairs);
+        
+        % sessionblock directories for block(i) and block(i+1)
+        sessionFirstBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
+        sessionSecondBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1});
+        [samePairFeatureMat1, samePairFeatureMat2] = buildAcrossDiffPairFeatureMat(sameWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
+        [reversePairFeatureMat1, reversePairFeatureMat2] = buildAcrossDiffPairFeatureMat(reverseWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
+        [diffPairFeatureMat1, diffPairFeatureMat2] = buildAcrossDiffPairFeatureMat(diffWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
+        [probePairFeatureMat1, probePairFeatureMat2] = buildAcrossDiffPairFeatureMat(probeWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
+        [targetPairFeatureMat1, targetPairFeatureMat2] = buildAcrossDiffPairFeatureMat(targetWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         
         % reshape matrix to events X time X features
         samePairFeatureMat1 = permute(samePairFeatureMat1, [1 3 2]);
         samePairFeatureMat2 = permute(samePairFeatureMat2, [1 3 2]);
+        reversePairFeatureMat1 = permute(reversePairFeatureMat1, [1 3 2]);
+        reversePairFeatureMat2 = permute(reversePairFeatureMat2, [1 3 2]);
         diffPairFeatureMat1 = permute(diffPairFeatureMat1, [1 3 2]);
         diffPairFeatureMat2 = permute(diffPairFeatureMat2, [1 3 2]);
-        
-        size(samePairFeatureMat1)
-        size(samePairFeatureMat2)
-        size(diffPairFeatureMat1)
-        size(diffPairFeatureMat2)
+        probePairFeatureMat1 = permute(probePairFeatureMat1, [1 3 2]);
+        probePairFeatureMat2 = permute(probePairFeatureMat2, [1 3 2]);
+        targetPairFeatureMat1 = permute(targetPairFeatureMat1, [1 3 2]);
+        targetPairFeatureMat2 = permute(targetPairFeatureMat2, [1 3 2]);
         
         %%- Build Similarity Matrics
         % same Pairs
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
+        [eventReverse, featureReverse] = compute_reinstatement(reversePairFeatureMat1, reversePairFeatureMat2);
+        [eventProbe, featureProbe] = compute_reinstatement(probePairFeatureMat1, probePairFeatureMat2);
+        [eventTarget, featureTarget] = compute_reinstatement(targetPairFeatureMat1, targetPairFeatureMat2);
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
         
@@ -107,10 +122,10 @@ for iSesh=1:length(sessions),
         
         %%- Plotting
         figure
-        subplot(311)
+        subplot(321)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
-        title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
-            ' with ', num2str(size(tempDiff,1)), ' events'])
+        title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1), ' vs ',...
+            num2str(iBlock), ' with ', num2str(size(tempDiff,1)), ' events'])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -129,9 +144,10 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
         plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
        
-        subplot(312);
+        subplot(323);
         imagesc(squeeze(mean(tempDiff(:, :, :),1)));
-        title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1), ...
+            ' vs ', num2str(iBlock)])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -150,9 +166,10 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
         plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-        subplot(313);
+        subplot(325);
         imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
-        title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1), ...
+            ' vs ', num2str(iBlock)])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -170,16 +187,83 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
         plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+        %%- reverse, probe, target
+        subplot(322)
+        imagesc(squeeze(mean(eventReverse(:, :, :),1)));
+        title(['Reverse Pairs Cosine Similarity for Block ', num2str(iBlock-1), ' vs ',...
+            num2str(iBlock), ' with ', num2str(size(eventReverse,1)), ' events'])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = [0:10:55];
+        ax.YTickLabel = [-1:1:5];
+        ax.XTick = [0:10:55];
+        ax.XTickLabel = [-1:1:4];
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        set(gca, 'clim', clim);
+        hold on
+        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
+        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        
+        subplot(324)
+        imagesc(squeeze(mean(eventProbe(:, :, :),1)));
+        title(['Probe Pairs Cosine Similarity for Block ', num2str(iBlock-1), ' vs ',...
+            num2str(iBlock), ' with ', num2str(size(eventProbe,1)), ' events'])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = [0:10:55];
+        ax.YTickLabel = [-1:1:5];
+        ax.XTick = [0:10:55];
+        ax.XTickLabel = [-1:1:4];
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        set(gca, 'clim', clim);
+        hold on
+        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
+        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        
+        subplot(326)
+        imagesc(squeeze(mean(eventTarget(:, :, :),1)));
+        title(['Target Pairs Cosine Similarity for Block ', num2str(iBlock-1), ' vs ',...
+            num2str(iBlock), ' with ', num2str(size(eventTarget,1)), ' events'])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = [0:10:55];
+        ax.YTickLabel = [-1:1:5];
+        ax.XTick = [0:10:55];
+        ax.XTickLabel = [-1:1:4];
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        set(gca, 'clim', clim);
+        hold on
+        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
+        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        
         %%- Save Image
-        figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks/');
-        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
+        figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks/');
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
         if ~exist(figureDir)
             mkdir(figureDir)
         end
         saveas(gca, figureFile, 'png')
         
+        savefig(figureFile)
+        
         pause(0.1);
-%         set(gca, 'clim', clim);  
-    end % loop through blocks
-end % loop through sessions
-
+    end
+end
