@@ -261,14 +261,8 @@ for iSesh=1:length(sessions),
             mkdir(figureDir)
         end
         saveas(gca, figureFile, 'png')
-        savefig(figureFile)
         
-        %%- save reinstatement matrices
-        save(strcat(figureFile, '.mat'), 'eventSame', 'featureSame', ...
-                                        'eventReverse', 'featureReverse', ...
-                                        'eventDiff', 'featureDiff', ...
-                                        'eventTarget', 'featureTarget', ...
-                                        'eventProbe', 'featureProbe');
+        savefig(figureFile)
         
         pause(0.1);
     end
