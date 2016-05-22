@@ -200,11 +200,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         %%- Save Image
-        if VOCALIZATION,
-            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_vocalization/');
-        else
-            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_probeon/');
-        end
+        figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks/');
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
         if ~exist(figureDir)
             mkdir(figureDir)

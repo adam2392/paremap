@@ -7,17 +7,17 @@ close all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+subj = 'NIH039';
 sessNum = [0, 1, 2];
+VOCALIZATION = 1;
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
+eegRootDirWork = '/home/adamli/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -55,12 +55,22 @@ events = events(correctIndices);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-TYPE_TRANSF = 'morlet_spec';
+if VOCALIZATION,
+    TYPE_TRANSF = 'morlet_spec_vocalization';
+else
+    TYPE_TRANSF = 'morelet_spec';
+end
 dataDir = strcat('condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSF);
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-sessions = sessions(3:end);
+if strcmp(subj, 'NIH039')
+    sessions = sessions([1,2,4]);
+elseif strcmp(subj, 'NIH034')
+    sessions = sessions([3. 4]);
+end
+sessions
+
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
 
@@ -120,6 +130,16 @@ for iSesh=1:length(sessions),
         % set linethickness
         LT = 1.5;
         
+        if VOCALIZATION,
+            ticks = [0:10:55];
+            labels = [-4:1:2];
+            timeZero = 40;
+        else
+            ticks = [0:10:55];
+            labels = [-1:1:5];
+            timeZero = 10;
+        end
+        
         %%- Plotting
         figure
         subplot(321)
@@ -131,18 +151,18 @@ for iSesh=1:length(sessions),
         ylabel('Time (seconds)');
         ax = gca;
         axis square
-        ax.YTick = [0:10:55];
-        ax.YTickLabel = [-1:1:5];
-        ax.XTick = [0:10:55];
-        ax.XTickLabel = [-1:1:4];
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
         set(gca,'tickdir','out','YDir','normal');
         set(gca, 'box', 'off');
         colorbar();
         clim = get(gca, 'clim');
         hold on
-        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
-        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
        
         subplot(323);
         imagesc(squeeze(mean(tempDiff(:, :, :),1)));
@@ -153,18 +173,18 @@ for iSesh=1:length(sessions),
         ylabel('Time (seconds)');
         ax = gca;
         axis square
-        ax.YTick = [0:10:55];
-        ax.YTickLabel = [-1:1:5];
-        ax.XTick = [0:10:55];
-        ax.XTickLabel = [-1:1:4];
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
         set(gca,'tickdir','out','YDir','normal');
         set(gca, 'box', 'off');
         colorbar();
         set(gca, 'clim', clim);
         hold on
-        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
-        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(325);
         imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
@@ -175,17 +195,17 @@ for iSesh=1:length(sessions),
         ylabel('Time (seconds)');
         ax = gca;
         axis square
-        ax.YTick = [0:10:55];
-        ax.YTickLabel = [-1:1:5];
-        ax.XTick = [0:10:55];
-        ax.XTickLabel = [-1:1:4];
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
         set(gca,'tickdir','out','YDir','normal');
         set(gca, 'box', 'off');
         colorbar();
         hold on
-        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
-        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         %%- reverse, probe, target
         subplot(322)
@@ -197,18 +217,18 @@ for iSesh=1:length(sessions),
         ylabel('Time (seconds)');
         ax = gca;
         axis square
-        ax.YTick = [0:10:55];
-        ax.YTickLabel = [-1:1:5];
-        ax.XTick = [0:10:55];
-        ax.XTickLabel = [-1:1:4];
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
         set(gca,'tickdir','out','YDir','normal');
         set(gca, 'box', 'off');
         colorbar();
         set(gca, 'clim', clim);
         hold on
-        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
-        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(324)
         imagesc(squeeze(mean(eventProbe(:, :, :),1)));
@@ -219,18 +239,18 @@ for iSesh=1:length(sessions),
         ylabel('Time (seconds)');
         ax = gca;
         axis square
-        ax.YTick = [0:10:55];
-        ax.YTickLabel = [-1:1:5];
-        ax.XTick = [0:10:55];
-        ax.XTickLabel = [-1:1:4];
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
         set(gca,'tickdir','out','YDir','normal');
         set(gca, 'box', 'off');
         colorbar();
         set(gca, 'clim', clim);
         hold on
-        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
-        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(326)
         imagesc(squeeze(mean(eventTarget(:, :, :),1)));
@@ -241,21 +261,25 @@ for iSesh=1:length(sessions),
         ylabel('Time (seconds)');
         ax = gca;
         axis square
-        ax.YTick = [0:10:55];
-        ax.YTickLabel = [-1:1:5];
-        ax.XTick = [0:10:55];
-        ax.XTickLabel = [-1:1:4];
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
         set(gca,'tickdir','out','YDir','normal');
         set(gca, 'box', 'off');
         colorbar();
         set(gca, 'clim', clim);
         hold on
-        plot(get(gca, 'xlim'), [10 10], 'k', 'LineWidth', LT)
-        plot([10 10], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         %%- Save Image
-        figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks/');
+        if VOCALIZATION,
+            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_vocalization/');
+        else
+            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_probeon/');
+        end
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
         if ~exist(figureDir)
             mkdir(figureDir)
