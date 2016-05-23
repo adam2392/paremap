@@ -8,7 +8,7 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH039';
+subj = 'NIH034';
 sessNum = [0, 1, 2];
 VOCALIZATION = 0;
 
@@ -59,9 +59,9 @@ events = events(correctIndices);
 if VOCALIZATION,
     TYPE_TRANSF = 'morlet_spec_vocalization';
 else
-    TYPE_TRANSF = 'morelet_spec';
+    TYPE_TRANSF = 'morlet_spec';
 end
-dataDir = strcat('condensed_data_', subj);
+dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSF);
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
@@ -70,7 +70,7 @@ sessions = {sessions(3:end).name};
 if strcmp(subj, 'NIH039')
     sessions = sessions([1,2,4]);
 elseif strcmp(subj, 'NIH034')
-    sessions = sessions([2, 3]);
+    sessions = sessions([3, 4]);
 end
 sessions
 
