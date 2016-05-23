@@ -2,15 +2,20 @@
 %         fed into compute_reinstatement.m
 %         -- This is done for within blocks analysis of the paremap task
 %        
-%
+
+function createWithinBlocksReinstatementMat(subj, VOCALIZATION)
 close all;
 clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+if ~exist(subj)
+    subj = 'NIH034';
+end
 sessNum = [0, 1, 2];
-VOCALIZATION = 0;
+if ~exist(VOCALIZATION)
+    VOCALIZATION = 0;
+end
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -221,4 +226,4 @@ for iSesh=1:length(sessions),
 %         set(gca, 'clim', clim);  
     end % loop through blocks
 end % loop through sessions
-
+end
