@@ -10,7 +10,7 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+subj = 'NIH039';
 sessNum = [0, 1, 2];
 DEBUG = 1;
 
@@ -54,7 +54,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
+eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -169,8 +169,17 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%- Input to gete_ms
 %%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
-LOWERTIME = -1;
-UPPERTIME = 5;
+
+%
+for iEvent=1:length(eventTrigger),
+    eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+end
+LOWERTIME = -4;
+UPPERTIME = 2;
+
+% Settings for probewordon synchronization
+% LOWERTIME = -1;
+% UPPERTIME = 5;
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
@@ -373,8 +382,8 @@ for iChan=1:numChannels
     
     % create vector of the actual seconds in time axis for the powerMat
     % (since its time binned)...
-    LOWERTIME = 1001;
-    UPPERTIME = 6000;
+%     LOWERTIME = 1001;
+%     UPPERTIME = 6000;
     OVERLAP = 100;
     WINSIZE = 500;
 %     FS = 1000;
@@ -471,7 +480,7 @@ for iChan=1:numChannels
                         if ROBUST_SPEC,
                             TYPE_SPECT = 'robust_spec';
                         else
-                            TYPE_SPECT = 'morlet_spec';
+                            TYPE_SPECT = 'morlet_spec_vocalization';
                         end
                         
                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);

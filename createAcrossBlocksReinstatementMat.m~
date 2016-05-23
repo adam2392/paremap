@@ -7,9 +7,9 @@ close all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+subj = 'NIH039';
 sessNum = [0, 1, 2];
-VOCALIZATION = 0;
+VOCALIZATION = 1;
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -58,16 +58,16 @@ events = events(correctIndices);
 if VOCALIZATION,
     TYPE_TRANSF = 'morlet_spec_vocalization';
 else
-    TYPE_TRANSF = 'morlet_spec';
+    TYPE_TRANSF = 'morelet_spec';
 end
-dataDir = strcat('./condensed_data_', subj);
+dataDir = strcat('condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSF);
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 if strcmp(subj, 'NIH039')
     sessions = sessions([1,2,4]);
 elseif strcmp(subj, 'NIH034')
-    sessions = sessions([3, 4]);
+    sessions = sessions([3. 4]);
 end
 sessions
 
