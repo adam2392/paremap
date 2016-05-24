@@ -124,12 +124,15 @@ for iSesh=1:length(sessions),
         % rand sample down the different word pair feature mat -> match
         % size
         randIndices = randsample(size(eventDiff,1), size(eventSame,1));
-        tempDiff = eventDiff(randIndices,:,:);
+        eventDiff = eventDiff(randIndices,:,:);
         
         if VOCALIZATION,
             ticks = [0:10:55];
             labels = [-4:1:2];
             timeZero = 40;
+            
+            eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
+            eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
         else
             ticks = [0:10:55];
             labels = [-1:1:5];
@@ -144,7 +147,7 @@ for iSesh=1:length(sessions),
         subplot(311)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
         title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
-            ' with ', num2str(size(tempDiff,1)), ' events'])
+            ' with ', num2str(size(eventDiff,1)), ' events'])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -164,7 +167,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
        
         subplot(312);
-        imagesc(squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
         title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
         hold on
         xlabel('Time (seconds)');timeZero
@@ -185,7 +188,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(313);
-        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
         title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
         hold on
         xlabel('Time (seconds)');

@@ -7,14 +7,14 @@ close all;
 % clear all;
 % clc;
 
-%% PARAMETERS FOR RUNNING PREPROCESS
-if ~exist(subj)
+% %% PARAMETERS FOR RUNNING PREPROCESS
+if ~exist('subj')
     subj = 'NIH034';
 end
 sessNum = [0, 1, 2];
-% if ~exist(VOCALIZATION)
-%     VOCALIZATION = 0;
-% end
+if ~exist('VOCALIZATION')
+    VOCALIZATION = 0;
+end
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -127,10 +127,45 @@ for iSesh=1:length(sessions),
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
         
+        if VOCALIZATION,
+            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_vocalization/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_vocalization/');
+        else
+            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_probeon/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_probeon/');
+        end
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
+        matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
+        if ~exist(figureDir)
+            mkdir(figureDir)
+        end
+        if ~exist(matDir)
+            mkdir(matDir)
+        end
+        %%- save reinstatement matrices
+        save(strcat(matFile, '.mat'), 'eventSame', 'featureSame', ...
+                                        'eventReverse', 'featureReverse', ...
+                                        'eventDiff', 'featureDiff', ...
+                                        'eventTarget', 'featureTarget', ...
+                                        'eventProbe', 'featureProbe');
+        
+        
         % rand sample down the different word pair feature mat -> match
         % size
-        randIndices = randsample(size(eventDiff,1), size(eventSame,1));
-        tempDiff = eventDiff(randIndices,:,:);
+        minSampleSize = min([size(eventSame,1), size(eventDiff,1), ...
+                            size(eventReverse,1), size(eventProbe, 1), ...
+                            size(eventTarget,1)]);
+        
+        randIndices = randsample(size(eventSame,1), minSampleSize);
+        eventSame = eventSame(randIndices,:,:);
+        randIndices = randsample(size(eventDiff,1), minSampleSize);
+        eventDiff = eventDiff(randIndices,:,:);
+        randIndices = randsample(size(eventReverse,1), minSampleSize);
+        eventReverse = eventReverse(randIndices,:,:);
+        randIndices = randsample(size(eventProbe,1), minSampleSize);
+        eventProbe = eventProbe(randIndices,:,:);
+        randIndices = randsample(size(eventTarget,1), minSampleSize);
+        eventTarget = eventTarget(randIndices,:,:);
         
         % set linethickness
         LT = 1.5;
@@ -139,6 +174,12 @@ for iSesh=1:length(sessions),
             ticks = [0:10:55];
             labels = [-4:1:2];
             timeZero = 40;
+            
+            eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
+            eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
+            eventReverse = eventReverse(:,1:timeZero+5, 1:timeZero+5);
+            eventProbe = eventProbe(:,1:timeZero+5, 1:timeZero+5);
+            eventTarget = eventTarget(:,1:timeZero+5, 1:timeZero+5);
         else
             ticks = [0:10:55];
             labels = [-1:1:5];
@@ -150,7 +191,7 @@ for iSesh=1:length(sessions),
         subplot(321)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
         title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1), ' vs ',...
-            num2str(iBlock), ' with ', num2str(size(tempDiff,1)), ' events'])
+            num2str(iBlock), ' with ', num2str(size(eventDiff,1)), ' events'])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -170,7 +211,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
        
         subplot(323);
-        imagesc(squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
         title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1), ...
             ' vs ', num2str(iBlock)])
         hold on
@@ -192,7 +233,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(325);
-        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
         title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1), ...
             ' vs ', num2str(iBlock)])
         hold on
@@ -279,27 +320,25 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-        %%- Save Image
-        if VOCALIZATION,
-            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_vocalization/');
-        else
-            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_probeon/');
-        end
-        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
-        if ~exist(figureDir)
-            mkdir(figureDir)
-        end
-        saveas(gca, figureFile, 'png')
-        savefig(figureFile)
+        %%- text output for block i and block i+1
+%         subplot(427)
+%         subStr = sprintf('%s begin: %s and end: %s',blocks{iBlock}, 
+%         text(0.5, 0.5, blocks{iBlock});
+%         set(ax, 'visible', 'off');
+%         
+%         subplot(428)
+%         
+        fig = gcf;
+        fig.PaperUnits = 'inches';
+        pos = [0.35, 3.65, 12.55, 7.50];
+        fig.PaperPosition = pos;
         
-        %%- save reinstatement matrices
-        save(strcat(figureFile, '.mat'), 'eventSame', 'featureSame', ...
-                                        'eventReverse', 'featureReverse', ...
-                                        'eventDiff', 'featureDiff', ...
-                                        'eventTarget', 'featureTarget', ...
-                                        'eventProbe', 'featureProbe');
+        %%- Save Image
+        print(figureFile, '-dpng', '-ro')
+%         saveas(gca, figureFile, 'png')
+        savefig(figureFile)
         
         pause(0.1);
     end
 end
-end
+% end
