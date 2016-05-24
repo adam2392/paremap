@@ -46,7 +46,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 0;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -243,20 +243,35 @@ for iEvent=1:length(eventTrigger),
     end
     fprintf('Creating channels EEG matrix: %.3s', toc);
 
+    for chanone=1:size(eegWave,1),
+        for chantwo=1:size(eegWave,1),
+            firstWave = eegWave(chanone, :);
+            twoWave = eegWave(chantwo, :);
+            
+            test =xcorr(firstWave,twoWave);
+            size(test)
+            
+        end
+    end
+    
+    
     % set the # of points of the fft
     Fs = 1000;
     nfft = 500;
     % set the step size for the sub-sections
     stepsize = round(nfft/5); % overlap 25%
     
-    %%- W(j) in Welch's method
-    % set window function for periodograms from Welch's method
+    % Hamming Window
     convwin = 0.54-0.46 * cos((2*pi*(1:nfft))/(nfft-1));
     convwin = convwin(:); %vectorize this 
     
-    
     % set range of frequencies for periodigrams
     frq = (Fs/2) .* linspace(0, 1, nfft/2);
+    
+    % frequency bands (in Hz) used during the computation of the connectivity
+    % matrices
+    bands = [0 4; 4 8; 8 13; 13 30; 30 90];
+
     
     %%- 03: split the data into overlapping sub-sections for cross-power
     % zero-lag cross-correlation for each pair of iEEG electrodes
@@ -272,18 +287,65 @@ for iEvent=1:length(eventTrigger),
         % ... check if data is all zeros
         if (sum(sum(abs(datasec)))>0),
             % ... comput the fft. size(X) = (nfft/2) x # of channels
-            X = fft(repmat(convwin(1 : min(nfft, size(datasec, 1))), 1, numChannels) .* datasec, nfft);
+            window = convwin(1 : min(nfft, size(datasec, 1)));
+            X = fft(repmat(window, 1, numChannels) .* datasec, nfft);
             X = X(1:nfft/2,:);
             size(X)
             
+            % ... set temporary matrices for the computation of the cross-
+            %     power spectra and coherences
+            Y = zeros(nfft/2,numChannels*(numChannels-1)/2);
+            Z = zeros(nfft/2,numChannels*(numChannels-1)/2);
+            
+            size(Y)
+            size(Z)
+            
+            pointer = 0;
+            for j=1:numChannels-1
+                pointer+1
+                pointer+numChannels-j
+                Y(:,pointer+1:pointer+numChannels-j) = X(:,j+1:numChannels);
+                Z(:,pointer+1:pointer+numChannels-j) = repmat(X(:,j),1,numChannels-j);
+                pointer = pointer+numChannels-j;
+            end
+            
             %%%%%% Read up on Welch's method and then implement...
+            CrossPwr = CrossPwr+[X.*conj(X) abs(Z.*conj(Y))];
+            CrossSpc = CrossSpc+[X Z].*conj([X Y]);
+            clear X Y Z pointer j
         end
-        
-        stepsize
-        nsections
-        size(datasec)
-        
     end
+    CrossPwr = CrossPwr./nsections;
+    CrossSpc = CrossSpc./nsections;
+    
+    % step 5: compute the cross-coherence
+    CrossChr = ones(nfft/2,numChannels*(numChannels+1)/2);
+    Y = zeros(nfft/2,numChannels*(numChannels-1)/2);
+    pointer = 0;
+    for j=1:numChannels-1
+        Y(:,pointer+1:pointer+numChannels-j) = CrossSpc(:,j+1:numChannels).*repmat(CrossSpc(:,j),1,numChannels-j);
+        pointer = pointer+numChannels-j;
+    end
+    CrossChr(:,numChannels+1:end) = (CrossSpc(:,numChannels+1:end).*conj(CrossSpc(:,numChannels+1:end)))./Y;
+    clear Y CrossSpc pointer j nsections data
+
+    % step 6: evaluate the cumulative power and the mean coherence in the
+    %         each frequency band of interest and save in file
+    for k=1:size(bands,1)
+        tmp = sum(CrossPwr(frq>=bands(k,1) & frq<bands(k,2),:),1);  
+        tmp = tmp(:)';
+        fid2 = fopen(sprintf('%s/adj_pwr_%s_%s.dat',pathval,filename,label_bands{k}),'ab');
+        fwrite(fid2,tmp,'single'); 
+        fclose(fid2);
+        clear tmp fid2
+        
+        tmp = mean(CrossChr(frq>=bands(k,1) & frq<bands(k,2),:),1); tmp = tmp(:)';
+        fid2 = fopen(sprintf('%s/adj_chr_%s_%s.dat',pathval,filename,label_bands{k}),'ab');
+        fwrite(fid2,tmp,'single');
+        fclose(fid2);
+        clear tmp fid2
+    end
+
     
 end
 %     fileDir = strcat('/home/adamli/paremap/', subj, '_eegwaves');

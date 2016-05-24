@@ -16,8 +16,7 @@ function [samePairFeatureMat1, samePairFeatureMat2] = buildSamePairFeatureMat(sa
             filePath = fullfile(wordDir, files{iChan});
             data = load(filePath);
             data = data.data;
-            data.powerMatZ = data.powerMatZ(:,:,1:size(data.powerMatZ,3)-1);
-            
+           
             % concatenate all the freq. vectors that are already 500 ms
             % windowed and 100 ms overlap
             if isempty(wordPairFeatureMat),

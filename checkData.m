@@ -80,6 +80,7 @@ for iSesh=1:length(sessions),
         diffPairFeatureMat1 = [];
         diffPairFeatureMat2 = [];
         
+        blockSpect = [];
         % loop through every word in the sameWordGroup
         for iWord=1:length(sameWordGroup),
             wordone = diffWordGroup{iWord}{1};
@@ -96,7 +97,7 @@ for iSesh=1:length(sessions),
             %%- loop through channels of data
             firstPairFeatureMat = [];
             secondPairFeatureMat = [];
-            for iChan=1:length(filesone) % loop through and open up all channels
+            for iChan=4:4%length(filesone) % loop through and open up all channels
                 % Load in the data struct for each word pair per channel
                 fileOnePath = fullfile(wordoneDir, filesone{iChan});
                 dataOne = load(fileOnePath);
@@ -105,7 +106,7 @@ for iSesh=1:length(sessions),
                 dataTwo = load(fileTwoPath);
                 dataTwo = dataTwo.data;
 
-                if DEUBG,
+                if DEBUG,
 %                 fileOnePath
 %                 wordone
 %                 dataOne
@@ -140,25 +141,32 @@ for iSesh=1:length(sessions),
 %                 colorbar();
             end
             
-            % check the concatenated features
-            size(firstPairFeatureMat)
-            size(secondPairFeatureMat)
+            % create block spectrogram of all words
+            if isempty(blockSpect)
+                blockSpect = firstPairFeatureMat;
+            else
+                blockSpect = cat(1, blockSpect, firstPairFeatureMat);
+            end
             
-            figure
-            imagesc(squeeze(mean(firstPairFeatureMat,1)));
-            hold on
-            colormap('jet');
-            title(['Same Pairs for block ', blocks{iBlock}])
-            set(gca,'tickdir','out','YDir','normal');
-            colorbar();
-
-            figure
-            imagesc(squeeze(mean(secondPairFeatureMat,1)));
-            hold on
-            colormap('jet');
-            title(['Diff Pairs for block ', blocks{iBlock}])
-            set(gca,'tickdir','out','YDir','normal');
-            colorbar();
+            % check the concatenated features
+%             size(firstPairFeatureMat)
+%             size(secondPairFeatureMat)
+            
+%             figure
+%             imagesc(squeeze(mean(firstPairFeatureMat,1)));
+%             hold on
+%             colormap('jet');
+%             title(['Same Pairs for block ', blocks{iBlock}])
+%             set(gca,'tickdir','out','YDir','normal');
+%             colorbar();
+% 
+%             figure
+%             imagesc(squeeze(mean(secondPairFeatureMat,1)));
+%             hold on
+%             colormap('jet');
+%             title(['Diff Pairs for block ', blocks{iBlock}])
+%             set(gca,'tickdir','out','YDir','normal');
+%             colorbar();
             
             %%- build events X features X time matrix with events being
             %%lined up to be compared
@@ -167,6 +175,13 @@ for iSesh=1:length(sessions),
                 diffPairFeatureMat2 = cat(1, diffPairFeatureMat2, secondPairFeatureMat(:, :, :));
             end
         end
+        
+        figure;
+        imagesc(squeeze(mean(blockSpect, 1)));
+        colormap('jet');
+        colorbar();
+        set(gca,'tickdir','out','YDir','normal');
+        filesone{iChan}
         
         size(diffPairFeatureMat1)
         size(diffPairFeatureMat2)

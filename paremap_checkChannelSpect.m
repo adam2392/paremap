@@ -10,14 +10,15 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH039';
+subj = 'NIH034';
 sessNum = [0, 1, 2];
 DEBUG = 1;
+figFontAx = 16;
 
 REF_TYPES = {'noreref', 'bipolar', 'global'};
 THIS_REF_TYPE = REF_TYPES{3}; 
 
-USE_CHAN_SUBSET = 1; % 0=all channels, 1=process the subset
+USE_CHAN_SUBSET = 0; % 0=all channels, 1=process the subset
 
 % array of frequency bands
 freqBandAr(1).name    = 'delta';
@@ -52,7 +53,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 % eegRootDirHome = '/home/adamli/paremap';
 
@@ -123,7 +124,7 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  =31:96;            %G1, G2, LF1, AST1,
+        iChanListSub  = 2:96;            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
@@ -169,18 +170,8 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%- Input to gete_ms
 %%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
-
-% offset to synchronize with vocalization
-for iEvent=1:length(eventTrigger),
-    eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
-    eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
-end
-LOWERTIME = -4;
-UPPERTIME = 2;
-
-% Settings for probewordon synchronization
-% LOWERTIME = -1;
-% UPPERTIME = 5;
+LOWERTIME = -1;
+UPPERTIME = 5;
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
@@ -393,276 +384,73 @@ for iChan=1:numChannels
         tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
     end
     timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS);
-
-    powPlot = mean(powerMatZ, 2);
     
+    %%- Plot spectrograms
+    powPlot = mean(powerMatZ, 2);
     size(powPlot)
     titleStr = sprintf('mean power: chan %s, %d events', chanStr{iChan}, size(powerMatZ,2));
-    powPlot = squeeze(powPlot); % squeeze out the singleton dimension
+    powPlot = squeeze(powPlot);
     
     figure
-    hImg    = imagesc(eegWaveT,log10(waveletFreqs),powPlot); 
-    hold on;  colormap(jet);
-
+    subplot(311)
+    hIMg = imagesc(waveT,log10(waveletFreqs),powPlot);
+    hold on; colormap(jet);
     hCbar = colorbar('east');
-    set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
+    set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right') 
     set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
     set(gca,'tickdir','out','YDir','normal');
+    set(gca,'fontsize',figFontAx)
     title(titleStr, 'fontsize',20)
-    
-    figureDir = './Figures/NIH034_SpectCheck/Raw/';
-    figureFile = strcat(figureDir, num2str(iChan));
-    if ~exist(figureDir),
-        mkdir(figureDir)
-    end
-    saveas(gca, figureFile, 'png')
     
     % remake powerMatZ to the points that we want (before probe on -> 3.5
     % seconds later
     powerMatZ = squeeze(powerMatZ); % only get the powerMatZ time points we want... (1001 - 2000+3500) = -1.0 seconds -> 3.5 seconds
-%     powerMatZ = powerMatZ(:,:,LOWERTIME:UPPERTIME);
-    
-    if DEBUG,
-        size(powerMatZ)
-    end
     %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
     addpath('./m_oldAnalysis_anovaANDsinglechannel/');
     WINDOWSIZE = 500; % in milliseconds
     OVERLAP = 100;    % in milliseconds
     powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);
     
-    powPlot = mean(powerMatZ, 1);
+    powPlot = squeeze(mean(powerMatZ, 1));
     size(powPlot)
     titleStr = sprintf('mean power: chan %s, %d events', chanStr{iChan}, size(powerMatZ,1));
-    powPlot = squeeze(powPlot); % squeeze out the singleton dimension
     
-    figure
-    hImg    = imagesc(tWin,log10(waveletFreqs),powPlot); 
-    hold on;  colormap(jet);
-
+    subplot(312)
+    hIMg = imagesc(tWin,log10(waveletFreqs),powPlot);
+    hold on; colormap(jet);
     hCbar = colorbar('east');
-    set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
+    set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')   
     set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
     set(gca,'tickdir','out','YDir','normal');
+    set(gca,'fontsize',figFontAx)
     title(titleStr, 'fontsize',20)
-    
-    figureDir = './Figures/NIH034_SpectCheck/TimeBinned/';
-    figureFile = strcat(figureDir, num2str(iChan));
-    if ~exist(figureDir),
-        mkdir(figureDir)
-    end
-    saveas(gca, figureFile, 'png')
-
-    if DEBUG,
-        size(powerMatZ)
-    end
     
     %% FREQUENCY BIN WITH FREQUENCY BANDS
     rangeFreqs = reshape([freqBandAr.rangeF], 2, 7)';
     waveletFreqs = waveletFreqs;
     powerMatZ = freqBinSpectrogram(powerMatZ, rangeFreqs, waveletFreqs);
     
-    
-    powPlot = mean(powerMatZ, 1);
+    powPlot = squeeze(mean(powerMatZ, 1));
     size(powPlot)
     titleStr = sprintf('mean power: chan %s, %d events', chanStr{iChan}, size(powerMatZ,1));
-    powPlot = squeeze(powPlot); % squeeze out the singleton dimension
     
-    figure
-    hImg    = imagesc(tWin,1:7,powPlot); 
-    hold on;  colormap(jet);
-
+    subplot(313)
+    hIMg = imagesc(tWin,1:7,powPlot);
+    hold on; colormap(jet);
     hCbar = colorbar('east');
-    set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
-    set(gca,'ytick',1:7,'yticklabel',{'delta', 'theta', 'alpha', 'beta', 'low gamma', 'high gamma', 'HFO'})
+    set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right', 'fontsize',14) 
+    set(gca, 'xtick');
+    set(gca,'ytick',1:7,...
+        'yticklabel',{'delta', 'theta', 'alpha', 'beta', 'low gamma', 'high gamma', 'HFO'}, ...
+        'fontsize',20)
     set(gca,'tickdir','out','YDir','normal');
+    set(gca,'fontsize',figFontAx)
     title(titleStr, 'fontsize',20)
     
-    figureDir = './Figures/NIH034_SpectCheck/TimeFreqBinned/';
-    figureFile = strcat(figureDir, num2str(iChan));
-    if ~exist(figureDir),
+    figureDir = strcat('./Figures/', subj, '_SpectCheck/');
+    figureFile = strcat(figureDir, chanStr{iChan});
+    if ~exist(figureDir)
         mkdir(figureDir)
     end
     saveas(gca, figureFile, 'png')
-    
-    if DEBUG,
-        size(powerMatZ)
-    end
-    
-<<<<<<< HEAD
-    %% SPLIT INTO SESSIONS AND BLOCKS
-%     subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
-%     subjBlocks = unique({events.blocknumber});   % e.g. blocks 0,1,2,3,4,5
-%     
-%     for iSesh=1:length(subjSessions),
-%         for iBlock=1:length(subjBlocks),
-%             sessionBlockIndices = strcmp({events.sessionName}, subjSessions(iSesh)) & ...
-%                                     strcmp({events.blocknumber}, subjBlocks(iBlock));
-%                                 
-%             %%- LOOP THROUGH PROBEWORDS
-%             probeWords = unique({events(sessionBlockIndices).probeWord});
-%             for iProbe=1:length(probeWords),
-%                 THIS_PROBE = probeWords{iProbe};
-%                 
-%                 % events for this probeWord and their targetWords
-%                 probeIndices = strcmp({events.probeWord}, THIS_PROBE);
-%                 tempEvents = events(probeIndices & sessionBlockIndices);
-%                 targetWords = unique({tempEvents.targetWord});
-%                 
-%                 %%- LOOP THROUGH TARGETWORDS FOR EACH PROBEWORD
-%                 for iTarget=1:length(targetWords),
-%                     THIS_TARGET = targetWords{iTarget};
-%                     
-%                     % match probe, target, session and block
-%                     eventIndices = find(strcmp({events.probeWord}, THIS_PROBE) & ...
-%                                     strcmp({events.targetWord}, THIS_TARGET) & ...
-%                                     sessionBlockIndices);
-%                     sessionBlockWordPairEvents = events(eventIndices);
-%                     sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
-%                     
-%                     thisPowMat = powerMatZ(eventIndices,:,:);
-%                     
-%                     %% SAVE PROCESSED DATA IN A MATLAB STRUCT
-%                     if SAVE,
-%                         %%- Save this new power matrix Z-scored into data .mat file
-%                         data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
-%                         data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
-%                         data.sessionNum = sessionNumber;                % the session number
-%                         data.blockNum = subjBlocks{iBlock};             % the block number
-%                         data.eegWaveV = eegWaveV(eventIndices,:);                       % eeg wave form
-%                         data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
-%                         data.chanNum = thisChan;                        % store the corresponding channel number
-%                         data.chanStr = thisChanStr;                     % the string name of the channel
-%                         data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
-%                         data.freqBandYlabel = {freqBandAr.name};
-%                         data.descriptor = 'Initial processing -1 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap';
-%                         
-%                         % to plot the axes
-% %                         set(gca, 'YTick', 1:7, 'YTickLabel', {freqBandAr.name})
-%                         
-%                         data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-%                         data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
-%                         data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-%                         data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-%                         data.freq = freq;                       % ROBUSTSPECT: save the frequency points
-% 
-%                         %%- SAVING DIR PARAMETERS
-%                         if ROBUST_SPEC,
-%                             TYPE_SPECT = 'robust_spec';
-%                         else
-%                             TYPE_SPECT = 'morlet_spec';
-%                         end
-%                         
-%                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
-%                         wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
-%                         
-%                         % data directories to save data into
-%                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-%                         homeDir = '/home/adamli/paremap/';
-%                         dataDir = strcat('condensed_data_', subj);
-%                         typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
-%                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
-%                         chanFilePath = fullfile(fileDir, chanFileName);; 
-% 
-%                         if ~exist(fileDir)
-%                             mkdir(fileDir);
-%                         end
-%                         save(chanFilePath, 'data');            
-%                     end
-%                 end % loop through target
-%             end % loop through probe
-%         end % loop through block 
-%     end % loop through session
-=======
-    % SPLIT INTO SESSIONS AND BLOCKS
-    subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
-    subjBlocks = unique({events.blocknumber});   % e.g. blocks 0,1,2,3,4,5
-    
-    for iSesh=1:length(subjSessions),
-        for iBlock=1:length(subjBlocks),
-            sessionBlockIndices = strcmp({events.sessionName}, subjSessions(iSesh)) & ...
-                                    strcmp({events.blocknumber}, subjBlocks(iBlock));
-                                
-            %%- LOOP THROUGH PROBEWORDS
-            probeWords = unique({events(sessionBlockIndices).probeWord});
-            for iProbe=1:length(probeWords),
-                THIS_PROBE = probeWords{iProbe};
-                
-                % events for this probeWord and their targetWords
-                probeIndices = strcmp({events.probeWord}, THIS_PROBE);
-                tempEvents = events(probeIndices & sessionBlockIndices);
-                targetWords = unique({tempEvents.targetWord});
-                
-                %%- LOOP THROUGH TARGETWORDS FOR EACH PROBEWORD
-                for iTarget=1:length(targetWords),
-                    THIS_TARGET = targetWords{iTarget};
-                    
-                    % match probe, target, session and block
-                    eventIndices = find(strcmp({events.probeWord}, THIS_PROBE) & ...
-                                    strcmp({events.targetWord}, THIS_TARGET) & ...
-                                    sessionBlockIndices);
-                    sessionBlockWordPairEvents = events(eventIndices);
-                    sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
-                    
-                    thisPowMat = powerMatZ(eventIndices,:,:);
-                    
-                    %% SAVE PROCESSED DATA IN A MATLAB STRUCT
-                    if SAVE,
-                        %%- Save this new power matrix Z-scored into data .mat file
-                        data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
-                        data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
-                        data.sessionNum = sessionNumber;                % the session number
-                        data.blockNum = subjBlocks{iBlock};             % the block number
-                        data.eegWaveV = eegWaveV(eventIndices,:);                       % eeg wave form
-                        data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
-                        data.chanNum = thisChan;                        % store the corresponding channel number
-                        data.chanStr = thisChanStr;                     % the string name of the channel
-                        data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
-                        data.freqBandYlabel = {freqBandAr.name};
-                        data.descriptor = 'Initial processing -1 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap';
-                        
-                        % to plot the axes
-%                         set(gca, 'YTick', 1:7, 'YTickLabel', {freqBandAr.name})
-                        
-                        data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-                        data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
-                        data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-                        data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-                        data.freq = freq;                       % ROBUSTSPECT: save the frequency points
-
-                        %%- SAVING DIR PARAMETERS
-                        if ROBUST_SPEC,
-                            TYPE_SPECT = 'robust_spec';
-                        else
-                            TYPE_SPECT = 'morlet_spec_vocalization';
-                        end
-                        
-                        chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
-                        wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
-                        
-                        % data directories to save data into
-                        homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-%                         homeDir = '/home/adamli/paremap/';
-                        dataDir = strcat('condensed_data_', subj);
-                        typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
-                        fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
-                        chanFilePath = fullfile(fileDir, chanFileName);; 
-
-                        if ~exist(fileDir)
-                            mkdir(fileDir);
-                        end
-                        save(chanFilePath, 'data');            
-                    end
-                end % loop through target
-            end % loop through probe
-        end % loop through block 
-    end % loop through session
->>>>>>> cf2cf5e93c42efae92fa63589ccc1f12e9caac4a
-    
-%     % normalized to 1 so all can be shifted to fit on a single plot
-%     eegWaveMeanSub  = eegWaveV-mean(mean(eegWaveV));   %double mean and double max because multiple events from same channel should be normalized together
-%     eegWaveShift    = (iChanSave-1)*2 + eegWaveMeanSub./max(max(abs(eegWaveMeanSub)));
-%     eegInstPow      = abs(eegWaveMeanSub).^2;
-%     eegInstPowShift = (iChanSave-1)*2 + eegInstPow./max(max(abs(eegInstPow)));
-%     wavesSft(iChanSave,iEv,iT) = eegWaveShift;
 end

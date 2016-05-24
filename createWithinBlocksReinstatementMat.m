@@ -1,17 +1,29 @@
-clear all;
-clc;
+%         -- Creating matrices that are eventsXtimeXfeatures, which can be
+%         fed into compute_reinstatement.m
+%         -- This is done for within blocks analysis of the paremap task
+%        
+
+function createWithinBlocksReinstatementMat(subj, VOCALIZATION)
+close all;
+% clear all;
+% clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+if ~exist(subj)
+    subj = 'NIH034';
+end
 sessNum = [0, 1, 2];
+% if ~exist(VOCALIZATION)
+%     VOCALIZATION = 0;
+% end
 
+addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
+eegRootDirWork = '/home/adamli/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -49,12 +61,24 @@ events = events(correctIndices);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-TYPE_TRANSF = 'morlet_spec';
-dataDir = strcat('condensed_data_', subj);
+if VOCALIZATION,
+    TYPE_TRANSF = 'morlet_spec_vocalization';
+else
+    TYPE_TRANSF = 'morlet_spec';
+end
+dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSF);
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-sessions = sessions(3:end);
+% sessions = sessions(3:end);
+
+if strcmp(subj, 'NIH039')
+    sessions = sessions([1,2,4]);
+elseif strcmp(subj, 'NIH034')
+    sessions = sessions([3, 4]);
+end
+sessions
+
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
 
@@ -80,10 +104,10 @@ for iSesh=1:length(sessions),
         size(diffPairFeatureMat2)
         
         % reshape matrix to events X time X features
-        samePairFeatureMat1 = reshape(samePairFeatureMat1, size(samePairFeatureMat1,1), size(samePairFeatureMat1,3), size(samePairFeatureMat1,2)); 
-        samePairFeatureMat2 = reshape(samePairFeatureMat2, size(samePairFeatureMat2,1), size(samePairFeatureMat2,3), size(samePairFeatureMat2,2)); 
-        diffPairFeatureMat1 = reshape(diffPairFeatureMat1, size(diffPairFeatureMat1,1), size(diffPairFeatureMat1,3), size(diffPairFeatureMat1,2)); 
-        diffPairFeatureMat2 = reshape(diffPairFeatureMat2, size(diffPairFeatureMat2,1), size(diffPairFeatureMat2,3), size(diffPairFeatureMat2,2)); 
+        samePairFeatureMat1 = permute(samePairFeatureMat1, [1 3 2]);
+        samePairFeatureMat2 = permute(samePairFeatureMat2, [1 3 2]);
+        diffPairFeatureMat1 = permute(diffPairFeatureMat1, [1 3 2]);
+        diffPairFeatureMat2 = permute(diffPairFeatureMat2, [1 3 2]);
         
         size(samePairFeatureMat1)
         size(samePairFeatureMat2)
@@ -95,23 +119,111 @@ for iSesh=1:length(sessions),
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
+        size(squeeze(mean(eventDiff(:, :, :),1)))
+        
+        % rand sample down the different word pair feature mat -> match
+        % size
+        randIndices = randsample(size(eventDiff,1), size(eventSame,1));
+        tempDiff = eventDiff(randIndices,:,:);
+        
+        if VOCALIZATION,
+            ticks = [0:10:55];
+            labels = [-4:1:2];
+            timeZero = 40;
+        else
+            ticks = [0:10:55];
+            labels = [-1:1:5];
+            timeZero = 10;
+        end
+        
+        % set linethickness
+        LT = 1.5;
+        
+        %%- Plotting
         figure
-        subplot(211)
+        subplot(311)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
+        title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
+            ' with ', num2str(size(tempDiff,1)), ' events'])
         hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
-        title(['Same Pairs for block ', blocks{iBlock}])
         set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
         colorbar();
-        
-        subplot(212);
-        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
-        title(['Diff Pairs for block ', blocks{iBlock}])
-        set(gca,'tickdir','out','YDir','normal');
+        clim = get(gca, 'clim');
+        hold on
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+       
+        subplot(312);
+        imagesc(squeeze(mean(tempDiff(:, :, :),1)));
+        title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        hold on
+        xlabel('Time (seconds)');timeZero
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
         colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
         colorbar();
+        set(gca, 'clim', clim);
+        hold on
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        
+        subplot(313);
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
+        title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        hold on
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        
+        %%- Save Image
+        if VOCALIZATION,
+            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_vocalization/');
+        else
+            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_probeon/');
+        end
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
+        if ~exist(figureDir)
+            mkdir(figureDir)
+        end
+        saveas(gca, figureFile, 'png')
+        savefig(figureFile)
+        
+        %%- save reinstatement matrices
+        save(strcat(figureFile, '.mat'), 'eventSame', 'featureSame', ...
+                                        'eventDiff', 'featureDiff');
         
         
+        pause(0.1);
+%         set(gca, 'clim', clim);  
     end % loop through blocks
 end % loop through sessions
-
+end
