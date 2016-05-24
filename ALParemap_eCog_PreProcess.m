@@ -54,7 +54,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -170,9 +170,10 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
 
-%
+% offset to synchronize with vocalization
 for iEvent=1:length(eventTrigger),
     eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+    eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
 end
 LOWERTIME = -4;
 UPPERTIME = 2;
@@ -488,7 +489,7 @@ for iChan=1:numChannels
                         
                         % data directories to save data into
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-                        homeDir = '/home/adamli/paremap/';
+%                         homeDir = '/home/adamli/paremap/';
                         dataDir = strcat('condensed_data_', subj);
                         typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);

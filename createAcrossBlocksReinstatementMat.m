@@ -3,18 +3,18 @@
 %         -- This is done for ACROSS blocks analysis of the paremap task
 
 function createAcrossBlocksReinstatementMat(subj, VOCALIZATION)
-clear all;
 close all;
-clc;
+% clear all;
+% clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
 if ~exist(subj)
     subj = 'NIH034';
 end
 sessNum = [0, 1, 2];
-if ~exist(VOCALIZATION)
-    VOCALIZATION = 0;
-end
+% if ~exist(VOCALIZATION)
+%     VOCALIZATION = 0;
+% end
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
