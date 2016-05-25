@@ -229,6 +229,19 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+<<<<<<< HEAD
+        %%- Save Image
+        if VOCALIZATION,
+            figureDir = strcat('./Figures/reinstatement/', subj, '/within_blocks_vocalization/');
+        else
+            figureDir = strcat('./Figures/reinstatement/', subj, '/within_blocks_probeon/');
+        end
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
+        if ~exist(figureDir)
+            mkdir(figureDir)
+        end
+=======
+>>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
         saveas(gca, figureFile, 'png')
         savefig(figureFile)
         
