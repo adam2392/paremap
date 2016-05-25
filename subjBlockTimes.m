@@ -1,6 +1,8 @@
 % return for a subject, every session-block's begin and end time
 
 subj = 'NIH034';
+subjNum = subj;
+sessNum = [0,1,2];
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
@@ -62,27 +64,39 @@ for iSesh=1:length(subjSessions),
         blockTimes(iBlock,2) = endTime;
     end
     
-    subject.(sessionFieldName) = reshape(blockTimes(:) - min(blockTimes(:)), 6, 2)./1000./60;
+%     subject.(sessionFieldName) = reshape(blockTimes(:) - min(blockTimes(:)), 6, 2)./1000;
+    
+    subject.(sessionFieldName) = (blockTimes - min(blockTimes(:)))./1000;
 end
 
 sessions = fields(subject);
-
-fig = figure;
-legStr = {};
-colors = {'r', 'm', 'c', 'b', 'k', 'g'};
+sessionBlockTimes = [];
 for s=1:length(sessions)
-    for i=1:6
-        plot(subject.(sessions{1})(i,:), [s, s], colors{i});
-        hold on
-        if s==1,
-            legStr{i} = strcat('block_', num2str(i-1));
-        end
+    subj.(sessions{s}) = zeros(5,1);
+    for i=1:5
+        subj.(sessions{s})(i) = subject.(sessions{1})(i+1, 1) - subject.(sessions{1})(i, 2);
     end
 end
-legend(legStr, 'Location', 'best');
-title(['Subject ', subj, ' Length of each Session-Block'])
-xlabel('Time in seconds');
-ylabel('Session');
-ylim([0, s+1]);
+
+subj.session1
+subject.session1
+
+% fig = figure;
+% legStr = {};
+% colors = {'r', 'm', 'c', 'b', 'k', 'g'};
+% for s=1:length(sessions)
+%     for i=1:6
+%         plot(subject.(sessions{1})(i,:), [s, s], colors{i});
+%         hold on
+%         if s==1,
+%             legStr{i} = strcat('block_', num2str(i-1));
+%         end
+%     end
+% end
+% legend(legStr, 'Location', 'best');
+% title(['Subject ', subjNum, ' Length of each Session-Block'])
+% xlabel('Time in seconds');
+% ylabel('Session');
+% ylim([0, s+1]);
 
 

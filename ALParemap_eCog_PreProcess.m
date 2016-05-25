@@ -171,16 +171,16 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 eventTrigger = events;
 
 % offset to synchronize with vocalization
-for iEvent=1:length(eventTrigger),
-    eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
-    eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
-end
-LOWERTIME = -4;
-UPPERTIME = 2;
+% for iEvent=1:length(eventTrigger),
+%     eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+%     eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
+% end
+% LOWERTIME = -4;
+% UPPERTIME = 2;
 
 % Settings for probewordon synchronization
-% LOWERTIME = -1;
-% UPPERTIME = 5;
+LOWERTIME = -1;
+UPPERTIME = 5;
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)

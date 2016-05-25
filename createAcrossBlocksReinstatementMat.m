@@ -327,14 +327,14 @@ for iSesh=1:length(sessions),
 %         set(ax, 'visible', 'off');
 %         
 %         subplot(428)
-%         
+  
         fig = gcf;
         fig.PaperUnits = 'inches';
         pos = [0.35, 3.65, 12.55, 7.50];
         fig.PaperPosition = pos;
         
         %%- Save Image
-        print(figureFile, '-dpng', '-ro')
+        print(figureFile, '-dpng', '-r0')
 %         saveas(gca, figureFile, 'png')
         savefig(figureFile)
         
