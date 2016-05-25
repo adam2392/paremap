@@ -91,15 +91,14 @@ for iSesh=1:length(sessions),
         secondwordpairs = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1}));
         secondwordpairs = {secondwordpairs(3:end).name};
         
-        firstwordpairs
-        secondwordpairs
-        
         %%- CREATE ACROSS WORD PAIRS GROUPS 
         [sameWordGroup, reverseWordGroup, probeWordGroup, targetWordGroup, diffWordGroup] = createAcrossWordGroups(firstwordpairs, secondwordpairs);
         
         % sessionblock directories for block(i) and block(i+1)
         sessionFirstBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
         sessionSecondBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1});
+        
+        % build features matrix events X features X time
         [samePairFeatureMat1, samePairFeatureMat2] = buildAcrossDiffPairFeatureMat(sameWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [reversePairFeatureMat1, reversePairFeatureMat2] = buildAcrossDiffPairFeatureMat(reverseWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [diffPairFeatureMat1, diffPairFeatureMat2] = buildAcrossDiffPairFeatureMat(diffWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
@@ -149,7 +148,30 @@ for iSesh=1:length(sessions),
                                         'eventDiff', 'featureDiff', ...
                                         'eventTarget', 'featureTarget', ...
                                         'eventProbe', 'featureProbe');
+        % write debugging output to .txt file
+        sameWordGroup = [sameWordGroup{:}];
+        reverseWordGroup = [reverseWordGroup{:}];
+        diffWordGroup = [diffWordGroup{:}];
+        probeWordGroup = [probeWordGroup{:}];
+        targetWordGroup = [targetWordGroup{:}];
         
+        logFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}), '.txt');
+        fid = fopen(logFile, 'w');
+        fprintf(fid, '%6s \n', 'Block(i) word pairs:');
+        fprintf(fid, '%6s \n', firstwordpairs{:});
+        fprintf(fid, '\n %s \n', 'Block(i+1) word pairs:');
+        fprintf(fid, '%6s \n', secondwordpairs{:});
+        fprintf(fid, '\n %s \n', 'Same Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', sameWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Reverse Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', reverseWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Different Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', diffWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Probe Overlap Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', probeWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Target Overlap Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', targetWordGroup{:});
+                                    
         % rand sample down the different word pair feature mat -> match
         % size
         minSampleSize = min([size(eventSame,1), size(eventDiff,1), ...

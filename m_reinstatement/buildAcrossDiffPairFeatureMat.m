@@ -13,6 +13,7 @@ function [pairFeatureMat1, pairFeatureMat2 ] = buildDiffPairFeatureMat(wordGroup
         paironeDir = fullfile(sessionFirstBlockDir, pairone);
         paironeFiles = dir(fullfile(paironeDir));
         paironeFiles = {paironeFiles(3:end).name};
+        
         pairtwoDir = fullfile(sessionSecondBlockDir, pairtwo);
         pairtwoFiles = dir(fullfile(pairtwoDir));
         pairtwoFiles = {pairtwoFiles(3:end).name};

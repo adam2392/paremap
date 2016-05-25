@@ -10,7 +10,7 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH039';
+subj = 'NIH034';
 sessNum = [0, 1, 2];
 DEBUG = 1;
 
@@ -448,6 +448,8 @@ for iChan=1:numChannels
                                     strcmp({events.targetWord}, THIS_TARGET) & ...
                                     sessionBlockIndices);
                     sessionBlockWordPairEvents = events(eventIndices);
+                    
+                    blockNum = unique({sessionBlockWordPairEvents.blocknumber});
                     sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
                     
                     thisPowMat = powerMatZ(eventIndices,:,:);
@@ -458,8 +460,8 @@ for iChan=1:numChannels
                         data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
                         data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
                         data.sessionNum = sessionNumber;                % the session number
-                        data.blockNum = subjBlocks{iBlock};             % the block number
-                        data.eegWaveV = eegWaveV(eventIndices,:);                       % eeg wave form
+                        data.blockNum = blockNum;                       % the block number
+                        data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
                         data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
                         data.chanNum = thisChan;                        % store the corresponding channel number
                         data.chanStr = thisChanStr;                     % the string name of the channel
