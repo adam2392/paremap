@@ -5,17 +5,17 @@
 
 function createWithinBlocksReinstatementMat(subj, VOCALIZATION)
 close all;
-clear all;
-clc;
+% clear all;
+% clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
 if ~exist(subj)
     subj = 'NIH034';
 end
 sessNum = [0, 1, 2];
-if ~exist(VOCALIZATION)
-    VOCALIZATION = 0;
-end
+% if ~exist(VOCALIZATION)
+%     VOCALIZATION = 0;
+% end
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -206,9 +206,9 @@ for iSesh=1:length(sessions),
         
         %%- Save Image
         if VOCALIZATION,
-            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_vocalization/');
+            figureDir = strcat('./Figures/reinstatement/', subj, '/within_blocks_vocalization/');
         else
-            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_probeon/');
+            figureDir = strcat('./Figures/reinstatement/', subj, '/within_blocks_probeon/');
         end
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
         if ~exist(figureDir)

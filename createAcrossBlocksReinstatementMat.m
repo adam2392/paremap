@@ -3,18 +3,18 @@
 %         -- This is done for ACROSS blocks analysis of the paremap task
 
 function createAcrossBlocksReinstatementMat(subj, VOCALIZATION)
-clear all;
+% clear all;
 close all;
-clc;
+% clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
 if ~exist(subj)
     subj = 'NIH034';
 end
 sessNum = [0, 1, 2];
-if ~exist(VOCALIZATION)
-    VOCALIZATION = 0;
-end
+% if ~exist(VOCALIZATION)
+%     VOCALIZATION = 0;
+% end
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -281,9 +281,9 @@ for iSesh=1:length(sessions),
         
         %%- Save Image
         if VOCALIZATION,
-            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_vocalization/');
+            figureDir = strcat('./Figures/reinstatement/', subj, '/across_blocks_vocalization/');
         else
-            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_probeon/');
+            figureDir = strcat('./Figures/reinstatement/', subj, '/across_blocks_probeon/');
         end
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
         if ~exist(figureDir)
