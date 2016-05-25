@@ -1,3 +1,6 @@
+clear
+close all
+clc
 
 %%- run within blocks analysis
 createWithinBlocksReinstatementMat('NIH034', 0); % sync to probewordon

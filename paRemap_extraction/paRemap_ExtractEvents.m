@@ -123,6 +123,7 @@ sessionNum = str2num( sessionName(strNumeric) );               if isempty(sessio
 %- Read session.log line-by-line and convert to events structure
 events      = [];
 index       = 0;
+type = 0;
 while true
     thisLine            = fgetl(fid); % get new line
     if ~ischar(thisLine); break; end  % reached EOF
@@ -131,8 +132,7 @@ while true
     %- Generic text scan to get time, offset, and type
     xTOT                = textscan(thisLine,'%f%d%s');
     msoffset            = xTOT{2}(1);
-    type                = xTOT{3}{1};
-    
+    eventType                = xTOT{3}{1};
     
     %- default Parameters (details will be filled out/altered based on type)
     experiment          = 'paRemap';
@@ -144,7 +144,7 @@ while true
     
     %%- type stores the third column of session.log and loops through row
     %%- by row
-    switch type
+    switch eventType
         %%- This case is started by every recording session and ends with
         %%- rec_end
         % STORES: - recStart: the absolute time in milliseconds when recording
@@ -226,7 +226,8 @@ while true
             probeWord   = probeTOT{4}{1}; % store probeWord
             targetWord  = probeTOT{6}{1}; % store targetWord
             mstime = probeTOT{1}(1);      % store absolute time of this row
-            type = type;                  % store type of event
+            type = probeTOT{3}{1};
+%             type = type;                  % store type of event
             
             %thisAnnFile = xTOT{7}{1};  %- one version has an annotation file associated with each word, eventually that was jettisoned.  
             

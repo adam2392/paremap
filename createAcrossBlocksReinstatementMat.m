@@ -3,18 +3,29 @@
 %         -- This is done for ACROSS blocks analysis of the paremap task
 
 function createAcrossBlocksReinstatementMat(subj, VOCALIZATION)
+<<<<<<< HEAD
 % clear all;
 close all;
+=======
+close all;
+% clear all;
+>>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
 % clc;
 
-%% PARAMETERS FOR RUNNING PREPROCESS
-if ~exist(subj)
+% %% PARAMETERS FOR RUNNING PREPROCESS
+if ~exist('subj')
     subj = 'NIH034';
 end
 sessNum = [0, 1, 2];
+<<<<<<< HEAD
 % if ~exist(VOCALIZATION)
 %     VOCALIZATION = 0;
 % end
+=======
+if ~exist('VOCALIZATION')
+    VOCALIZATION = 0;
+end
+>>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -22,6 +33,7 @@ addpath('./m_reinstatement/');
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 
 % Determine which directory we're working with automatically
@@ -90,15 +102,14 @@ for iSesh=1:length(sessions),
         secondwordpairs = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1}));
         secondwordpairs = {secondwordpairs(3:end).name};
         
-        firstwordpairs
-        secondwordpairs
-        
         %%- CREATE ACROSS WORD PAIRS GROUPS 
         [sameWordGroup, reverseWordGroup, probeWordGroup, targetWordGroup, diffWordGroup] = createAcrossWordGroups(firstwordpairs, secondwordpairs);
         
         % sessionblock directories for block(i) and block(i+1)
         sessionFirstBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
         sessionSecondBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1});
+        
+        % build features matrix events X features X time
         [samePairFeatureMat1, samePairFeatureMat2] = buildAcrossDiffPairFeatureMat(sameWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [reversePairFeatureMat1, reversePairFeatureMat2] = buildAcrossDiffPairFeatureMat(reverseWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [diffPairFeatureMat1, diffPairFeatureMat2] = buildAcrossDiffPairFeatureMat(diffWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
@@ -127,22 +138,85 @@ for iSesh=1:length(sessions),
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
         
+        if VOCALIZATION,
+            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_vocalization/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_vocalization/');
+        else
+            figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_probeon/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_probeon/');
+        end
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
+        matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
+        if ~exist(figureDir)
+            mkdir(figureDir)
+        end
+        if ~exist(matDir)
+            mkdir(matDir)
+        end
+        %%- save reinstatement matrices
+        save(strcat(matFile, '.mat'), 'eventSame', 'featureSame', ...
+                                        'eventReverse', 'featureReverse', ...
+                                        'eventDiff', 'featureDiff', ...
+                                        'eventTarget', 'featureTarget', ...
+                                        'eventProbe', 'featureProbe');
+        % write debugging output to .txt file
+        sameWordGroup = [sameWordGroup{:}];
+        reverseWordGroup = [reverseWordGroup{:}];
+        diffWordGroup = [diffWordGroup{:}];
+        probeWordGroup = [probeWordGroup{:}];
+        targetWordGroup = [targetWordGroup{:}];
+        
+        logFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}), '.txt');
+        fid = fopen(logFile, 'w');
+        fprintf(fid, '%6s \n', 'Block(i) word pairs:');
+        fprintf(fid, '%6s \n', firstwordpairs{:});
+        fprintf(fid, '\n %s \n', 'Block(i+1) word pairs:');
+        fprintf(fid, '%6s \n', secondwordpairs{:});
+        fprintf(fid, '\n %s \n', 'Same Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', sameWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Reverse Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', reverseWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Different Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', diffWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Probe Overlap Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', probeWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Target Overlap Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', targetWordGroup{:});
+                                    
         % rand sample down the different word pair feature mat -> match
         % size
-        randIndices = randsample(size(eventDiff,1), size(eventSame,1));
-        tempDiff = eventDiff(randIndices,:,:);
+        minSampleSize = min([size(eventSame,1), size(eventDiff,1), ...
+                            size(eventReverse,1), size(eventProbe, 1), ...
+                            size(eventTarget,1)]);
+        
+        randIndices = randsample(size(eventSame,1), minSampleSize);
+        eventSame = eventSame(randIndices,:,:);
+        randIndices = randsample(size(eventDiff,1), minSampleSize);
+        eventDiff = eventDiff(randIndices,:,:);
+        randIndices = randsample(size(eventReverse,1), minSampleSize);
+        eventReverse = eventReverse(randIndices,:,:);
+        randIndices = randsample(size(eventProbe,1), minSampleSize);
+        eventProbe = eventProbe(randIndices,:,:);
+        randIndices = randsample(size(eventTarget,1), minSampleSize);
+        eventTarget = eventTarget(randIndices,:,:);
         
         % set linethickness
         LT = 1.5;
         
         if VOCALIZATION,
-            ticks = [0:10:55];
-            labels = [-4:1:2];
-            timeZero = 40;
+            ticks = [6:10:56];
+            labels = [-3:1:2];
+            timeZero = 36;
+            
+%             eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
+%             eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
+%             eventReverse = eventReverse(:,1:timeZero+5, 1:timeZero+5);
+%             eventProbe = eventProbe(:,1:timeZero+5, 1:timeZero+5);
+%             eventTarget = eventTarget(:,1:timeZero+5, 1:timeZero+5);
         else
-            ticks = [0:10:55];
-            labels = [-1:1:5];
-            timeZero = 10;
+            ticks = [6:10:56];
+            labels = [0:1:5];
+            timeZero = 6;
         end
         
         %%- Plotting
@@ -150,7 +224,7 @@ for iSesh=1:length(sessions),
         subplot(321)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
         title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1), ' vs ',...
-            num2str(iBlock), ' with ', num2str(size(tempDiff,1)), ' events'])
+            num2str(iBlock), ' with ', num2str(size(eventDiff,1)), ' events'])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -170,7 +244,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
        
         subplot(323);
-        imagesc(squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
         title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1), ...
             ' vs ', num2str(iBlock)])
         hold on
@@ -192,7 +266,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(325);
-        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
         title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1), ...
             ' vs ', num2str(iBlock)])
         hold on
@@ -279,7 +353,21 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+        %%- text output for block i and block i+1
+%         subplot(427)
+%         subStr = sprintf('%s begin: %s and end: %s',blocks{iBlock}, 
+%         text(0.5, 0.5, blocks{iBlock});
+%         set(ax, 'visible', 'off');
+%         
+%         subplot(428)
+  
+        fig = gcf;
+        fig.PaperUnits = 'inches';
+        pos = [0.35, 3.65, 12.55, 7.50];
+        fig.PaperPosition = pos;
+        
         %%- Save Image
+<<<<<<< HEAD
         if VOCALIZATION,
             figureDir = strcat('./Figures/reinstatement/', subj, '/across_blocks_vocalization/');
         else
@@ -290,16 +378,13 @@ for iSesh=1:length(sessions),
             mkdir(figureDir)
         end
         saveas(gca, figureFile, 'png')
+=======
+        print(figureFile, '-dpng', '-r0')
+%         saveas(gca, figureFile, 'png')
+>>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
         savefig(figureFile)
-        
-        %%- save reinstatement matrices
-        save(strcat(figureFile, '.mat'), 'eventSame', 'featureSame', ...
-                                        'eventReverse', 'featureReverse', ...
-                                        'eventDiff', 'featureDiff', ...
-                                        'eventTarget', 'featureTarget', ...
-                                        'eventProbe', 'featureProbe');
         
         pause(0.1);
     end
 end
-end
+% end

@@ -23,7 +23,9 @@ addpath('./m_reinstatement/');
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -124,27 +126,50 @@ for iSesh=1:length(sessions),
         % rand sample down the different word pair feature mat -> match
         % size
         randIndices = randsample(size(eventDiff,1), size(eventSame,1));
-        tempDiff = eventDiff(randIndices,:,:);
+        eventDiff = eventDiff(randIndices,:,:);
         
         if VOCALIZATION,
-            ticks = [0:10:55];
-            labels = [-4:1:2];
-            timeZero = 40;
+            ticks = [6:10:56];
+            labels = [-3:1:2];
+            timeZero = 36;
+            
+%             eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
+%             eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
         else
-            ticks = [0:10:55];
-            labels = [-1:1:5];
-            timeZero = 10;
+            ticks = [6:10:56];
+            labels = [0:1:5];
+            timeZero = 6;
         end
         
         % set linethickness
         LT = 1.5;
+        
+        %%- Save Image
+        if VOCALIZATION,
+            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_vocalization/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_vocalization/');
+        else
+            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_probeon/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_probeon/');
+        end
+        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
+        matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
+        if ~exist(figureDir)
+            mkdir(figureDir)
+        end
+        if ~exist(matDir)
+            mkdir(matDir)
+        end
+        %%- save reinstatement matrices
+        save(strcat(matFile, '.mat'), 'eventSame', 'featureSame', ...
+                                        'eventDiff', 'featureDiff');
         
         %%- Plotting
         figure
         subplot(311)
         imagesc(squeeze(mean(eventSame(:, :, :),1)));
         title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
-            ' with ', num2str(size(tempDiff,1)), ' events'])
+            ' with ', num2str(size(eventDiff,1)), ' events'])
         hold on
         xlabel('Time (seconds)');
         ylabel('Time (seconds)');
@@ -164,10 +189,10 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
        
         subplot(312);
-        imagesc(squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
         title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
         hold on
-        xlabel('Time (seconds)');timeZero
+        xlabel('Time (seconds)');
         ylabel('Time (seconds)');
         ax = gca;
         axis square
@@ -185,7 +210,7 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(313);
-        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(tempDiff(:, :, :),1)));
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
         title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
         hold on
         xlabel('Time (seconds)');
@@ -204,6 +229,7 @@ for iSesh=1:length(sessions),
         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+<<<<<<< HEAD
         %%- Save Image
         if VOCALIZATION,
             figureDir = strcat('./Figures/reinstatement/', subj, '/within_blocks_vocalization/');
@@ -214,13 +240,10 @@ for iSesh=1:length(sessions),
         if ~exist(figureDir)
             mkdir(figureDir)
         end
+=======
+>>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
         saveas(gca, figureFile, 'png')
         savefig(figureFile)
-        
-        %%- save reinstatement matrices
-        save(strcat(figureFile, '.mat'), 'eventSame', 'featureSame', ...
-                                        'eventDiff', 'featureDiff');
-        
         
         pause(0.1);
 %         set(gca, 'clim', clim);  

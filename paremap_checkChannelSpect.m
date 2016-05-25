@@ -53,7 +53,8 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
+eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 % eegRootDirHome = '/home/adamli/paremap';
 
@@ -372,6 +373,11 @@ for iChan=1:numChannels
     end
     clear powerMat
     
+    % normalized to 1 so all can be shifted to fit on a single plot
+    eegWaveMeanSub  = eegWaveV-mean(mean(eegWaveV));   %double mean and double max because multiple events from same channel should be normalized together
+    eegWaveShift    = eegWaveMeanSub./max(max(abs(eegWaveMeanSub)));
+    wavesSft = eegWaveShift;
+    
     % create vector of the actual seconds in time axis for the powerMat
     % (since its time binned)...
 %     LOWERTIME = 1001;
@@ -391,8 +397,20 @@ for iChan=1:numChannels
     titleStr = sprintf('mean power: chan %s, %d events', chanStr{iChan}, size(powerMatZ,2));
     powPlot = squeeze(powPlot);
     
+    typeSync = 'ProbeWord Locked';
+    
     figure
-    subplot(311)
+    % first plot eeg trace
+    subplot(411)
+    eegTitle = sprintf('%s %s: %s : channel %s number(%s) over %d events', subj, typeSync, session, chanStr{iChan}, num2str(chanList(iChan)), size(eegWaveV, 1));
+    hold on; plot(eegWaveT, mean(wavesSft, 1));
+    set(gca,'tickdir','out','YDir','normal');
+    set(gca,'fontsize',figFontAx)
+    title(eegTitle, 'fontsize',20)
+    xlabel('time (s)')
+    ylabel('voltage value (normalized)')
+    
+    subplot(412)
     hIMg = imagesc(waveT,log10(waveletFreqs),powPlot);
     hold on; colormap(jet);
     hCbar = colorbar('east');
@@ -415,7 +433,7 @@ for iChan=1:numChannels
     size(powPlot)
     titleStr = sprintf('mean power: chan %s, %d events', chanStr{iChan}, size(powerMatZ,1));
     
-    subplot(312)
+    subplot(413)
     hIMg = imagesc(tWin,log10(waveletFreqs),powPlot);
     hold on; colormap(jet);
     hCbar = colorbar('east');
@@ -434,7 +452,7 @@ for iChan=1:numChannels
     size(powPlot)
     titleStr = sprintf('mean power: chan %s, %d events', chanStr{iChan}, size(powerMatZ,1));
     
-    subplot(313)
+    subplot(414)
     hIMg = imagesc(tWin,1:7,powPlot);
     hold on; colormap(jet);
     hCbar = colorbar('east');
@@ -452,5 +470,15 @@ for iChan=1:numChannels
     if ~exist(figureDir)
         mkdir(figureDir)
     end
-    saveas(gca, figureFile, 'png')
+    
+    fig = gcf;
+    fig.PaperUnits = 'inches';
+    pos = [20.9722    2.2917   13.8750   15.5694];
+    fig.PaperPosition = pos;
+
+    %%- Save Image
+    print(figureFile, '-dpng', '-r0')
+    
+    pause(0.5)
+	close all
 end

@@ -6,11 +6,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------    VARIABLES USED WHEN RUNNING AS SCRIPT (commment out otherwise)   -----------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all;
-clc;
 
+function ALParemap_eCog_PreProcess(subj, VOCALIZATION)
+% clear all;
+close all;
+clc;
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH039';
+% subj = 'NIH034';
 sessNum = [0, 1, 2];
 DEBUG = 1;
 
@@ -52,9 +54,9 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg/';     % work
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+% eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -123,7 +125,7 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  = 2:96;            %G1, G2, LF1, AST1,
+        iChanListSub  =31:96;            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
@@ -170,16 +172,20 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
 
-%
-for iEvent=1:length(eventTrigger),
-    eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+% offset to synchronize with vocalization
+if VOCALIZATION,
+    for iEvent=1:length(eventTrigger),
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
+    end
+    LOWERTIME = -4;
+    UPPERTIME = 2;
+else
+    % Settings for probewordon synchronization
+    LOWERTIME = -1;
+    UPPERTIME = 5;
 end
-LOWERTIME = -4;
-UPPERTIME = 2;
 
-% Settings for probewordon synchronization
-% LOWERTIME = -1;
-% UPPERTIME = 5;
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
@@ -207,7 +213,7 @@ end
 %%- NEEDED FOR EVERY EVENTS
 %%- remap event pointer from default (server) to local copy of the EEG data
 for iEvent=1:length(eventTrigger),
-    eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile,defaultEEGfile,fullfileEEG(subjDir,eventEEGpath));
+    eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile, defaultEEGfile, fullfileEEG(subjDir,eventEEGpath));
 end
 
 %%- gets the range of frequencies using eeganalparams
@@ -309,13 +315,13 @@ for iChan=1:numChannels
         stemList = unique({eventTrigger.eegfile});
         
         % indices of the powerMat to Z-score wrt
-        fixOnToOff = abs(eventsTriggerXlim(1))*resampledrate:(abs(eventsTriggerXlim(1)) + 1)*resampledrate - 1; % -1 sec to 0 seconds probe word on
         for iStem=1:length(stemList),
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
+            
+            length(iEvStem)
             for iF = 1:length(waveletFreqs),
-%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
                 mu = mean(allVal); stdev = std(allVal);
 
                 % create the power matrix
@@ -392,8 +398,8 @@ for iChan=1:numChannels
         tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
     end
     timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS);
-%     
-    % remake powerMatZ to the points that we want (before probe on -> 3.5
+
+  % remake powerMatZ to the points that we want (before probe on -> 3.5
     % seconds later
     powerMatZ = squeeze(powerMatZ); % only get the powerMatZ time points we want... (1001 - 2000+3500) = -1.0 seconds -> 3.5 seconds
 %     powerMatZ = powerMatZ(:,:,LOWERTIME:UPPERTIME);
@@ -406,7 +412,7 @@ for iChan=1:numChannels
     WINDOWSIZE = 500; % in milliseconds
     OVERLAP = 100;    % in milliseconds
     powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);
-    
+ 
     if DEBUG,
         size(powerMatZ)
     end
@@ -415,11 +421,10 @@ for iChan=1:numChannels
     rangeFreqs = reshape([freqBandAr.rangeF], 2, 7)';
     waveletFreqs = waveletFreqs;
     powerMatZ = freqBinSpectrogram(powerMatZ, rangeFreqs, waveletFreqs);
-    
+
     if DEBUG,
         size(powerMatZ)
     end
-    
     % SPLIT INTO SESSIONS AND BLOCKS
     subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
     subjBlocks = unique({events.blocknumber});   % e.g. blocks 0,1,2,3,4,5
@@ -448,6 +453,8 @@ for iChan=1:numChannels
                                     strcmp({events.targetWord}, THIS_TARGET) & ...
                                     sessionBlockIndices);
                     sessionBlockWordPairEvents = events(eventIndices);
+                    
+                    blockNum = unique({sessionBlockWordPairEvents.blocknumber});
                     sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
                     
                     thisPowMat = powerMatZ(eventIndices,:,:);
@@ -458,8 +465,8 @@ for iChan=1:numChannels
                         data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
                         data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
                         data.sessionNum = sessionNumber;                % the session number
-                        data.blockNum = subjBlocks{iBlock};             % the block number
-                        data.eegWaveV = eegWaveV(eventIndices,:);                       % eeg wave form
+                        data.blockNum = blockNum;                       % the block number
+                        data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
                         data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
                         data.chanNum = thisChan;                        % store the corresponding channel number
                         data.chanStr = thisChanStr;                     % the string name of the channel
@@ -480,7 +487,10 @@ for iChan=1:numChannels
                         if ROBUST_SPEC,
                             TYPE_SPECT = 'robust_spec';
                         else
-                            TYPE_SPECT = 'morlet_spec_vocalization';
+                            TYPE_SPECT = 'morlet_spec';
+                        end
+                        if VOCALIZATION
+                            TYPE_SPECT = strcat(TYPE_SPECT, '_vocalization');
                         end
                         
                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
@@ -488,7 +498,7 @@ for iChan=1:numChannels
                         
                         % data directories to save data into
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-                        homeDir = '/home/adamli/paremap/';
+%                         homeDir = '/home/adamli/paremap/';
                         dataDir = strcat('condensed_data_', subj);
                         typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
