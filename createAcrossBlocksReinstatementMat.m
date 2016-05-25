@@ -3,13 +3,9 @@
 %         -- This is done for ACROSS blocks analysis of the paremap task
 
 function createAcrossBlocksReinstatementMat(subj, VOCALIZATION)
-<<<<<<< HEAD
-% clear all;
-close all;
-=======
+
 close all;
 % clear all;
->>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
 % clc;
 
 % %% PARAMETERS FOR RUNNING PREPROCESS
@@ -17,15 +13,10 @@ if ~exist('subj')
     subj = 'NIH034';
 end
 sessNum = [0, 1, 2];
-<<<<<<< HEAD
-% if ~exist(VOCALIZATION)
-%     VOCALIZATION = 0;
-% end
-=======
+
 if ~exist('VOCALIZATION')
     VOCALIZATION = 0;
 end
->>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
 
 addpath('./m_reinstatement/');
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
@@ -367,21 +358,7 @@ for iSesh=1:length(sessions),
         fig.PaperPosition = pos;
         
         %%- Save Image
-<<<<<<< HEAD
-        if VOCALIZATION,
-            figureDir = strcat('./Figures/reinstatement/', subj, '/across_blocks_vocalization/');
-        else
-            figureDir = strcat('./Figures/reinstatement/', subj, '/across_blocks_probeon/');
-        end
-        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
-        if ~exist(figureDir)
-            mkdir(figureDir)
-        end
-        saveas(gca, figureFile, 'png')
-=======
         print(figureFile, '-dpng', '-r0')
-%         saveas(gca, figureFile, 'png')
->>>>>>> 15f35d9c64361bf6d1f2e27dd1d1db6906b84c22
         savefig(figureFile)
         
         pause(0.1);

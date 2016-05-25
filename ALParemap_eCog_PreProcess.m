@@ -497,6 +497,7 @@ for iChan=1:numChannels
                         wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
                         
                         % data directories to save data into
+                        workDir = '/Users/liaj/Documents/MATLAB/paremap';
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
 %                         homeDir = '/home/adamli/paremap/';
                         dataDir = strcat('condensed_data_', subj);
