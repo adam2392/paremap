@@ -23,7 +23,9 @@ addpath('./m_reinstatement/');
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -131,8 +133,8 @@ for iSesh=1:length(sessions),
             labels = [-3:1:2];
             timeZero = 36;
             
-            eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
-            eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
+%             eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
+%             eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
         else
             ticks = [6:10:56];
             labels = [0:1:5];

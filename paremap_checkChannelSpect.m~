@@ -404,11 +404,10 @@ for iChan=1:numChannels
     subplot(411)
     eegTitle = sprintf('%s %s: %s : channel %s number(%s) over %d events', subj, typeSync, session, chanStr{iChan}, num2str(chanList(iChan)), size(eegWaveV, 1));
     hold on; plot(eegWaveT, mean(wavesSft, 1));
+%     set(gca,'ytick',log10(freqBandYticks),'yticklabel',freqBandYtickLabels)
     set(gca,'tickdir','out','YDir','normal');
     set(gca,'fontsize',figFontAx)
     title(eegTitle, 'fontsize',20)
-    xlabel('time (s)')
-    ylabel('voltage value (normalized)')
     
     subplot(412)
     hIMg = imagesc(waveT,log10(waveletFreqs),powPlot);
@@ -470,15 +469,5 @@ for iChan=1:numChannels
     if ~exist(figureDir)
         mkdir(figureDir)
     end
-    
-    fig = gcf;
-    fig.PaperUnits = 'inches';
-    pos = [20.9722    2.2917   13.8750   15.5694];
-    fig.PaperPosition = pos;
-
-    %%- Save Image
-    print(figureFile, '-dpng', '-r0')
-    
-    pause(0.5)
-	close all
+    saveas(gca, figureFile, 'png')
 end

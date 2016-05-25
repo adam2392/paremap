@@ -22,6 +22,7 @@ addpath('./m_reinstatement/');
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 
 % Determine which directory we're working with automatically
@@ -149,7 +150,6 @@ for iSesh=1:length(sessions),
                                         'eventTarget', 'featureTarget', ...
                                         'eventProbe', 'featureProbe');
         
-        
         % rand sample down the different word pair feature mat -> match
         % size
         minSampleSize = min([size(eventSame,1), size(eventDiff,1), ...
@@ -171,19 +171,19 @@ for iSesh=1:length(sessions),
         LT = 1.5;
         
         if VOCALIZATION,
-            ticks = [0:10:55];
-            labels = [-4:1:2];
-            timeZero = 40;
+            ticks = [6:10:56];
+            labels = [-3:1:2];
+            timeZero = 36;
             
-            eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
-            eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
-            eventReverse = eventReverse(:,1:timeZero+5, 1:timeZero+5);
-            eventProbe = eventProbe(:,1:timeZero+5, 1:timeZero+5);
-            eventTarget = eventTarget(:,1:timeZero+5, 1:timeZero+5);
+%             eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
+%             eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
+%             eventReverse = eventReverse(:,1:timeZero+5, 1:timeZero+5);
+%             eventProbe = eventProbe(:,1:timeZero+5, 1:timeZero+5);
+%             eventTarget = eventTarget(:,1:timeZero+5, 1:timeZero+5);
         else
-            ticks = [0:10:55];
-            labels = [-1:1:5];
-            timeZero = 10;
+            ticks = [6:10:56];
+            labels = [0:1:5];
+            timeZero = 6;
         end
         
         %%- Plotting
