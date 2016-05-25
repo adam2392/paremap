@@ -17,7 +17,7 @@ DEBUG = 1;
 REF_TYPES = {'noreref', 'bipolar', 'global'};
 THIS_REF_TYPE = REF_TYPES{3}; 
 
-USE_CHAN_SUBSET = 1; % 0=all channels, 1=process the subset
+USE_CHAN_SUBSET = 0; % 0=all channels, 1=process the subset
 
 % array of frequency bands
 freqBandAr(1).name    = 'delta';
@@ -208,7 +208,7 @@ end
 %%- NEEDED FOR EVERY EVENTS
 %%- remap event pointer from default (server) to local copy of the EEG data
 for iEvent=1:length(eventTrigger),
-    eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile,defaultEEGfile,fullfileEEG(subjDir,eventEEGpath));
+    eventTrigger(iEvent).eegfile = regexprep(eventTrigger(iEvent).eegfile, defaultEEGfile, fullfileEEG(subjDir,eventEEGpath));
 end
 
 %%- gets the range of frequencies using eeganalparams
@@ -310,13 +310,13 @@ for iChan=1:numChannels
         stemList = unique({eventTrigger.eegfile});
         
         % indices of the powerMat to Z-score wrt
-        fixOnToOff = abs(eventsTriggerXlim(1))*resampledrate:(abs(eventsTriggerXlim(1)) + 1)*resampledrate - 1; % -1 sec to 0 seconds probe word on
         for iStem=1:length(stemList),
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
+            
+            length(iEvStem)
             for iF = 1:length(waveletFreqs),
-%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
                 mu = mean(allVal); stdev = std(allVal);
 
                 % create the power matrix

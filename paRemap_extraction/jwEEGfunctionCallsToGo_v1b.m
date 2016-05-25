@@ -11,7 +11,7 @@
 subj       = 'NIH034';
 
 rootEEGdirWork  = '/Volumes/JW24TB/data24TB/eeg';                        %office-local
-%rootEEGdirWork = '/Users/wittigj/DataJW/AnalysisStuff/dataLocal/eeg';   %office-local
+rootEEGdirWork = '/Users/liaj/Documents/MATLAB/paremap';   %office-local
 rootEEGdirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';   %home
 rootEEGdirHome = '/home/adamli/paremap';
 % rootEEGdirHome = '/Volumes/NIL_PASS';

@@ -153,7 +153,7 @@ for iSesh=1:length(sessions),
             matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_probeon/');
         end
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
-        matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
+        matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
         if ~exist(figureDir)
             mkdir(figureDir)
         end
