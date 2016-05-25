@@ -213,7 +213,7 @@ while true
         case {'BLOCK_0', 'BLOCK_1', 'BLOCK_2', 'BLOCK_3', 'BLOCK_4', 'BLOCK_5'}
             blockTOT = textscan(thisLine, '%f%d%s%s%s'); 
             if strcmp(blockTOT{5}(1), 'TEST')
-                blocknumber = type;             % store the block number
+                blocknumber = eventType;             % store the block number
                 miniblocknumber = blockTOT{4}(1);   % store miniblocknumber
             end  
         case {'FIXATION_ON'}

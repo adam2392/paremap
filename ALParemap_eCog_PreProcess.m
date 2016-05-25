@@ -521,3 +521,4 @@ for iChan=1:numChannels
 %     eegInstPowShift = (iChanSave-1)*2 + eegInstPow./max(max(abs(eegInstPow)));
 %     wavesSft(iChanSave,iEv,iT) = eegWaveShift;
 end
+end
