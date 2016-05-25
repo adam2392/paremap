@@ -6,11 +6,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------    VARIABLES USED WHEN RUNNING AS SCRIPT (commment out otherwise)   -----------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all;
-clc;
 
+function ALParemap_eCog_PreProcess(subj, VOCALIZATION)
+% clear all;
+close all;
+clc;
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+% subj = 'NIH034';
 sessNum = [0, 1, 2];
 DEBUG = 1;
 
@@ -171,16 +173,19 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 eventTrigger = events;
 
 % offset to synchronize with vocalization
-% for iEvent=1:length(eventTrigger),
-%     eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
-%     eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
-% end
-% LOWERTIME = -4;
-% UPPERTIME = 2;
+if VOCALIZATION,
+    for iEvent=1:length(eventTrigger),
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
+    end
+    LOWERTIME = -4;
+    UPPERTIME = 2;
+else
+    % Settings for probewordon synchronization
+    LOWERTIME = -1;
+    UPPERTIME = 5;
+end
 
-% Settings for probewordon synchronization
-LOWERTIME = -1;
-UPPERTIME = 5;
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
@@ -482,7 +487,10 @@ for iChan=1:numChannels
                         if ROBUST_SPEC,
                             TYPE_SPECT = 'robust_spec';
                         else
-                            TYPE_SPECT = 'morlet_spec_vocalization';
+                            TYPE_SPECT = 'morlet_spec';
+                        end
+                        if VOCALIZATION
+                            TYPE_SPECT = strcat(TYPE_SPECT, '_vocalization');
                         end
                         
                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
