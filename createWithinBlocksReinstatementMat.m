@@ -164,7 +164,7 @@ for iSesh=1:length(sessions),
         save(strcat(matFile, '.mat'), 'eventSame', 'featureSame', ...
                                         'eventDiff', 'featureDiff');
         
-                % write debugging output to .txt file
+        % write debugging output to .txt file
         sameWordGroup = [sameWordGroup{:}];
         reverseWordGroup = [reverseWordGroup{:}];
         diffWordGroup = [diffWordGroup{:}];
@@ -247,10 +247,10 @@ for iSesh=1:length(sessions),
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         %%- SAve Imge
-        fig = gcf;
-        fig.PaperUnits = 'inches';
-        pos = [13.8750    4.5694   13.2639   14.0000];
-        fig.PaperPosition = pos;
+%         fig = gcf;
+%         fig.PaperUnits = 'inches';
+%         pos = [13.8750    4.5694   13.2639   14.0000];
+%         fig.PaperPosition = pos;
         
         %%- Save Image
         print(figureFile, '-dpng', '-r0')
