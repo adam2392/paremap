@@ -241,8 +241,7 @@ disp('Variables to use here are:')
 disp('powerMat, powerMatZ, phaseMat, numChanPrealloc')
 disp('waveletFreqs, waveletWidth, ..')
 
-disp(['size of matrices made are: '])
-disp(size(powerMat))
+
 fprintf('Number of preallocated channels are: %d', numChanPrealloc)
 fprintf('\n');
 fprintf('Duration of analysis is: %d\n', DurationMS)
