@@ -23,7 +23,7 @@ addpath('./m_reinstatement/');
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/home/adamli/paremap';     % work
-eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
+% eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 
 
@@ -147,10 +147,10 @@ for iSesh=1:length(sessions),
         %%- Save Image
         if VOCALIZATION,
             figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_vocalization/');
-            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_vocalization/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/within_blocks_vocalization/');
         else
             figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_probeon/');
-            matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_probeon/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/within_blocks_probeon/');
         end
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
         matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
