@@ -10,7 +10,7 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+subj = 'NIH039';
 sessNum = [0, 1, 2];
 DEBUG = 1;
 figFontAx = 16;
@@ -56,7 +56,7 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 eegRootDirWork = '/home/adamli/paremap';     % work
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/home/adamli/paremap';
+eegRootDirHome = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
@@ -302,13 +302,12 @@ for iChan=1:numChannels
         stemList = unique({eventTrigger.eegfile});
         
         % indices of the powerMat to Z-score wrt
-        fixOnToOff = abs(eventsTriggerXlim(1))*resampledrate:(abs(eventsTriggerXlim(1)) + 1)*resampledrate - 1; % -1 sec to 0 seconds probe word on
         for iStem=1:length(stemList),
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
             for iF = 1:length(waveletFreqs),
-%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
+%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
                 mu = mean(allVal); stdev = std(allVal);
 
                 % create the power matrix
