@@ -245,6 +245,6 @@ FS = 1000;      % sampling frequency of data
 addpath('./m_parallelized_functions');
 save('tempworkspace');
 parfor iChan=1:numChannels
-    preProcessChannelCheck;
+    preProcessChannelCheck(iChan);
 end
 delete('tempworkspace.mat');

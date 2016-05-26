@@ -1,4 +1,4 @@
-function preProcessChannel()    
+function preProcessChannel(iChan)    
     load('tempworkspace');
     powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
     powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);

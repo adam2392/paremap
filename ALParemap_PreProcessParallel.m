@@ -181,6 +181,14 @@ if VOCALIZATION,
     end
     LOWERTIME = -4;
     UPPERTIME = 2;
+elseif MATCHWORD,
+    for iEvent=1:length(eventTrigger),
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).matchOnTime   ;
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime);
+    end
+    LOWERTIME = -4;
+    UPPERTIME = 2;
+    
 else
     % Settings for probewordon synchronization
     LOWERTIME = -1;
@@ -259,7 +267,7 @@ SAVE = 1;       % save data?
 addpath('./m_parallelized_functions');
 save('tempworkspace');
 parfor iChan=1:numChannels
-    preProcessChannel;
+    preProcessChannel(iChan);
 end
 delete('tempworkspace.mat');
 end

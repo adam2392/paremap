@@ -1,4 +1,4 @@
-function preProcessChannelCheck()
+function preProcessChannelCheck(iChan)
     load('tempworkspace');
     
     powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
