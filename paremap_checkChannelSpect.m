@@ -10,7 +10,7 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+subj = 'NIH039';
 sessNum = [0, 1, 2];
 DEBUG = 1;
 figFontAx = 16;
@@ -302,13 +302,13 @@ for iChan=1:numChannels
         stemList = unique({eventTrigger.eegfile});
         
         % indices of the powerMat to Z-score wrt
-        fixOnToOff = abs(eventsTriggerXlim(1))*resampledrate:(abs(eventsTriggerXlim(1)) + 1)*resampledrate - 1; % -1 sec to 0 seconds probe word on
+%         fixOnToOff = abs(eventsTriggerXlim(1))*resampledrate:(abs(eventsTriggerXlim(1)) + 1)*resampledrate - 1; % -1 sec to 0 seconds probe word on
         for iStem=1:length(stemList),
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
             for iF = 1:length(waveletFreqs),
-%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
+                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
+%                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,fixOnToOff)),length(iEvStem)*length(fixOnToOff),1); % normalize wrt fixation period
                 mu = mean(allVal); stdev = std(allVal);
 
                 % create the power matrix
