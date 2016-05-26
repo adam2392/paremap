@@ -257,6 +257,7 @@ WINDOW = 200;   % window size for spectrotemporal pursuit
 FS = 1000;      % sampling frequency of data
 
 SAVE = 1;       % save data?
+addpath('./m_parallelized_functions');
 save('tempworkspace');
 parfor iChan=1:numChannels
     preProcessChannel;

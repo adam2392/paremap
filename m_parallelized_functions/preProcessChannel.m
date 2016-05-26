@@ -142,7 +142,7 @@ function preProcessChannel()
         size(powerMatZ)
     end
     %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
-    addpath('./m_oldAnalysis_anovaANDsinglechannel/');
+    addpath('../m_oldAnalysis_anovaANDsinglechannel/');
     WINDOWSIZE = 500; % in milliseconds
     OVERLAP = 100;    % in milliseconds
     powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);

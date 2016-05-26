@@ -56,11 +56,12 @@ PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 mea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/home/adamli/paremap';
+eegRootDirJhu = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
 elseif length(dir(eegRootDirHome))>0, eegRootDir = eegRootDirHome;
+elseif length(dir(eegRootDirJhu))>0, eegRootDir = eegRootDirJhu;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
 % Either go through all the sessions, or a specific session
