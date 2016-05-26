@@ -164,6 +164,23 @@ for iSesh=1:length(sessions),
         save(strcat(matFile, '.mat'), 'eventSame', 'featureSame', ...
                                         'eventDiff', 'featureDiff');
         
+                % write debugging output to .txt file
+        sameWordGroup = [sameWordGroup{:}];
+        reverseWordGroup = [reverseWordGroup{:}];
+        diffWordGroup = [diffWordGroup{:}];
+        
+        logFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), '.txt');
+        fid = fopen(logFile, 'w');
+        fprintf(fid, '%6s \n', 'Block(i) word pairs:');
+        fprintf(fid, '%6s \n', wordpairs{:});
+        fprintf(fid, '\n %s \n', 'Same Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', sameWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Reverse Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', reverseWordGroup{:});
+        fprintf(fid, '\n %s \n', 'Different Pair Group:');
+        fprintf(fid, '%6s vs %6s \n', diffWordGroup{:});                          
+                               
+                                    
         %%- Plotting
         figure
         subplot(311)
