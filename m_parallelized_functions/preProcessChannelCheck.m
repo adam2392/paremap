@@ -162,6 +162,7 @@ function preProcessChannelCheck(iChan)
     title(eegTitle, 'fontsize',20)
     xlabel('time (s)')
     ylabel('voltage value (normalized)')
+    xlim([LOWERTIME UPPERTIME])
     
     subplot(412)
     hIMg = imagesc(waveT,log10(waveletFreqs),powPlot);
