@@ -3,7 +3,7 @@
 %         -- This is done for within blocks analysis of the paremap task
 %        
 
-function createWithinBlocksReinstatementMat(subj, VOCALIZATION)
+function createWithinBlocksReinstatementMat(subj, VOCALIZATION, MATCHWORD)
 close all;
 % clear all;
 % clc;
@@ -65,9 +65,14 @@ events = events(correctIndices);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if VOCALIZATION,
     TYPE_TRANSF = 'morlet_spec_vocalization';
+elseif MATCHWORD
+    TYPE_TRANSF = 'morlet_spec_matchword';
 else
     TYPE_TRANSF = 'morlet_spec';
 end
+
+disp(TYPE_TRANSF)
+
 dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSF);
 sessions = dir(dataDir);
@@ -132,9 +137,10 @@ for iSesh=1:length(sessions),
             ticks = [6:10:56];
             labels = [-3:1:2];
             timeZero = 36;
-            
-%             eventSame = eventSame(:,1:timeZero+5, 1:timeZero+5);
-%             eventDiff = eventDiff(:,1:timeZero+5, 1:timeZero+5);
+        elseif MATCHWORD
+            ticks = [6:10:56];
+            labels = [-4:1:1];
+            timeZero = 46;
         else
             ticks = [6:10:56];
             labels = [0:1:5];
@@ -148,6 +154,9 @@ for iSesh=1:length(sessions),
         if VOCALIZATION,
             figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_vocalization/');
             matDir = strcat('./Figures/', subj, '/reinstatement_mat/within_blocks_vocalization/');
+        elseif MATCHWORD
+            figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_matchword/');
+            matDir = strcat('./Figures/', subj, '/reinstatement_mat/within_blocks_matchword/');
         else
             figureDir = strcat('./Figures/', subj, '/reinstatement/within_blocks_probeon/');
             matDir = strcat('./Figures/', subj, '/reinstatement_mat/within_blocks_probeon/');

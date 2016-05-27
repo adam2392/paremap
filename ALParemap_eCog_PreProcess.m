@@ -7,7 +7,7 @@
 %%------------------    VARIABLES USED WHEN RUNNING AS SCRIPT (commment out otherwise)   -----------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function ALParemap_eCog_PreProcess(subj, VOCALIZATION)
+function ALParemap_eCog_PreProcess(subj, VOCALIZATION, MATCHWORD)
 % clear all;
 close all;
 clc;
@@ -126,7 +126,7 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  =31:96;            %G1, G2, LF1, AST1,
+        iChanListSub  =18:96;            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
@@ -181,10 +181,19 @@ if VOCALIZATION,
     end
     LOWERTIME = -4;
     UPPERTIME = 2;
-else
+elseif MATCHWORD,
+    for iEvent=1:length(eventTrigger),
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
+    end
+    LOWERTIME = -5;
+    UPPERTIME = 1;
+elseif ~VOCALIZATION && ~MATCHWORD
     % Settings for probewordon synchronization
     LOWERTIME = -1;
     UPPERTIME = 5;
+else
+    error('not set correctly.');
 end
 
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
@@ -229,11 +238,6 @@ else
 end
 % #channels X #events X #freqs. X #timepoints = 4D array
 arrayGB = numChanPrealloc * length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
-% initialize power matrices to make sure they can be stored
-powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-
 clear defaultEEGfile subjDir eventEEGpath
 % print statements for debugging and process checking
 fprintf('\n');
@@ -245,8 +249,6 @@ disp('Variables to use here are:')
 disp('powerMat, powerMatZ, phaseMat, numChanPrealloc')
 disp('waveletFreqs, waveletWidth, ..')
 
-disp(['size of matrices made are: '])
-disp(size(powerMat))
 fprintf('Number of preallocated channels are: %d', numChanPrealloc)
 fprintf('\n');
 fprintf('Duration of analysis is: %d\n', DurationMS)
@@ -320,7 +322,7 @@ for iChan=1:numChannels
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
             
-            length(iEvStem)
+            disp(['Length of session eeg file: ', length(iEvStem)])
             for iF = 1:length(waveletFreqs),
                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
                 mu = mean(allVal); stdev = std(allVal);
@@ -474,10 +476,6 @@ for iChan=1:numChannels
                         data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
                         data.freqBandYlabel = {freqBandAr.name};
                         data.descriptor = 'Initial processing -1 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap';
-                        
-                        % to plot the axes
-%                         set(gca, 'YTick', 1:7, 'YTickLabel', {freqBandAr.name})
-                        
                         data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
                         data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
                         data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
@@ -492,6 +490,8 @@ for iChan=1:numChannels
                         end
                         if VOCALIZATION
                             TYPE_SPECT = strcat(TYPE_SPECT, '_vocalization');
+                        elseif MATCHWORD
+                            TYPE_SPECT = strcat(TYPE_SPECT, '_matchword');
                         end
                         
                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
@@ -500,9 +500,16 @@ for iChan=1:numChannels
                         % data directories to save data into
                         workDir = '/Users/liaj/Documents/MATLAB/paremap';
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-                        homeDir = '/home/adamli/paremap/';
+                        jhuDir = '/home/adamli/paremap/';
+                        
+                        % Determine which directory we're working with automatically
+                        if     length(dir(workDir))>0, rootDir = workDir;
+                        elseif length(dir(homeDir))>0, rootDir = homeDir;
+                        elseif length(dir(jhuDir))>0, rootDir = jhuDir;
+                        else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+                        
                         dataDir = strcat('condensed_data_', subj);
-                        typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
+                        typeTransformDir = fullfile(rootDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
                         chanFilePath = fullfile(fileDir, chanFileName);; 
 
@@ -515,12 +522,5 @@ for iChan=1:numChannels
             end % loop through probe
         end % loop through block 
     end % loop through session
-    
-%     % normalized to 1 so all can be shifted to fit on a single plot
-%     eegWaveMeanSub  = eegWaveV-mean(mean(eegWaveV));   %double mean and double max because multiple events from same channel should be normalized together
-%     eegWaveShift    = (iChanSave-1)*2 + eegWaveMeanSub./max(max(abs(eegWaveMeanSub)));
-%     eegInstPow      = abs(eegWaveMeanSub).^2;
-%     eegInstPowShift = (iChanSave-1)*2 + eegInstPow./max(max(abs(eegInstPow)));
-%     wavesSft(iChanSave,iEv,iT) = eegWaveShift;
 end
 end

@@ -183,16 +183,17 @@ if VOCALIZATION,
     UPPERTIME = 2;
 elseif MATCHWORD,
     for iEvent=1:length(eventTrigger),
-        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).matchOnTime   ;
-        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime);
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
     end
-    LOWERTIME = -4;
-    UPPERTIME = 2;
-    
-else
+    LOWERTIME = -5;
+    UPPERTIME = 1;
+elseif ~VOCALIZATION && ~MATCHWORD
     % Settings for probewordon synchronization
     LOWERTIME = -1;
     UPPERTIME = 5;
+else
+    error('not set correctly.');
 end
 
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 

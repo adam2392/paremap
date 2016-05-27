@@ -1,5 +1,6 @@
 function preProcessChannel(iChan)    
     load('tempworkspace');
+    iChan
     powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
     powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
     phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
@@ -233,9 +234,15 @@ function preProcessChannel(iChan)
                         % data directories to save data into
                         workDir = '/Users/liaj/Documents/MATLAB/paremap';
                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-                        homeDir = '/home/adamli/paremap/';
+                        jhuDir = '/home/adamli/paremap/';
+                        
+                        if     length(dir(workDir))>0, rootDir = workDir;
+                        elseif length(dir(homeDir))>0, rootDir = homeDir;
+                        elseif length(dir(jhuDir))>0, rootDir = jhuDir;
+                        else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+                        
                         dataDir = strcat('condensed_data_', subj);
-                        typeTransformDir = fullfile(homeDir, dataDir, TYPE_SPECT);
+                        typeTransformDir = fullfile(rootDir, dataDir, TYPE_SPECT);
                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
                         chanFilePath = fullfile(fileDir, chanFileName);; 
 
