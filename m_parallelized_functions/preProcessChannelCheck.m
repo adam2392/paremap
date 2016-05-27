@@ -1,6 +1,6 @@
 function preProcessChannelCheck(iChan)
     load('tempworkspace');
-    
+    iChan
     powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
     powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
 
@@ -215,8 +215,15 @@ function preProcessChannelCheck(iChan)
     set(gca,'tickdir','out','YDir','normal');
     set(gca,'fontsize',figFontAx)
     title(titleStr, 'fontsize',20)
+
+    TYPE_SPECT = '';
+    if VOCALIZATION
+        TYPE_SPECT = strcat(TYPE_SPECT, '_vocalization');
+    elseif MATCHWORD
+        TYPE_SPECT = strcat(TYPE_SPECT, '_matchword');
+    end
     
-    figureDir = strcat('./Figures/', subj, '_SpectCheck/');
+    figureDir = strcat('./Figures/', subj, '_SpectCheck', TYPE_SPECT, '/');
     figureFile = strcat(figureDir, chanStr{iChan});
     if ~exist(figureDir)
         mkdir(figureDir)

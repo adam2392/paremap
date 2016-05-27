@@ -10,7 +10,11 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH039';
+subj = 'NIH034';
+VOCALIZATION = 0;
+MATCHWORD = 1;
+
+
 sessNum = [0, 1, 2];
 DEBUG = 1;
 figFontAx = 16;
@@ -18,7 +22,7 @@ figFontAx = 16;
 REF_TYPES = {'noreref', 'bipolar', 'global'};
 THIS_REF_TYPE = REF_TYPES{3}; 
 
-USE_CHAN_SUBSET = 0; % 0=all channels, 1=process the subset
+USE_CHAN_SUBSET = 1; % 0=all channels, 1=process the subset
 
 % array of frequency bands
 freqBandAr(1).name    = 'delta';
@@ -125,7 +129,7 @@ switch THIS_REF_TYPE
         end
         eventEEGpath  = '/eeg.reref/';
         
-        iChanListSub  = 2:96;            %G1, G2, LF1, AST1,
+        iChanListSub  = 1:5;            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
@@ -169,10 +173,31 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 %%------------------      AND SET UP POWER, POWERZ AND PHASE MATRICS        ---------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%- Input to gete_ms
-%%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
 eventTrigger = events;
-LOWERTIME = -1;
-UPPERTIME = 5;
+%%- Dependent only on eventsTriggerXlim: These stay the same regardless of how we process events
+% offset to synchronize with vocalization
+if VOCALIZATION && ~MATCHWORD,
+    for iEvent=1:length(eventTrigger),
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
+    end
+    LOWERTIME = -4;
+    UPPERTIME = 2;
+elseif MATCHWORD && ~VOCALIZATION,
+    for iEvent=1:length(eventTrigger),
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
+        eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
+    end
+    LOWERTIME = -5;
+    UPPERTIME = 1;
+elseif ~VOCALIZATION && ~MATCHWORD
+    % Settings for probewordon synchronization
+    LOWERTIME = -1;
+    UPPERTIME = 5;
+else
+    error('not set correctly.');
+end
+
 eventsTriggerXlim = [LOWERTIME UPPERTIME]; % range of time to get data from (-2 seconds to 5 seconds after mstime (probeWordOn)) 
 eventOffsetMS   = eventsTriggerXlim(1)*1000;      % positive = after event time; negative = before event time
 eventDurationMS = diff(eventsTriggerXlim)*1000;   % duration includes offset (i.e., if offset -500 and duration 1000, only 500 ms post event will be prsented)
@@ -227,8 +252,6 @@ disp('Variables to use here are:')
 disp('powerMat, powerMatZ, phaseMat, numChanPrealloc')
 disp('waveletFreqs, waveletWidth, ..')
 
-disp(['size of matrices made are: '])
-disp(size(powerMat))
 fprintf('Number of preallocated channels are: %d', numChanPrealloc)
 fprintf('\n');
 fprintf('Duration of analysis is: %d\n', DurationMS)
@@ -242,6 +265,7 @@ ALPHA = 300;    % l1 regularization parameter
 WINDOW = 200;   % window size for spectrotemporal pursuit
 FS = 1000;      % sampling frequency of data
 
+clear iChan
 addpath('./m_parallelized_functions');
 save('tempworkspace');
 parfor iChan=1:numChannels
