@@ -10,7 +10,7 @@ clear all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
+subj = 'NIH039';
 VOCALIZATION = 0;
 MATCHWORD = 1;
 
