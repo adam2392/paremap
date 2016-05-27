@@ -154,7 +154,9 @@ function preProcessChannelCheck(iChan)
     % first plot eeg trace
     subplot(411)
     eegTitle = sprintf('%s %s: %s : channel %s number(%s) over %d events', subj, typeSync, session, chanStr{iChan}, num2str(chanList(iChan)), size(eegWaveV, 1));
-    hold on; plot(eegWaveT, mean(wavesSft, 1));
+%     plot(eegWaveT, mean(wavesSft, 1));
+    hold on
+    H(1) = shadedErrorBar(eegWaveT,  mean(wavesSft, 1), 0.05*std(wavesSft), '-r', 0);
     set(gca,'tickdir','out','YDir','normal');
     set(gca,'fontsize',figFontAx)
     title(eegTitle, 'fontsize',20)

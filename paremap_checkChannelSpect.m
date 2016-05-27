@@ -22,7 +22,7 @@ figFontAx = 16;
 REF_TYPES = {'noreref', 'bipolar', 'global'};
 THIS_REF_TYPE = REF_TYPES{3}; 
 
-USE_CHAN_SUBSET = 1; % 0=all channels, 1=process the subset
+USE_CHAN_SUBSET = 0; % 0=all channels, 1=process the subset
 
 % array of frequency bands
 freqBandAr(1).name    = 'delta';
@@ -268,7 +268,7 @@ FS = 1000;      % sampling frequency of data
 clear iChan
 addpath('./m_parallelized_functions');
 save('tempworkspace');
-parfor iChan=1:numChannels
+for iChan=1:numChannels
     preProcessChannelCheck(iChan);
 end
 delete('tempworkspace.mat');
