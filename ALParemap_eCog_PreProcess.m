@@ -179,8 +179,9 @@ if VOCALIZATION,
         eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
         eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
     end
-    LOWERTIME = -4;
-    UPPERTIME = 2;
+    LOWERTIME = -2;
+    UPPERTIME = 4;
+    disp('VOCALIZATION');
 elseif MATCHWORD,
     for iEvent=1:length(eventTrigger),
         eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
@@ -188,10 +189,12 @@ elseif MATCHWORD,
     end
     LOWERTIME = -5;
     UPPERTIME = 1;
+    disp('MATCHWORD');
 elseif ~VOCALIZATION && ~MATCHWORD
     % Settings for probewordon synchronization
     LOWERTIME = -1;
     UPPERTIME = 5;
+    disp('PROBE WORD ON');
 else
     error('not set correctly.');
 end

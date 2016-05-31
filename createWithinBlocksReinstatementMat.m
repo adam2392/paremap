@@ -22,13 +22,14 @@ addpath('./m_reinstatement/');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirJhu = '/home/adamli/paremap';     % work
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
+elseif length(dir(eegRootDirJhu))>0, eegRootDir = eegRootDirJhu;
 elseif length(dir(eegRootDirHome))>0, eegRootDir = eegRootDirHome;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
@@ -103,6 +104,7 @@ for iSesh=1:length(sessions),
         %%- BUILD FEATURE MATRIX 
         sessionBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
         [samePairFeatureMat1, samePairFeatureMat2] = buildSamePairFeatureMat(sameWordGroup, sessionBlockDir);
+        [reversePairFeatureMat1, reversePairFeatureMat2] = buildDiffPairFeatureMat(reverseWordGroup, sessionBlockDir);
         [diffPairFeatureMat1, diffPairFeatureMat2] = buildDiffPairFeatureMat(diffWordGroup, sessionBlockDir);
 
         size(samePairFeatureMat1)
@@ -113,6 +115,8 @@ for iSesh=1:length(sessions),
         % reshape matrix to events X time X features
         samePairFeatureMat1 = permute(samePairFeatureMat1, [1 3 2]);
         samePairFeatureMat2 = permute(samePairFeatureMat2, [1 3 2]);
+        reversePairFeatureMat1 = permute(reversePairFeatureMat1, [1 3 2]);
+        reversePairFeatureMat2 = permute(reversePairFeatureMat2, [1 3 2]);
         diffPairFeatureMat1 = permute(diffPairFeatureMat1, [1 3 2]);
         diffPairFeatureMat2 = permute(diffPairFeatureMat2, [1 3 2]);
         
@@ -124,6 +128,7 @@ for iSesh=1:length(sessions),
         %%- Build Similarity Matrics
         % same Pairs
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
+        [eventReverse, featureReverse] = compute_reinstatement(reversePairFeatureMat1, reversePairFeatureMat2);
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
@@ -171,6 +176,7 @@ for iSesh=1:length(sessions),
         end
         %%- save reinstatement matrices
         save(strcat(matFile, '.mat'), 'eventSame', 'featureSame', ...
+                                        'eventReverse', 'featureReverse',...
                                         'eventDiff', 'featureDiff');
         
         % write debugging output to .txt file
