@@ -1,15 +1,11 @@
-close all
-clc
-clear all
-
 %%- Section for Pulling reinstatement matrices already produced and just
 %%make different plots
 ANALYSIS_TYPE = {'within_blocks', 'across_blocks'};
 EVENT_SYNC = {'probeon', 'vocalization', 'matchword'};
 
-subj = 'NIH039';
+subj = 'NIH034';
 ANALYSIS = ANALYSIS_TYPE{1};
-SYNC = EVENT_SYNC{3};
+SYNC = EVENT_SYNC{1};
 
 % file dir for all the saved mat files
 fileDir = strcat('./Figures/', subj, '/reinstatement_mat/', ANALYSIS, '_', SYNC, '/');
@@ -61,7 +57,7 @@ for iSesh=1:length(sessions),
             eventProbe = data.eventProbe;
             eventReverse = data.eventReverse;
             eventTarget = data.eventTarget;
-            featureReverse = data.featureReverse;
+            featureReverse = data.featureReverse
             featureTarget = data.featureTarget;
             featureProbe = data.featureProbe;
         end
@@ -98,69 +94,69 @@ for iSesh=1:length(sessions),
         LT = 1.5;
         
         %%- Plotting
-%         figure
-%         subplot(311)
-%         imagesc(squeeze(mean(eventSame(:, :, :),1)));
-%         title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
-%             ' with ', num2str(size(eventDiff,1)), ' events'])
-%         hold on
-%         xlabel('Time (seconds)');
-%         ylabel('Time (seconds)');
-%         ax = gca;
-%         axis square
-%         ax.YTick = ticks;
-%         ax.YTickLabel = labels;
-%         ax.XTick = ticks;
-%         ax.XTickLabel = labels;
-%         colormap('jet');
-%         set(gca,'tickdir','out','YDir','normal');
-%         set(gca, 'box', 'off');
-%         colorbar();
-%         clim = get(gca, 'clim');
-%         hold on
-%         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
-%         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-%        
-%         subplot(312);
-%         imagesc(squeeze(mean(eventDiff(:, :, :),1)));
-%         title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
-%         hold on
-%         xlabel('Time (seconds)');
-%         ylabel('Time (seconds)');
-%         ax = gca;
-%         axis square
-%         ax.YTick = ticks;
-%         ax.YTickLabel = labels;
-%         ax.XTick = ticks;
-%         ax.XTickLabel = labels;
-%         colormap('jet');
-%         set(gca,'tickdir','out','YDir','normal');
-%         set(gca, 'box', 'off');
-%         colorbar();
-%         set(gca, 'clim', clim);
-%         hold on
-%         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
-%         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-%         
-%         subplot(313);
-%         imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
-%         title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
-%         hold on
-%         xlabel('Time (seconds)');
-%         ylabel('Time (seconds)');
-%         ax = gca;
-%         axis square
-%         ax.YTick = ticks;
-%         ax.YTickLabel = labels;
-%         ax.XTick = ticks;
-%         ax.XTickLabel = labels;
-%         colormap('jet');
-%         set(gca,'tickdir','out','YDir','normal');
-%         set(gca, 'box', 'off');
-%         colorbar();
-%         hold on
-%         plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
-%         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        figure
+        subplot(311)
+        imagesc(squeeze(mean(eventSame(:, :, :),1)));
+        title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
+            ' with ', num2str(size(eventDiff,1)), ' events'])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        clim = get(gca, 'clim');
+        hold on
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+       
+        subplot(312);
+        imagesc(squeeze(mean(eventDiff(:, :, :),1)));
+        title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        set(gca, 'clim', clim);
+        hold on
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+        
+        subplot(313);
+        imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
+        title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        axis square
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
+        colormap('jet');
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        colorbar();
+        hold on
+        plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         %%- Save Image
 %         print(figureFile, '-dpng', '-r0')
@@ -172,13 +168,11 @@ for iSesh=1:length(sessions),
     size(avgeSameSessionReinstatement)
     size(avgeDiffSessionReinstatement)
     
-    eventSame = avgeSameSessionReinstatement;
-    eventDiff = avgeDiffSessionReinstatement;
-    
+    eventSame = avge
     figure
     subplot(311)
     imagesc(squeeze(mean(eventSame(:, :, :),1)));
-    title(['Same Pairs Cosine Similarity for ', sessions{iSesh}, ...
+    title(['Same Pairs Cosine Similarity for Block ', num2str(iBlock-1) ...
         ' with ', num2str(size(eventDiff,1)), ' events'])
     hold on
     xlabel('Time (seconds)');
@@ -200,7 +194,7 @@ for iSesh=1:length(sessions),
 
     subplot(312);
     imagesc(squeeze(mean(eventDiff(:, :, :),1)));
-    title(['Different Word Pairs Cosine Similarity'])
+    title(['Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
     hold on
     xlabel('Time (seconds)');
     ylabel('Time (seconds)');
@@ -221,7 +215,7 @@ for iSesh=1:length(sessions),
 
     subplot(313);
     imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
-    title(['Same-Different Word Pairs Cosine Similarity'])
+    title(['Same-Different Word Pairs Cosine Similarity for Block ', num2str(iBlock-1)])
     hold on
     xlabel('Time (seconds)');
     ylabel('Time (seconds)');
@@ -238,8 +232,6 @@ for iSesh=1:length(sessions),
     hold on
     plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+
     
-    figureFile = strcat('./Figures/', subj, '/reinstatement/', ANALYSIS, '_', SYNC, '/', ...
-        'summary_', sessions{iSesh});
-    print(figureFile, '-dpng', '-r0')
 end % loop through sessions
