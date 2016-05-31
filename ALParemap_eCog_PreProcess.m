@@ -184,8 +184,8 @@ if VOCALIZATION,
     disp('VOCALIZATION');
 elseif MATCHWORD,
     for iEvent=1:length(eventTrigger),
-        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
         eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
+        eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
     end
     LOWERTIME = -5;
     UPPERTIME = 1;
