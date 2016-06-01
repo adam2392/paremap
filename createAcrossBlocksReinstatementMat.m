@@ -23,12 +23,13 @@ addpath('./m_reinstatement/');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirWork = '/home/adamli/paremap';     % work
+eegRootDirJhu = '/home/adamli/paremap';     % work
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 
 % Determine which directory we're working with automatically
 if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
+elseif length(dir(eegRootDirJhu))>0, eegRootDir = eegRootDirJhu;
 elseif length(dir(eegRootDirHome))>0, eegRootDir = eegRootDirHome;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
