@@ -7,9 +7,12 @@ clear all
 ANALYSIS_TYPE = {'within_blocks', 'across_blocks'};
 EVENT_SYNC = {'probeon', 'vocalization', 'matchword'};
 
-subj = 'NIH039';
+subj = 'NIH034';
 ANALYSIS = ANALYSIS_TYPE{1};
 SYNC = EVENT_SYNC{3};
+
+disp(ANALYSIS)
+disp(SYNC)
 
 % file dir for all the saved mat files
 fileDir = strcat('./Figures/', subj, '/reinstatement_mat/', ANALYSIS, '_', SYNC, '/');
@@ -175,6 +178,20 @@ for iSesh=1:length(sessions),
     eventSame = avgeSameSessionReinstatement;
     eventDiff = avgeDiffSessionReinstatement;
     
+    
+    %%- Compute a t-test score for each pixel in heat map
+    [~, T, T] = size(eventSame);
+    eventTtest = zeros(T, T);
+    for i=1:T
+        for j=1:T
+            [h, p] = ttest2(eventSame(:, i, j), eventDiff(:, i, j));
+            if p > 0.05
+                p = 1;
+            end
+            eventTtest(i, j) = p;
+        end
+    end
+    
     figure
     subplot(311)
     imagesc(squeeze(mean(eventSame(:, :, :),1)));
@@ -220,7 +237,8 @@ for iSesh=1:length(sessions),
     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
 
     subplot(313);
-    imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
+%     imagesc(squeeze(mean(eventSame(:, :, :),1)) - squeeze(mean(eventDiff(:, :, :),1)));
+    imagesc(eventTtest);
     title(['Same-Different Word Pairs Cosine Similarity'])
     hold on
     xlabel('Time (seconds)');
@@ -234,12 +252,13 @@ for iSesh=1:length(sessions),
     colormap('jet');
     set(gca,'tickdir','out','YDir','normal');
     set(gca, 'box', 'off');
+    set(gca, 'clim', [0, 0.05]);
     colorbar();
     hold on
     plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
     
     figureFile = strcat('./Figures/', subj, '/reinstatement/', ANALYSIS, '_', SYNC, '/', ...
-        'summary_', sessions{iSesh});
+        'summaryttest_', sessions{iSesh});
     print(figureFile, '-dpng', '-r0')
 end % loop through sessions

@@ -49,9 +49,9 @@ events = events(correctIndices);
 % for i=1:length(events)
 %     events(i).mstime = events(i).matchOnTime - events(i).mstime;% - events(i).responseTime;
 % end
-% 
-% mean([events.mstime])
-% plot([events.mstime])
+
+mean([events.responseTime])
+plot([events.mstime])
 
 %%- Section for Pulling reinstatement matrices already produced and just
 %%make different plots
