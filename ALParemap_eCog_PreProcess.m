@@ -325,7 +325,7 @@ for iChan=1:numChannels
             fprintf('.');
             iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
             
-            disp(['Length of session eeg file: ', length(iEvStem)])
+%             disp(['Length of session eeg file: ', length(iEvStem)])
             for iF = 1:length(waveletFreqs),
                 allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
                 mu = mean(allVal); stdev = std(allVal);
