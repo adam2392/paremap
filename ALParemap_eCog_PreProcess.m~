@@ -456,6 +456,7 @@ for iChan=1:numChannels
                 %% SAVE PROCESSED DATA IN A MATLAB STRUCT
                 if SAVE,
                     %%- Save this new power matrix Z-scored into data .mat file
+                    data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
                     data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
                     data.sessionNum = sessionNumber;                % the session number
                     data.blockNum = blockNum;                       % the block number
@@ -465,13 +466,13 @@ for iChan=1:numChannels
                     data.chanStr = thisChanStr;                     % the string name of the channel
                     data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
                     data.freqBandYlabel = {freqBandAr.name};
-                    data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
+                    data.descriptor = 'Initial processing -1 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap';
                     data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
                     data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
                     data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
                     data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
                     data.freq = freq;                       % ROBUSTSPECT: save the frequency points
-                    
+
                     %%- SAVING DIR PARAMETERS
                     if ROBUST_SPEC,
                         TYPE_SPECT = 'robust_spec';
@@ -485,6 +486,7 @@ for iChan=1:numChannels
                     end
 
                     chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
+                    wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
 
                     % data directories to save data into
                     workDir = '/Users/liaj/Documents/MATLAB/paremap';
