@@ -1,7 +1,7 @@
 clear
 close all
 clc
-
+addpath('./m_reinstatement/');
 subj_list = {'NIH034', 'NIH039'};
 OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 
@@ -23,3 +23,5 @@ OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 % createAcrossBlocksReinstatementMat('NIH039', 1, 0);
 
 %% Looking at Vocalized Word Groups
+createWithinBlocksVocalizedGroupReinstatement('NIH034');
+createAcrossBlocksVocalizedGroupReinstatement('NIH034');
