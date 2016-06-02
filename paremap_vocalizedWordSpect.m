@@ -548,4 +548,5 @@ for iChan=1:numChannels
             end
         end % loop through block 
     end % loop through session
+    close all;
 end % loop through channels
