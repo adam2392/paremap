@@ -218,15 +218,15 @@ for iSesh=1:length(sessions),
         
         %%- Make bar plots from 0,0
         sameMean = mean(eventSame(:,timeZero,timeZero), 1);
-        sameSem = std(eventSame(:,timeZero,timeZero))/size(eventSame,1);
+        sameSem = std(eventSame(:,timeZero,timeZero))/sqrt(size(eventSame,1));
         diffMean = mean(eventDiff(:,timeZero,timeZero), 1);
-        diffSem = std(eventDiff(:,timeZero,timeZero))/size(eventDiff,1);
+        diffSem = std(eventDiff(:,timeZero,timeZero))/sqrt(size(eventDiff,1));
         probeMean = mean(eventProbe(:,timeZero,timeZero), 1);
-        probeSem = std(eventProbe(:,timeZero,timeZero))/size(eventProbe,1);
+        probeSem = std(eventProbe(:,timeZero,timeZero))/sqrt(size(eventProbe,1));
         targetMean = mean(eventTarget(:,timeZero,timeZero), 1);
-        targetSem = std(eventTarget(:,timeZero,timeZero))/size(eventTarget,1);
+        targetSem = std(eventTarget(:,timeZero,timeZero))/sqrt(size(eventTarget,1));
         reverseMean = mean(eventReverse(:,timeZero,timeZero), 1);
-        reverseSem = std(eventReverse(:,timeZero,timeZero))/size(eventReverse,1);
+        reverseSem = std(eventReverse(:,timeZero,timeZero))/sqrt(size(eventReverse,1));
         
         meanVec = [sameMean, diffMean, reverseMean, probeMean, targetMean];
         semVec = [sameSem, diffSem, reverseSem, probeSem, targetSem];
