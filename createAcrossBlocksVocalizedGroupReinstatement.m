@@ -29,12 +29,6 @@
                         'BRICK_JUICE', 'BRICK_PANTS', 'BRICK_BRICK', 'BRICK_GLASS', ...
                         'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', 'GLASS_JUICE', ...
                         'GLASS_GLASS', 'JUICE_JUICE'};
-    
-%     allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...
-%                     'BRICK_JUICE', 'BRICK_PANTS', 'BRICK_BRICK', 'BRICK_GLASS', 'BRICK_CLOCK', ...
-%                     'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', 'PANTS_CLOCK', 'PANTS_BRICK', ...
-%                     'GLASS_JUICE', 'GLASS_GLASS', 'GLASS_BRICK', 'GLASS_PANTS', 'GLASS_CLOCK', ...
-%                     'JUICE_JUICE', 'JUICE_GLASS', 'JUICE_BRICK', 'JUICE_CLOCK', 'JUICE_PANTS'};
 
     %% RUN ANALYSIS
     %%- LOOP THROUGH SESSIONS AND BLOCKS
@@ -122,13 +116,13 @@
                 
                 %%- 03: BUILD FEATURE MATRIX UP USING CELL ARRAY
                 % build onto feature matrices in cell mat
-%                 if allVocalizedIndices(index) == 0
-%                     eventReinMat{index} = eventRein;
-%                     featureReinMat{index} = featureRein;
-%                 else
-%                     eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
-%                     featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
-%                 end
+                if allVocalizedIndices(index) == 0
+                    eventReinMat{index} = eventRein;
+                    featureReinMat{index} = featureRein;
+                else
+                    eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
+                    featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
+                end
                 
                 % save the relevant mat files
                 if ~exist(strcat(matFile, '.mat'))
@@ -145,11 +139,7 @@
                 
                 allVocalizedIndices(index) = 1;
             end %loop through word pairs -> built feature matrix
-            
-            
-            % save the relevant mat files
-%             save(strcat(matFile, '.mat'), 'eventReinMat', 'featureReinMat');
-%                 
+    
             %%- 04: PLOTTING
             fig = figure;
             clim = [0 0]; %initialize colorbar
