@@ -187,20 +187,14 @@
 %                     allVocalizedPairs{index};
 %                     allVocalizedIndices(index) = 1;
                 end
-            end % end of loop through words
+            end % end of loop through words            
             
-            fig;
-            hFig = get(gcf);
-            hAxes = hFig.Children;
-            for i=1:2:length(hAxes)
-                hAxes(i).Limits = clim;
-                
-            end
-            
+            % change the color limit to the max in the group for comparison
             for i=1:length(fa)
                 fa{i}.CLim = clim;
             end
             
+            % change figure dimensions before saving
             fig = gcf;
             fig.PaperUnits = 'inches';
             pos = [5.1667 0.6806 9.9722 10.3889];

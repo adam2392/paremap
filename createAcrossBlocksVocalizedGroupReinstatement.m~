@@ -120,7 +120,7 @@
                     featureReinMat{index} = featureRein;
                 else
                     eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
-                    featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
+                    featureReinMat{index} = cat(1, featureReinMat{index}, featureRein
                 end
                 
                 allVocalizedIndices(index) = 1;
@@ -178,15 +178,6 @@
                 fa{i}.CLim = clim;
             end
             
-            % change figure dimensions before saving
-            fig = gcf;
-            fig.PaperUnits = 'inches';
-            pos = [5.1667 0.6806 9.9722 10.3889];
-            fig.PaperPosition = pos;
-            
-            %%- Save the image
-            print(figureFile, '-dpng', '-r0')
-            savefig(figureFile)
         end %loop thru blocks
     end %loop thru sessions
 % end

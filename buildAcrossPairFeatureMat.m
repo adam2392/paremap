@@ -1,12 +1,12 @@
-function [pairFeatureMat1, pairFeatureMat2] = buildAcrossPairFeatureMat(wordone, wordtwo, sessionBlockDir)
+function [pairFeatureMat1, pairFeatureMat2] = buildAcrossPairFeatureMat(wordone, wordtwo, sessionFirstBlockDir, sessionSecondBlockDir)
     pairFeatureMat1 = []; % initialize returned pair feature matrices
     pairFeatureMat2 = [];
 
     %%- 01: EXTRACT FILE DIRS FOR TWO VOCALIZED WORDS
-    wordoneDir = fullfile(sessionBlockDir, wordone);
+    wordoneDir = fullfile(sessionFirstBlockDir, wordone);
     filesone = dir(fullfile(wordoneDir));
     filesone = {filesone(3:end).name};
-    wordtwoDir = fullfile(sessionBlockDir, wordtwo);
+    wordtwoDir = fullfile(sessionSecondBlockDir, wordtwo);
     filestwo = dir(fullfile(wordtwoDir));
     filestwo = {filestwo(3:end).name};
 

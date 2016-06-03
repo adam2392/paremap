@@ -1,4 +1,4 @@
-function [sameGroup, reverseGroup, probeGroup, targetGroup, diffGroup] = createWithinWordGroups(firstwordpairs, secondwordpairs)
+function [sameGroup, reverseGroup, probeGroup, targetGroup, diffGroup] = createAcrossWordGroups(firstwordpairs, secondwordpairs)
     DEBUG_ON = 0;
 
     sameGroup = {};
