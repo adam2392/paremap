@@ -169,13 +169,13 @@
                     fieldname = strcat(wordPairs{iWord}{1}, '_', wordPairs{iWord}{2});
                     eventReinData.(fieldname) = eventRein;
                     featureReinData.(fieldname) = featureRein;
+                    save(strcat(matFile, '.mat'), 'eventReinData', 'featureReinData');
                 else
                     load(strcat(matFile, '.mat'));
                     fieldname = strcat(wordPairs{iWord}{1}, '_', wordPairs{iWord}{2});
                     eventReinData.(fieldname) = eventRein;
                     featureReinData.(fieldname) = featureRein;
                 end
-                save(strcat(matFile, '.mat'), 'eventReinData', 'featureReinData');
             end % end of loop through words            
             
             % change the color limit to the max in the group for comparison

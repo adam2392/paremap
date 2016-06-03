@@ -29,13 +29,20 @@
                         'BRICK_JUICE', 'BRICK_PANTS', 'BRICK_BRICK', 'BRICK_GLASS', ...
                         'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', 'GLASS_JUICE', ...
                         'GLASS_GLASS', 'JUICE_JUICE'};
+    
+%     allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...
+%                     'BRICK_JUICE', 'BRICK_PANTS', 'BRICK_BRICK', 'BRICK_GLASS', 'BRICK_CLOCK', ...
+%                     'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', 'PANTS_CLOCK', 'PANTS_BRICK', ...
+%                     'GLASS_JUICE', 'GLASS_GLASS', 'GLASS_BRICK', 'GLASS_PANTS', 'GLASS_CLOCK', ...
+%                     'JUICE_JUICE', 'JUICE_GLASS', 'JUICE_BRICK', 'JUICE_CLOCK', 'JUICE_PANTS'};
+
     %% RUN ANALYSIS
     %%- LOOP THROUGH SESSIONS AND BLOCKS
     for iSesh=1:length(sessions),
         for iBlock=1:length(blocks)-1, % loop through first 5 blocks and do across blocks analysis
             % initialize feature matrix cell
-            eventReinMat = {};
-            featureReinMat = {};
+            eventReinMat = cell(length(allVocalizedPairs), 1);
+            featureReinMat = cell(length(allVocalizedPairs), 1);
             allVocalizedIndices = zeros(length(allVocalizedPairs), 1);
             
             %%- 01: BUILD WORD PAIRS
@@ -51,8 +58,8 @@
             %%- set plotting directories and meta data output
             figureDir = strcat('./Figures/', subj, '/reinstatement/across_blocks_vocalizationWord/');
             matDir = strcat('./Figures/', subj, '/reinstatement_mat/across_blocks_vocalizationWord/');
-            figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
-            matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));  
+            figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs', num2str(blocks{iBlock+1}));
+            matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs', num2str(blocks{iBlock+1}));  
             if ~exist(figureDir)
                 mkdir(figureDir)
             end
@@ -142,12 +149,13 @@
             labels = [-1:1:4];
             
             for iPlot=1:length(allVocalizedPairs)
-                eventRein = featureMat{iPlot};
+                iPlot
+                eventRein = eventReinMat{iPlot};
                 wordSplit = strsplit(allVocalizedPairs{iPlot}, '_');
                 wordone = wordSplit{1};
                 wordtwo = wordSplit{2};
                 
-                if allVocalizedIndices(index) == 1
+                if allVocalizedIndices(iPlot) == 1
                     fa{iPlot} = subplot(4, 4, iPlot);
                     imagesc(squeeze(mean(eventRein(:,:,:),1)));
                     title({['Cosine Similarity for Block ', num2str(iBlock-1), ...
@@ -171,11 +179,15 @@
                     clim(2) = max(tempclim(2), clim(2));
                     plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
                     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+                else
+                    disp('did nothing')
                 end
             end
             % change the color limit to the max in the group for comparison
-            for i=1:length(fa)
-                fa{i}.CLim = clim;
+            for i=1:length(allVocalizedPairs)
+                if allVocalizedIndices(i) == 1
+                    fa{i}.CLim = clim;
+                end
             end
             
             % change figure dimensions before saving
@@ -187,6 +199,8 @@
             %%- Save the image
             print(figureFile, '-dpng', '-r0')
             savefig(figureFile)
+            
+            close all
         end %loop thru blocks
     end %loop thru sessions
 % end
