@@ -41,8 +41,8 @@
     for iSesh=1:length(sessions),
         for iBlock=1:length(blocks)-1, % loop through first 5 blocks and do across blocks analysis
             % initialize feature matrix cell
-            eventReinMat = cell(length(allVocalizedPairs), 1);
-            featureReinMat = cell(length(allVocalizedPairs), 1);
+%             eventReinMat = cell(length(allVocalizedPairs), 1);
+%             featureReinMat = cell(length(allVocalizedPairs), 1);
             allVocalizedIndices = zeros(length(allVocalizedPairs), 1);
             
             %%- 01: BUILD WORD PAIRS
@@ -122,22 +122,34 @@
                 
                 %%- 03: BUILD FEATURE MATRIX UP USING CELL ARRAY
                 % build onto feature matrices in cell mat
-                if allVocalizedIndices(index) == 0
-                    eventReinMat{index} = eventRein;
-                    featureReinMat{index} = featureRein;
+%                 if allVocalizedIndices(index) == 0
+%                     eventReinMat{index} = eventRein;
+%                     featureReinMat{index} = featureRein;
+%                 else
+%                     eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
+%                     featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
+%                 end
+                
+                % save the relevant mat files
+                if ~exist(strcat(matFile, '.mat'))
+                    fieldname = strcat(firstWord, '_', secondWord);
+                    eventReinData.(fieldname) = eventRein;
+                    featureReinData.(fieldname) = featureRein;
                 else
-                    eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
-                    featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
+                    load(strcat(matFile, '.mat'));
+                    fieldname = strcat(firstWord, '_', secondWord);
+                    eventReinData.(fieldname) = eventRein;
+                    featureReinData.(fieldname) = featureRein;
                 end
+                save(strcat(matFile, '.mat'), 'eventReinData', 'featureReinData');
                 
                 allVocalizedIndices(index) = 1;
-            end
+            end %loop through word pairs -> built feature matrix
             
-            eventReinMat
             
             % save the relevant mat files
-            save(strcat(matFile, '.mat'), 'eventReinMat', 'featureReinMat');
-                
+%             save(strcat(matFile, '.mat'), 'eventReinMat', 'featureReinMat');
+%                 
             %%- 04: PLOTTING
             fig = figure;
             clim = [0 0]; %initialize colorbar
