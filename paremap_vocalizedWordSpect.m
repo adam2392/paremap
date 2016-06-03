@@ -14,7 +14,7 @@ clc;
 
 subj = 'NIH034';
 VOCALIZATION = 1;
-figFontAx = 16;
+figFontAx = 12;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
 % subj = 'NIH034';
@@ -260,6 +260,10 @@ ALPHA = 300;    % l1 regularization parameter
 WINDOW = 200;   % window size for spectrotemporal pursuit
 FS = 1000;      % sampling frequency of data
 
+%%- LOAD IN THE ELECTRODE DATA 
+electrodesFile = strcat('/home/adamli/paremap/', subj, '/tal/mono_talGen/talSurf_', subj);
+electrodes = load(electrodesFile);
+
 SAVE = 1;       % save data?
 for iChan=1:numChannels
     powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
@@ -389,12 +393,8 @@ for iChan=1:numChannels
     
     % create vector of the actual seconds in time axis for the powerMat
     % (since its time binned)...
-%     LOWERTIME = 1001;
-%     UPPERTIME = 6000;
     OVERLAP = 100;
     WINSIZE = 500;
-%     FS = 1000;
-%     TIMEZERO = 2000;
     if tWin == 0, % if not set yet
         tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
     end
@@ -410,7 +410,7 @@ for iChan=1:numChannels
     end
     %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
     addpath('./m_oldAnalysis_anovaANDsinglechannel/');
-    WINDOWSIZE = 500; % in milliseconds
+    WINDOWSIZE = 500; % in millisecPROCESSED DATA IN A MATLAB STRUCTonds
     OVERLAP = 100;    % in milliseconds
     powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);
  
@@ -427,32 +427,51 @@ for iChan=1:numChannels
         size(powerMatZ)
     end
     
+    electrodeArea = strcat(electrodes.events(iChan).Loc2, ' @ ', electrodes.events(iChan).Loc3);
+    
     %%- 01: SPLIT INTO JUST THE WORDS (TARGET/VOCALIZED)
     targetWords = unique({events.targetWord});
-    fig = figure;
+    
+    minIndices = 100000;
+    %%- find the lowest nubmer of events to downsample
     for iTarget=1:length(targetWords)
         THIS_TARGET = targetWords{iTarget};
         eventIndices = find(strcmp({events.targetWord}, THIS_TARGET));
-
+        minIndices = min(length(eventIndices), minIndices);
+    end
+    
+    fig = figure;
+    fa = {}; % cell array pointers to subplots
+    clim=[0 0];
+    for iTarget=1:length(targetWords)
+        THIS_TARGET = targetWords{iTarget};
+        eventIndices = find(strcmp({events.targetWord}, THIS_TARGET)); % find all indices of this target word
+        randIndices = randsample(length(eventIndices), minIndices);
+        eventIndices = eventIndices(randIndices); % downsample indices
+        
         thisPowMat = powerMatZ(eventIndices,:,:);
 
-        titleStr = ['Spectrogram of ', targetWords{iTarget}, ' with ', ...
-            num2str(size(thisPowMat,1)), ' events'];
+        titleStr = {['Spectrogram of ', targetWords{iTarget}, ' with ', ...
+            num2str(size(thisPowMat,1)), ' events'], [electrodeArea]};
         fig;
-        subplot(3, 2, iTarget);
+        fa{iTarget} = subplot(3, 2, iTarget);
         imagesc(tWin, 1:7, squeeze(mean(thisPowMat, 1)));
         hold on; colormap(jet);
-        hCbar = colorbar('east');
+        hCbar = colorbar('eastoutside');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right', 'fontsize',14); 
         set(gca, 'xtick');
+        set(gca, 'box', 'off');
         set(gca,'ytick',1:7,...
             'yticklabel',{'delta', 'theta', 'alpha', 'beta', 'low gamma', 'high gamma', 'HFO'}, ...
-            'fontsize',20);
+            'fontsize',14);
         set(gca,'tickdir','out','YDir','normal');
         set(gca,'fontsize',figFontAx);
-        title(titleStr, 'fontsize',20);
+        title(titleStr, 'fontsize',14);
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
     end
-    %% SAVE PROCESSED DATA IN A MATLAB STRUCT
+    %% SAVE AVERAGED IMAGE ACROSS ALL SESSIONS/BLOCKS
     if SAVE,
         %%- SAVING DIR PARAMETERS
         TYPE_SPECT = '';
@@ -463,7 +482,7 @@ for iChan=1:numChannels
         end
 
         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
-
+        set(gca, 'box', 'off');
         % data directories to save data into
         figureDir = strcat('./Figures/', subj, '_SpectCheck', TYPE_SPECT, '/', 'summary/');
         figureFile = strcat(figureDir, chanStr{iChan});
@@ -477,7 +496,14 @@ for iChan=1:numChannels
         fig.PaperPosition = pos;
 
         %%- Save Image
-        print(figureFile, '-dpng', '-r0');           
+        print(figureFile, '-dpng', '-r0');  
+        
+        %%- ALSO SAVE AN IMAGE THAT ALL HAS THE SAME CLIM
+        for iTarget=1:length(targetWords)
+            fa{iTarget}.CLim = clim;
+        end
+        figureFile = strcat(figureDir, 'same_clim', chanStr{iChan});
+        print(figureFile, '-dpng', '-r0');
     end
     
     %%- 02: SPLIT INTO SESSIONS AND BLOCKS
@@ -502,8 +528,8 @@ for iChan=1:numChannels
                 % block
                 thisPowMat = powerMatZ(eventIndices,:,:);
                 
-                titleStr = ['Spectrogram of ', targetWords{iTarget}, ' with ', ...
-                    num2str(size(thisPowMat,1)), ' events'];
+                titleStr = {['Spectrogram of ', targetWords{iTarget}, ' with ', ...
+                    num2str(size(thisPowMat,1)), ' events'], [electrodeArea]};
                 
                 fig;
                 subplot(2, 2, iTarget);
@@ -512,12 +538,13 @@ for iChan=1:numChannels
                 hCbar = colorbar('east');
                 set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right', 'fontsize',14); 
                 set(gca, 'xtick');
+                set(gca, 'box', 'off');
                 set(gca,'ytick',1:7,...
                     'yticklabel',{'delta', 'theta', 'alpha', 'beta', 'low gamma', 'high gamma', 'HFO'}, ...
-                    'fontsize',20);
+                    'fontsize',14);
                 set(gca,'tickdir','out','YDir','normal');
                 set(gca,'fontsize',figFontAx);
-                title(titleStr, 'fontsize',20);
+                title(titleStr, 'fontsize',14);
             end
             %% SAVE PROCESSED DATA IN A MATLAB STRUCT
             if SAVE,
