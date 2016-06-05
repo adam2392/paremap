@@ -1,7 +1,7 @@
 % function createAcrossBlocksVocalizedGroupReinstatement(subj)
     close all;
     
-    subj = 'NIH034';
+    subj = 'NIH039';
     sessNum = [0, 1, 2];
     addpath('./m_reinstatement/');
     
@@ -150,7 +150,7 @@
             ticks = [6:10:56]; % for 6 seconds of data
             labels = [-1:1:4];
             
-            for iPlot=1:length(allVocalizedPairs)
+            for iPlot=1:length(eventReinMat)
                 iPlot
                 eventRein = eventReinMat{iPlot};
                 wordSplit = strsplit(allVocalizedPairs{iPlot}, '_');
