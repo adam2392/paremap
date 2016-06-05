@@ -1,0 +1,60 @@
+
+Accuracy for pair: ,"['BRICK', 'CLOCK']"
+Accuracy of Nearest Neighbors: 0.55 (+/- 0.50)
+Accuracy of Linear SVM: 0.58 (+/- 0.49)
+Accuracy of Random Forest: 0.67 (+/- 0.47)
+Accuracy of Logistic Regression: 0.62 (+/- 0.48)
+
+Accuracy for pair: ,"['BRICK', 'GLASS']"
+Accuracy of Nearest Neighbors: 0.89 (+/- 0.31)
+Accuracy of Linear SVM: 0.90 (+/- 0.30)
+Accuracy of Random Forest: 0.88 (+/- 0.33)
+Accuracy of Logistic Regression: 0.92 (+/- 0.27)
+
+Accuracy for pair: ,"['BRICK', 'JUICE']"
+Accuracy of Nearest Neighbors: 0.82 (+/- 0.39)
+Accuracy of Linear SVM: 0.79 (+/- 0.40)
+Accuracy of Random Forest: 0.83 (+/- 0.38)
+Accuracy of Logistic Regression: 0.84 (+/- 0.36)
+
+Accuracy for pair: ,"['BRICK', 'PANTS']"
+Accuracy of Nearest Neighbors: 0.82 (+/- 0.38)
+Accuracy of Linear SVM: 0.82 (+/- 0.38)
+Accuracy of Random Forest: 0.83 (+/- 0.38)
+Accuracy of Logistic Regression: 0.86 (+/- 0.35)
+
+Accuracy for pair: ,"['CLOCK', 'GLASS']"
+Accuracy of Nearest Neighbors: 0.78 (+/- 0.42)
+Accuracy of Linear SVM: 0.79 (+/- 0.41)
+Accuracy of Random Forest: 0.78 (+/- 0.41)
+Accuracy of Logistic Regression: 0.83 (+/- 0.38)
+
+Accuracy for pair: ,"['CLOCK', 'JUICE']"
+Accuracy of Nearest Neighbors: 0.66 (+/- 0.47)
+Accuracy of Linear SVM: 0.70 (+/- 0.46)
+Accuracy of Random Forest: 0.71 (+/- 0.45)
+Accuracy of Logistic Regression: 0.71 (+/- 0.45)
+
+Accuracy for pair: ,"['CLOCK', 'PANTS']"
+Accuracy of Nearest Neighbors: 0.69 (+/- 0.46)
+Accuracy of Linear SVM: 0.74 (+/- 0.44)
+Accuracy of Random Forest: 0.71 (+/- 0.45)
+Accuracy of Logistic Regression: 0.78 (+/- 0.42)
+
+Accuracy for pair: ,"['GLASS', 'JUICE']"
+Accuracy of Nearest Neighbors: 0.57 (+/- 0.50)
+Accuracy of Linear SVM: 0.64 (+/- 0.48)
+Accuracy of Random Forest: 0.62 (+/- 0.49)
+Accuracy of Logistic Regression: 0.67 (+/- 0.47)
+
+Accuracy for pair: ,"['GLASS', 'PANTS']"
+Accuracy of Nearest Neighbors: 0.60 (+/- 0.49)
+Accuracy of Linear SVM: 0.60 (+/- 0.49)
+Accuracy of Random Forest: 0.60 (+/- 0.49)
+Accuracy of Logistic Regression: 0.62 (+/- 0.49)
+
+Accuracy for pair: ,"['JUICE', 'PANTS']"
+Accuracy of Nearest Neighbors: 0.48 (+/- 0.50)
+Accuracy of Linear SVM: 0.64 (+/- 0.48)
+Accuracy of Random Forest: 0.57 (+/- 0.50)
+Accuracy of Logistic Regression: 0.67 (+/- 0.47)
