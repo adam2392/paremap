@@ -1,7 +1,7 @@
 % function createWithinBlocksVocalizedGroupReinstatement(subj)
     close all;
     
-    subj = 'NIH034';
+    subj = 'NIH039';
     sessNum = [0, 1, 2];
     addpath('./m_reinstatement/');
     
