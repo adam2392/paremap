@@ -12,7 +12,7 @@ clear all;
 close all;
 clc;
 
-subj = 'NIH034';
+subj = 'NIH039';
 VOCALIZATION = 1;
 figFontAx = 12;
 
@@ -261,7 +261,8 @@ WINDOW = 200;   % window size for spectrotemporal pursuit
 FS = 1000;      % sampling frequency of data
 
 %%- LOAD IN THE ELECTRODE DATA 
-electrodesFile = strcat('/home/adamli/paremap/', subj, '/tal/mono_talGen/talSurf_', subj);
+% electrodesFile = strcat('/home/adamli/paremap/', subj, '/tal/mono_talGen/talSurf_', subj);
+electrodesFile = strcat('/home/adamli/paremap/', subj, '/tal/talSurf_monopolar.mat');
 electrodes = load(electrodesFile);
 
 SAVE = 1;       % save data?
