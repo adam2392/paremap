@@ -7,23 +7,42 @@
 %%------------------    VARIABLES USED WHEN RUNNING AS SCRIPT (commment out otherwise)   -----------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function ALParemap_eCog_PreProcess(subj, VOCALIZATION, MATCHWORD)
+% subject, timeLock
+
+
+function ALParemap_eCog_PreProcess(subj, typeTransform, timeLock, referenceType, winSize, stepSize)
 % clear all;
 close all;
 clc;
 
-subj = 'NIH034';
-VOCALIZATION = 1;
-MATCHWORD = 0;
-%% PARAMETERS FOR RUNNING PREPROCESS
 % subj = 'NIH034';
-sessNum = [0, 1, 2];
-DEBUG = 1;
-
-REF_TYPES = {'noreref', 'bipolar', 'global'};
-THIS_REF_TYPE = REF_TYPES{3}; 
+% timeLock = 'vocalization';
+% referenceType = 'global';
+% winSize = 500;
+% stepSize = 100;
+% typeTransform = 'multitaper';
 
 USE_CHAN_SUBSET = 0; % 0=all channels, 1=process the subset
+%% PARAMETERS FOR RUNNING PREPROCESS
+expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
+expected_transforms = {'morlet', 'multitaper'};
+REF_TYPES = {'noreref', 'bipolar', 'global'};
+
+DEBUG = 1;
+if ~ismember(timeLock, expected_timeLocks)
+    disp('timeLock should be vocalization, matchword, or probeword');
+end
+if ~ismember(referenceType, REF_TYPES)
+    disp('reference types are noreref, bipolar, or global');
+end
+if ~ismember(typeTransform, expected_transforms)
+    disp('transform types are morlet, multitaper');
+end
+
+% REFERENCE ELECTRODE
+THIS_REF_TYPE = referenceType; 
+% FILTERING OPTIONS
+BP_FILTER_RAW                 = 1;  %-0 or 1: apply a bandpass filter to the raw traces (1-499 hz)
 
 % array of frequency bands
 freqBandAr(1).name    = 'delta';
@@ -50,10 +69,6 @@ end
 freqBandYticks  = unique([freqBandAr(1:7).rangeF]);
 for iFB=1:length(freqBandYticks), freqBandYtickLabels{iFB} = sprintf('%.0f Hz', freqBandYticks(iFB)); end
 
-% FILTERING OPTIONS
-BP_FILTER_RAW                 = 1;  %-0 or 1: apply a bandpass filter to the raw traces (1-499 hz)
-PROCESS_CHANNELS_SEQUENTIALLY = 1;  %0 or 1:  0 means extract all at once, 1 means sequentially
-
 %% LOAD EVENTS STRUCT AND SET DIRECTORIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
@@ -63,23 +78,15 @@ eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation'
 eegRootDirJhu = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
-if     length(dir(eegRootDirWork))>0, eegRootDir = eegRootDirWork;
-elseif length(dir(eegRootDirHome))>0, eegRootDir = eegRootDirHome;
-elseif length(dir(eegRootDirJhu))>0, eegRootDir = eegRootDirJhu;
+if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
+elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
 % Either go through all the sessions, or a specific session
-if sessNum == -1 | length(sessNum)>1, % all sessions
-    disp('STEP 1: Going through all sessions')
-    session = 'Meta Session [all]';
-    behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap');
-    sessStr = '[all]';
-else                                  % one session
-    disp('STEP 1: Going through one session')
-    session = sprintf('session_%d',sessNum);
-    behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap/', session);
-    sessStr = sprintf('[%d]',sessNum);
-end
+disp('STEP 1: Going through all sessions')
+session = 'Meta Session [all]';
+behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap');
 
 subjDir = fullfileEEG(eegRootDir,subj); % directory to subject (e.g. NIH034)
 docsDir = fullfileEEG(subjDir,'docs');  % directory to the docs (electordes.m, tagNames.txt, etc.)
@@ -119,27 +126,35 @@ iChanListSub = []; % list of the subset of channels we want to analyze (e.g. [48
 switch THIS_REF_TYPE
     case 'noreref'  
     case 'bipolar'
+        fprintf('Bipolar referencing');
+        chanFile      = [talDir '/leads_bp.txt'];
+        [chan1 chan2] = textread(chanFile,'%d%*c%d');
+        chanList      = [chan1 chan2];
+        for iChan=1:size(chanList,1),
+            %    chanStr{iChan} = sprintf('%d-%d (%s-%s)', chan1(iChan), chan2(iChan), chanTags{find(chanNums==chan1(iChan))}, chanTags{find(chanNums==chan2(iChan))} );
+            chanStr{iChan} = sprintf('%s-%s', chanTags{find(chanNums==chan1(iChan))}, chanTags{find(chanNums==chan2(iChan))} );
+        end
+        chanRefs      = [];
+        eventEEGpath  = '/eeg.reref/';
     case 'global' % look at global electrodes / monopolar
         fprintf('STEP 1: Using Global referencing\n');
         chanFile      = [talDir '/leads.txt'];
         chanList      = textread(chanFile,'%d'); % read in the list of channels nums
-        
+
         % set the names for each channel
         for iChan=1:size(chanList,1),
             chanStr{iChan} = sprintf('%s-global', chanTags{find(chanNums==chanList(iChan))} );
         end
         eventEEGpath  = '/eeg.reref/';
-        
-        iChanListSub  = 33:96;            %G1, G2, LF1, AST1,
     otherwise
         fprintf('Error, no referencing scheme selected');
 end
 
+iChanListSub  = 33:96;            %G1, G2, LF1, AST1,
 %%- select all channels, or part of the subset of channels
 if USE_CHAN_SUBSET==0,
     iChanList = 1:size(chanList,1);  %all possible channels
 else
-%     iChanList = iChanListSub(1:min([length(iChanListSub) USE_CHAN_SUBSET]));    %select subset of channels
     iChanList = iChanListSub;
 end
 
@@ -178,26 +193,26 @@ clear docsDir eegRootDir eegRootDirHome eegRootDirWork talDir behDir
 eventTrigger = events;
 
 % offset to synchronize with vocalization
-if VOCALIZATION,
+if strcmp(timeLock, 'vocalization'),
     for iEvent=1:length(eventTrigger),
         eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + eventTrigger(iEvent).responseTime;
         eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).responseTime);
     end
     LOWERTIME = -2;
-    UPPERTIME = 4;
+    UPPERTIME = 3;
     disp('VOCALIZATION');
-elseif MATCHWORD,
+elseif strcmp(timeLock, 'matchword'),
     for iEvent=1:length(eventTrigger),
         eventTrigger(iEvent).eegoffset = eventTrigger(iEvent).eegoffset + round(eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
         eventTrigger(iEvent).mstime = eventTrigger(iEvent).mstime + (eventTrigger(iEvent).matchOnTime - eventTrigger(iEvent).mstime);
     end
-    LOWERTIME = -5;
+    LOWERTIME = -4;
     UPPERTIME = 1;
     disp('MATCHWORD');
-elseif ~VOCALIZATION && ~MATCHWORD
+elseif strcmp(timeLock, 'probeword')
     % Settings for probewordon synchronization
     LOWERTIME = -1;
-    UPPERTIME = 5;
+    UPPERTIME = 4;
     disp('PROBE WORD ON');
 else
     error('not set correctly.');
@@ -238,13 +253,8 @@ waveletFreqs = eeganalparams('freqs');
 waveletWidth = eeganalparams('width');
 
 %-- pre-allocate memory (to make sure it can be done!)
-if PROCESS_CHANNELS_SEQUENTIALLY==0,  
-    numChanPrealloc = numChannels;  
-else
-    numChanPrealloc = 1;
-end
 % #channels X #events X #freqs. X #timepoints = 4D array
-arrayGB = numChanPrealloc * length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
+arrayGB = length(eventTrigger) * length(waveletFreqs) * DurationMS * 8 / 2^30; % 8 bytes per double, 2^30 bytes/GB
 clear defaultEEGfile subjDir eventEEGpath
 % print statements for debugging and process checking
 fprintf('\n');
@@ -253,11 +263,8 @@ fprintf('\n');
 fprintf('The amount of RAM (GB) needed is: %d', arrayGB);
 fprintf('\n\n');
 disp('Variables to use here are:')
-disp('powerMat, powerMatZ, phaseMat, numChanPrealloc')
+disp('powerMat, powerMatZ, phaseMat')
 disp('waveletFreqs, waveletWidth, ..')
-
-fprintf('Number of preallocated channels are: %d', numChanPrealloc)
-fprintf('\n');
 fprintf('Duration of analysis is: %d\n', DurationMS)
 
 %% EXTRACT, FILTER, PROCESS AND SAVE PREPROCESS DATA
@@ -271,15 +278,34 @@ FS = 1000;      % sampling frequency of data
 
 SAVE = 1;       % save data?
 for iChan=1:numChannels
-    powerMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-    powerMatZ = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
-    phaseMat  = zeros(numChanPrealloc, length(eventTrigger), length(waveletFreqs), DurationMS);
+    powerMat  = zeros(length(eventTrigger), length(waveletFreqs), DurationMS);
+    powerMatZ = zeros(length(eventTrigger), length(waveletFreqs), DurationMS);
+    phaseMat  = zeros(length(eventTrigger), length(waveletFreqs), DurationMS);
     
     thisChan = chanList(iChan,:);   % the channel to use in this loop (e.g. 48)
     thisChanStr = chanStr{iChan};
     strStart    = sprintf('\n STEP 5.%d -- Grab %d/%d: %s', iChan, iChan, numChannels, thisChanStr );  strStart(end+1:35)=' '; %buffer length so everything lines up
     fprintf('%s', strStart);   tic;
     
+    %% SETTINGS FOR SAVING PROCESSED DATA 
+    chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
+
+    % data directories to save data into
+    workDir = '/Users/liaj/Documents/MATLAB/paremap';
+    homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
+    jhuDir = '/home/adamli/paremap/';
+
+    % Determine which directory we're working with automatically
+    if     ~isempty(dir(workDir)), rootDir = workDir;
+    elseif ~isempty(dir(homeDir)), rootDir = homeDir;
+    elseif ~isempty(dir(jhuDir)), rootDir = jhuDir;
+    else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+
+    subjDir = strcat('condensed_data_', subj);
+    typeTransformDir = fullfile(rootDir, subjDir, strcat(typeTransform, '_', referenceType));
+    responseDir = fullfile(typeTransformDir, timeLock);
+
+    %% EXTRACT WAVEFORM, TRANSFORM, LOAD, SAVE
     %%- gete_ms: get the eegWaveV
     % eegwaveform for each event over the duration of time for a certain channel
     eegWaveV = gete_ms(thisChan,eventTrigger,DurationMS+(2*BufferMS),OffsetMS-BufferMS,0,preFiltFreq,preFiltType,preFiltOrder,resampledrate);
@@ -287,8 +313,8 @@ for iChan=1:numChannels
     % notch filter to eliminate 60 Hz noise
     fprintf(' [%.1f sec] --> notch filt\n', toc); tic;
     eegWaveV = buttfilt(eegWaveV,[59.5 60.5],resampledrate,'stop',1); %-filter is overkill: order 1 --> 25 dB drop (removing 5-15dB peak)
-    
-    if ~ROBUST_SPEC % OPTION 1: perform wavelet spectral analysis
+        
+    if strcmp(typeTransform, 'morlet') % OPTION 1: perform wavelet spectral analysis
         %%- multiphasevec3: get the phase and power
         % power, phase matrices for events x frequency x duration of time for each channel
         fprintf(' [%.1f sec] --> freq decomp', toc); tic;
@@ -313,43 +339,69 @@ for iChan=1:numChannels
         iEv = 1:length(eventTrigger); % # of events
         iT  = 1:size(eegWaveV,2); % # of time points
         iF  = 1:length(waveletFreqs); % # of freqs.
-        iChanSave = 1;
 
         % chan X event X freq X time
         % make power 10*log(power)
-        powerMat(iChanSave,iEv,iF,iT) = 10*log10(rawPow);
-        phaseMat(iChanSave,iEv,iF,iT) = rawPhase;
-
-    %     for each eegfile stem, z-score each channel and frequency
-        fprintf(' [%.1f sec] --> z-score', toc);  tic;
-        stemList = unique({eventTrigger.eegfile});
+        powerMat(iEv,iF,iT) = 10*log10(rawPow);
+        phaseMat(iEv,iF,iT) = rawPhase;
         
-        % indices of the powerMat to Z-score wrt
-        for iStem=1:length(stemList),
-            fprintf('.');
-            iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
-            
-%             disp(['Length of session eeg file: ', length(iEvStem)])
-            for iF = 1:length(waveletFreqs),
-                allVal = reshape(squeeze(powerMat(iChanSave,iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
-                mu = mean(allVal); stdev = std(allVal);
-
-                % create the power matrix
-                powerMatZ(iChanSave,iEvStem,iF,iT) = (powerMat(iChanSave,iEvStem,iF,iT)-mu)/stdev;
-
-                if sum(isnan(powerMatZ(iChanSave,iEvStem,iF,iT)))>0
-                    keyboard;
-                end
-            end
-        end
         % set two paramters from robust spectrotemp to 0 
         tWin = 0;
         freq = 0;
+        freqs = waveletFreqs;
+        
+        % create vector of the actual seconds in time axis for the powerMat
+        % (since its time binned)...
+        OVERLAP = stepSize;
+        WINSIZE = winSize;
+        if tWin == 0, % if not set yet
+            tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
+        end
+        timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS) - (WINSIZE - OVERLAP)/OVERLAP;
+
         
         fprintf(' [%.1f sec]', toc); tic;
         clear rawPow rawPhase
         disp('powerMatZ, powerMat and phaseMat are created')
-    else % OPTION 2: Perform robust spectrotemporal pursuit instead 
+    elseif strcmp(typeTransform, 'multitaper')
+        eegWaveV = eegWaveV(:,BufferMS+1:end-BufferMS); % remove buffer area
+        eegWaveT = (OffsetMS:DurationMS+OffsetMS-1)/1000; 
+     
+        Fs = 1000;
+        T = winSize/1000;
+        overlap = stepSize/1000;
+        mtBandWidth = 4;
+        mtFreqs = [];
+
+        %%- multitaper FFT 
+        [rawPowBase, freqs_FFT, t_sec,rawPhaseBase] = eeg_mtwelch2(eegWaveV, Fs, T, overlap, mtBandWidth, mtFreqs, 'eigen');
+        fprintf(' [multitaper%.1f|',toc); tic;
+        freq = freqs_FFT;
+        
+        powerMat = 10*log10(rawPowBase);
+       
+        freqs = freqs_FFT;
+        
+        % temp indicies
+        iEv = 1:length(eventTrigger); % # of events
+        iT  = 1:size(powerMat,3); % # of time points
+        iF  = 1:length(freqs); % # of freqs.
+        
+        tWin = t_sec + LOWERTIME;
+        [~, timeZero] = min(abs(tWin(:,2) + tWin(:,1)));
+%         rawPSD = zeros(size(rawPowBase));
+%         rawPhase = zeros(size(rawPhaseBase));
+%         for iEvent=1:size(eegWaveV, 1),
+%             X = eegWaveV(iEvent, :);
+%             [~, PS, PSD, freqs_FFT, all_phase, t_sec] = fft_spectral(X,Fs,T,overlap, 'multitaper', 4, 'weights', 'eigen');
+%             rawPSD(iEvent,:,:) = PSD;
+%             
+%             if ~isempty(find(squeeze(rawPowBase(iEvent,:,:)) == PSD))
+%                 disp('wtf')
+%             end
+%         end
+%         fprintf(' [multitaper %.1f|',toc); tic;
+    elseif strcmp(typeTransform, 'robust_spec') % OPTION 2: Perform robust spectrotemporal pursuit instead 
         %%- REMOVE LEADING/TRAILING BUFFER REGION FOR EEGWAVE
         eegWaveV = eegWaveV(:,BufferMS+1:end-BufferMS); % remove buffer area
         eegWaveT = (OffsetMS:DurationMS+OffsetMS-1)/1000; 
@@ -394,44 +446,55 @@ for iChan=1:numChannels
         end
         fprintf(' [%.1f sec]', toc);
     end
+    
+    %     for each eegfile stem, z-score each channel and frequency
+    fprintf(' [%.1f sec] --> z-score', toc);  tic;
+    stemList = unique({eventTrigger.eegfile});
+    powerMatZ = zeros(size(powerMat));
+    
+    % indices of the powerMat to Z-score wrt
+    for iStem=1:length(stemList),
+        fprintf('.');
+        iEvStem = find(strcmp({eventTrigger.eegfile}, stemList{iStem}));
+
+%             disp(['Length of session eeg file: ', length(iEvStem)])
+        for iF = 1:length(freqs),
+            allVal = reshape(squeeze(powerMat(iEvStem,iF,iT)),length(iEvStem)*length(iT),1); %allVal for particular chan and freq
+            mu = mean(allVal); stdev = std(allVal);
+
+            % create the power matrix
+            powerMatZ(iEvStem,iF,iT) = (powerMat(iEvStem,iF,iT)-mu)/stdev;
+
+            if sum(isnan(powerMatZ(iEvStem,iF,iT)))>0
+                keyboard;
+            end
+        end
+    end
+    
+    if strcmp(typeTransform, 'morlet')
+        %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
+        addpath('./m_oldAnalysis_anovaANDsinglechannel/');
+        WINDOWSIZE = 500; % in milliseconds
+        OVERLAP = 100;    % in milliseconds
+        powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);
+
+        if DEBUG,
+            size(powerMatZ)
+        end
+
+        %% FREQUENCY BIN WITH FREQUENCY BANDS
+        rangeFreqs = reshape([freqBandAr.rangeF], 2, 7)';
+        waveletFreqs = waveletFreqs;
+        powerMatZ = freqBinSpectrogram(powerMatZ, rangeFreqs, waveletFreqs);
+
+        if DEBUG,
+            size(powerMatZ)
+        end
+    elseif strcmp(typeTransform, 'multitaper')
+        %%- FREQUENCY BIN
+    end
+    
     clear powerMat
-    
-    % create vector of the actual seconds in time axis for the powerMat
-    % (since its time binned)...
-%     LOWERTIME = 1001;
-%     UPPERTIME = 6000;
-    OVERLAP = 100;
-    WINSIZE = 500;
-%     FS = 1000;
-%     TIMEZERO = 2000;
-    if tWin == 0, % if not set yet
-        tWin = (LOWERTIME) :OVERLAP/FS: (UPPERTIME)-WINSIZE/FS;
-    end
-    timeZero = abs(0-(LOWERTIME))/(OVERLAP/FS);
-
-  % remake powerMatZ to the points that we want (before probe on -> 3.5
-    % seconds later
-    powerMatZ = squeeze(powerMatZ); % only get the powerMatZ time points we want... (1001 - 2000+3500) = -1.0 seconds -> 3.5 seconds
-%     powerMatZ = powerMatZ(:,:,LOWERTIME:UPPERTIME);
-    
-    if DEBUG,
-        size(powerMatZ)
-    end
-    %% TIME BIN POWERMATZ WITH WINDOWSIZE AND OVERLAP
-    addpath('./m_oldAnalysis_anovaANDsinglechannel/');
-    WINDOWSIZE = 500; % in milliseconds
-    OVERLAP = 100;    % in milliseconds
-    powerMatZ = timeBinSpectrogram(powerMatZ, WINDOWSIZE, OVERLAP);
- 
-    if DEBUG,
-        size(powerMatZ)
-    end
-    
-    %% FREQUENCY BIN WITH FREQUENCY BANDS
-    rangeFreqs = reshape([freqBandAr.rangeF], 2, 7)';
-    waveletFreqs = waveletFreqs;
-    powerMatZ = freqBinSpectrogram(powerMatZ, rangeFreqs, waveletFreqs);
-
     if DEBUG,
         size(powerMatZ)
     end
@@ -456,29 +519,13 @@ for iChan=1:numChannels
             data.freqBandYlabel = {freqBandAr.name};
             data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
             data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-            data.vocalization = data.timeZero + ceil([events(eventIndices).responseTime]/OVERLAP);
             data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
 %             data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
 %             data.freq = freq;                       % ROBUSTSPECT: save the frequency points
 
-            chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
-
-            % data directories to save data into
-            workDir = '/Users/liaj/Documents/MATLAB/paremap';
-            homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-            jhuDir = '/home/adamli/paremap/';
-
-            % Determine which directory we're working with automatically
-            if     length(dir(workDir))>0, rootDir = workDir;
-            elseif length(dir(homeDir))>0, rootDir = homeDir;
-            elseif length(dir(jhuDir))>0, rootDir = jhuDir;
-            else   error('Neither Work nor Home EEG directories exist! Exiting'); end
-
-            dataDir = strcat('condensed_data_', subj);
-            typeTransformDir = fullfile(rootDir, dataDir, 'summary_vocalization');
-            fileDir = fullfile(typeTransformDir, THIS_TARGET);
-            chanFilePath = fullfile(fileDir, chanFileName);; 
-
+            fileDir = strcat(responseDir, '_targetWords/', THIS_TARGET);
+            chanFilePath = fullfile(fileDir, chanFileName);
+            
             if ~exist(fileDir)
                 mkdir(fileDir);
             end
@@ -569,88 +616,62 @@ for iChan=1:numChannels
             %%- SAVE 03: WORD PAIRS PER SESSION/BLOCK
             %%- CARRY OUT REGULAR ANALYSIS ON WORD PAIR GROUPS
             %%- LOOP THROUGH PROBEWORDS
-%             probeWords = unique({events(sessionBlockIndices).probeWord});
-%             for iProbe=1:length(probeWords),
-%                 THIS_PROBE = probeWords{iProbe};
-%                 
-%                 % events for this probeWord and their targetWords
-%                 probeIndices = strcmp({events.probeWord}, THIS_PROBE);
-%                 tempEvents = events(probeIndices & sessionBlockIndices);
-%                 targetWords = unique({tempEvents.targetWord});
-%                 
-%                 %%- LOOP THROUGH TARGETWORDS FOR EACH PROBEWORD
-%                 for iTarget=1:length(targetWords),
-%                     THIS_TARGET = targetWords{iTarget};
-%                     
-%                     % match probe, target, session and block
-%                     eventIndices = find(strcmp({events.probeWord}, THIS_PROBE) & ...
-%                                     strcmp({events.targetWord}, THIS_TARGET) & ...
-%                                     sessionBlockIndices);
-%                     sessionBlockWordPairEvents = events(eventIndices);
-%                     
-%                     blockNum = unique({sessionBlockWordPairEvents.blocknumber});
-%                     sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
-%                     
-%                     thisPowMat = powerMatZ(eventIndices,:,:);
-%                     
-%                     %% SAVE PROCESSED DATA IN A MATLAB STRUCT
-%                     if SAVE,
-%                         %%- Save this new power matrix Z-scored into data .mat file
-%                         data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
-%                         data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
-%                         data.sessionNum = sessionNumber;                % the session number
-%                         data.blockNum = blockNum;                       % the block number
-%                         data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
-%                         data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
-%                         data.chanNum = thisChan;                        % store the corresponding channel number
-%                         data.chanStr = thisChanStr;                     % the string name of the channel
-%                         data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
-%                         data.freqBandYlabel = {freqBandAr.name};
-%                         data.descriptor = 'Initial processing -1 seconds to 5 seconds after probeWordOn. Time binned with 500ms window and 100ms overlap';
-%                         data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-%                         data.vocalization = data.timeZero + ceil([sessionBlockWordPairEvents.responseTime]/OVERLAP);
-%                         data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-%                         data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-%                         data.freq = freq;                       % ROBUSTSPECT: save the frequency points
-% 
-%                         %%- SAVING DIR PARAMETERS
-%                         if ROBUST_SPEC,
-%                             TYPE_SPECT = 'robust_spec';
-%                         else
-%                             TYPE_SPECT = 'morlet_spec';
-%                         end
-%                         if VOCALIZATION
-%                             TYPE_SPECT = strcat(TYPE_SPECT, '_vocalization');
-%                         elseif MATCHWORD
-%                             TYPE_SPECT = strcat(TYPE_SPECT, '_matchword');
-%                         end
-%                         
-%                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
-%                         wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
-%                         
-%                         % data directories to save data into
-%                         workDir = '/Users/liaj/Documents/MATLAB/paremap';
-%                         homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-%                         jhuDir = '/home/adamli/paremap/';
-%                         
-%                         % Determine which directory we're working with automatically
-%                         if     length(dir(workDir))>0, rootDir = workDir;
-%                         elseif length(dir(homeDir))>0, rootDir = homeDir;
-%                         elseif length(dir(jhuDir))>0, rootDir = jhuDir;
-%                         else   error('Neither Work nor Home EEG directories exist! Exiting'); end
-%                         
-%                         dataDir = strcat('condensed_data_', subj);
-%                         typeTransformDir = fullfile(rootDir, dataDir, TYPE_SPECT);
-%                         fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
-%                         chanFilePath = fullfile(fileDir, chanFileName);; 
-% 
-%                         if ~exist(fileDir)
-%                             mkdir(fileDir);
-%                         end
-%                         save(chanFilePath, 'data');            
-%                     end
-%                 end % loop through target
-%             end % loop through probe
+            probeWords = unique({events(sessionBlockIndices).probeWord});
+            for iProbe=1:length(probeWords),
+                THIS_PROBE = probeWords{iProbe};
+                
+                % events for this probeWord and their targetWords
+                probeIndices = strcmp({events.probeWord}, THIS_PROBE);
+                tempEvents = events(probeIndices & sessionBlockIndices);
+                targetWords = unique({tempEvents.targetWord});
+                
+                %%- LOOP THROUGH TARGETWORDS FOR EACH PROBEWORD
+                for iTarget=1:length(targetWords),
+                    THIS_TARGET = targetWords{iTarget};
+                    
+                    % match probe, target, session and block
+                    eventIndices = find(strcmp({events.probeWord}, THIS_PROBE) & ...
+                                    strcmp({events.targetWord}, THIS_TARGET) & ...
+                                    sessionBlockIndices);
+                    sessionBlockWordPairEvents = events(eventIndices);
+                    
+                    blockNum = unique({sessionBlockWordPairEvents.blocknumber});
+                    sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
+                    
+                    thisPowMat = powerMatZ(eventIndices,:,:);
+                    
+                    %% SAVE PROCESSED DATA IN A MATLAB STRUCT
+                    if SAVE,
+                        %%- Save this new power matrix Z-scored into data .mat file
+                        data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
+                        data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
+                        data.sessionNum = sessionNumber;                % the session number
+                        data.blockNum = blockNum;                       % the block number
+                        data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
+                        data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
+                        data.chanNum = thisChan;                        % store the corresponding channel number
+                        data.chanStr = thisChanStr;                     % the string name of the channel
+                        data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
+                        data.freqBandYlabel = {freqBandAr.name};
+                        data.descriptor = 'Initial processing -2 seconds to 3 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
+                        data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+                        data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
+                        data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
+                        data.freq = freq;                       % ROBUSTSPECT: save the frequency points
+
+                        %%- SAVING DIR PARAMETERS
+                        chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
+                        wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
+                        fileDir = fullfile(responseDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
+                        chanFilePath = fullfile(fileDir, chanFileName);; 
+
+                        if ~exist(fileDir)
+                            mkdir(fileDir);
+                        end
+                        save(chanFilePath, 'data');            
+                    end
+                end % loop through target
+            end % loop through probe
         end % loop through block 
     end % loop through session
 end

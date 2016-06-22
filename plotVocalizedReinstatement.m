@@ -8,7 +8,7 @@ ANALYSIS_TYPE = {'within_blocks', 'across_blocks'};
 EVENT_SYNC = {'probeon', 'vocalizationWord'};
 
 subj = 'NIH039';
-ANALYSIS = ANALYSIS_TYPE{1};
+ANALYSIS = ANALYSIS_TYPE{2};
 SYNC = EVENT_SYNC{2};
 
 disp(ANALYSIS)
