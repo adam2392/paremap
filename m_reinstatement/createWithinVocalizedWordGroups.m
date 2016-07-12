@@ -4,7 +4,7 @@ function wordPairs = createWithinVocalizedWordGroups(targetWords)
     for i=1:length(targetWords)
         wordPairs{i} = {targetWords{i}, targetWords{i}};
     end
-    allWordCombs = combnk(targetWords, 2)
+    allWordCombs = combnk(targetWords, 2);
 
     len = length(wordPairs);
     for i=1:length(allWordCombs)

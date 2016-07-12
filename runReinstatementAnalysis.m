@@ -6,13 +6,24 @@ subj_list = {'NIH034', 'NIH039'};
 OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 
 %% Looking at Pairs of Words
-%%- run within blocks analysis
-% createWithinBlocksReinstatementMat('NIH034', 0, 1); % sync to matchwordon
-% createWithinBlocksReinstatementMat('NIH039', 0, 1); % sync to matchword
-% createWithinBlocksReinstatementMat('NIH034', 0, 0); % sync to probewordon
-% createWithinBlocksReinstatementMat('NIH039', 0, 0); % sync to probewordon
-% createWithinBlocksReinstatementMat('NIH034', 1, 0); % sync to vocalization
-% createWithinBlocksReinstatementMat('NIH039', 1, 0); 
+%%- MORLET BIPOLAR VOCALIZATION within/across blocks
+createWithinBlocksReinstatementMat('NIH034', 'morlet', 'vocalization', 'bipolar');
+% createWithinBlocksReinstatementMat('NIH039', 'morlet', 'vocalization', 'bipolar');
+createAcrossBlocksReinstatementMat('NIH034', 'morlet', 'vocalization', 'bipolar');
+% createAcrossBlocksReinstatementMat('NIH039', 'morlet', 'vocalization', 'bipolar');
+
+% VOCALIZED WORD GROUPS
+% createWithinBlocksVocalizedGroupReinstatement('NIH034', 'morlet', 'vocalization', 'bipolar');
+% createAcrossBlocksVocalizedGroupReinstatement('NIH034', 'morlet', 'vocalization', 'bipolar');
+% createWithinBlocksVocalizedGroupReinstatement('NIH034', 'multitaper', 'vocalization', 'bipolar');
+% createAcrossBlocksVocalizedGroupReinstatement('NIH034', 'multitaper', 'vocalization', 'bipolar');
+
+%%- MULTITAPER GLOBAL VOCALIZATION
+% createWithinBlocksReinstatementMat('NIH034', 'multitaper', 'vocalization', 'global');
+% createWithinBlocksReinstatementMat('NIH039', 'multitaper', 'vocalization', 'global');
+% createAcrossBlocksReinstatementMat('NIH034', 'multitaper', 'vocalization', 'global');
+% createAcrossBlocksReinstatementMat('NIH039', 'multitaper', 'vocalization', 'global');
+
 
 % %%- run across blocks analysis
 % createAcrossBlocksReinstatementMat('NIH034', 0, 1); % sync matchwordon
@@ -23,5 +34,5 @@ OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 % createAcrossBlocksReinstatementMat('NIH039', 1, 0);
 
 %% Looking at Vocalized Word Groups
-createWithinBlocksVocalizedGroupReinstatement('NIH034');
-createAcrossBlocksVocalizedGroupReinstatement('NIH034');
+% createWithinBlocksVocalizedGroupReinstatement('NIH034');
+% createAcrossBlocksVocalizedGroupReinstatement('NIH034');
