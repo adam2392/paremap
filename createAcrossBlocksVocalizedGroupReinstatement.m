@@ -2,10 +2,10 @@ function createAcrossBlocksVocalizedGroupReinstatement(subj, typeTransform, time
     close all;
     
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
-timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeTransform = 'morlet';
+% subj = 'NIH034';
+% timeLock = 'vocalization';
+% referenceType = 'bipolar';
+% typeTransform = 'morlet';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
@@ -30,7 +30,7 @@ addpath('./m_reinstatement/');
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
+dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 
@@ -111,7 +111,6 @@ for iSesh=1:length(sessions),
             wordSplit = strsplit(wordPairs{iPair}, '_');
             firstWord = wordSplit{1};
             secondWord = wordSplit{2};
-            wordSplit
             
             %%- 02: BUILD FEATURE MATRIX 
             [pairFeatureMat1, pairFeatureMat2] = buildAcrossPairFeatureMat(firstWord, secondWord, sessionFirstBlockDir, sessionSecondBlockDir);                
@@ -158,19 +157,6 @@ for iSesh=1:length(sessions),
                 eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
                 featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
             end
-
-            % save the relevant mat files
-%             if ~exist(strcat(matFile, '.mat'))
-%                 fieldname = strcat(firstWord, '_', secondWord);
-%                 eventReinData.(fieldname) = eventRein;
-%                 featureReinData.(fieldname) = featureRein;
-%             else
-%                 load(strcat(matFile, '.mat'));
-%                 fieldname = strcat(firstWord, '_', secondWord);
-%                 eventReinData.(fieldname) = eventRein;
-%                 featureReinData.(fieldname) = featureRein;
-%             end
-%             save(strcat(matFile, '.mat'), 'eventReinData', 'featureReinData');
 
             allVocalizedIndices(index) = 1;
         end %loop through word pairs -> built feature matrix

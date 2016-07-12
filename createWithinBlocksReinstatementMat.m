@@ -10,10 +10,10 @@ clc;
 %% PARAMETERS FOR RUNNING PREPROCESS
 % subj = 'NIH034';
 % timeLock = 'vocalization';
-% referenceType = 'global';
+% referenceType = 'bipolar';
 % % winSize = 500;
 % % stepSize = 100;
-% typeTransform = 'multitaper';
+% typeTransform = 'morlet';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};

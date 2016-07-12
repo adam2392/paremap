@@ -3,10 +3,10 @@ function createWithinBlocksVocalizedGroupReinstatement(subj, typeTransform, time
 close all;
     
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
-timeLock = 'vocalization';
-referenceType = 'global';
-typeTransform = 'multitaper';
+% subj = 'NIH034';
+% timeLock = 'vocalization';
+% referenceType = 'bipolar';
+% typeTransform = 'morlet';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
@@ -64,16 +64,14 @@ events = events(correctIndices);
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
+dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-
 if strcmp(subj, 'NIH039')
     sessions = sessions([1,2,4]);
 elseif strcmp(subj, 'NIH034')
     sessions = sessions([3, 4]);
 end
-sessions
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
 
@@ -104,96 +102,103 @@ end
                 
 %% CREATE VOCALIZED WORD GROUPS
 %%- LOOP THROUGH SESSIONS AND BLOCKS
+%%- LOOP THROUGH SESSIONS
 for iSesh=1:length(sessions),
+    %%- LOOP THROUGH BLOCKS
     for iBlock=1:length(blocks),
-        allVocalizedIndices = zeros(length(allVocalizedPairs), 1);
-
-        %%- 01: BUILD WORD PAIRS
         % get word pairs in this session-block
         targetWords = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock}));
         targetWords = {targetWords(3:end).name};
+        % get all pairs of target words
         wordPairs = createWithinVocalizedWordGroups(targetWords);
-
-        %%- BUILD FEATURE MATRIX FOR EACH WORD PAIR
-        sessionBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
-
+        wordPairs{:}
+        
         %%- set plotting directories and meta data output
-        figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));
-        matFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));  
+        figureFile = strcat(figureDir, sessions{iSesh}, '_', blocks{iBlock});
+        matFile = strcat(matDir, sessions{iSesh}, '_', blocks{iBlock});
         
         %%- do some error logging in a .txt file
         wordpairs = [wordPairs{:}];
-        logFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), '.txt');
+        logFile = strcat(matDir, sessions{iSesh}, '_', blocks{iBlock}, '.txt');
         fid = fopen(logFile, 'w');
         fprintf(fid, '%6s \n', 'Block(i) Target Words (vocalized):');
-        fprintf(fid, '%6s \n', targetWords{:}); 
+        fprintf(fid, '%6s \n', fullfile(dataDir, sessions{iSesh}, blocks{iBlock})); 
         fprintf(fid, '%6s \n', 'Word Pairs:');
         fprintf(fid, '%6s \n', wordpairs{:}); 
 
+        % initialize cell arrays to store data
         eventReinMat = {};
         featureReinMat = {};
-        %%- loop through every unique word pair of vocalized words
-        for iWord=1:length(wordPairs),
-%             wordSplit = strsplit(wordPairs{iWord}, '_');
-%             firstWord = wordSplit{1};
-%             secondWord = wordSplit{2};
-%             
-%             firstWord
-%             secondWord
-            
+        sessionBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
+        
+        %%- NOW LOOP THROUGH ALL TARGETWORDS SAVED FOR SESSION/BLOCK
+        allVocalizedIndices = zeros(length(allVocalizedPairs), 1);
+
+        %%- NOW LOOP THROUGH ALL PAIRS OF TARGET WORDS TO COMPARE
+        %%REINSTATEMENT MAPS
+        for iWord=1:length(wordPairs),            
             wordone = wordPairs{iWord}{1}; % first vocalized word
             wordtwo = wordPairs{iWord}{2}; % second vocalized word
 
             %%- 02: BUILD FEATURE MATRICES
-            %%- get pair feature matrices for every vocalized word
-            %%- comparison
+            %%- get pair feature matrices for every vocalized word comparison
             [pairFeatureMat1, pairFeatureMat2] = buildWithinPairFeatureMat(wordone, wordtwo, sessionBlockDir);
             % change time/features dimensions
             pairFeatureMat1 = permute(pairFeatureMat1, [1 3 2]);
             pairFeatureMat2 = permute(pairFeatureMat2, [1 3 2]);
+
+            size(pairFeatureMat1)
+            size(pairFeatureMat2)
 
             %%- 03: BUILD REINSTATEMENT MATRICES
             [eventRein, featureRein] = compute_reinstatement(pairFeatureMat1, pairFeatureMat2);
             size(eventRein)
             size(featureRein)
 
+
             checkOne = strjoin({wordone, wordtwo}, '_');
             checkTwo = strjoin({wordtwo, wordone}, '_');
-            %%- 02: FIND INDEX IN MASTER LIST OF WORDPAIRS
+            disp('Finished building reinstatement matrices for: ');
+            checkOne
+            checkTwo
+            %%- 04: FIND INDEX IN MASTER LIST OF WORDPAIRS
             % Check if this pair is in our list of 15 vocalization pairs
             if (ismember(checkOne, allVocalizedPairs) ||...
                 ismember(checkTwo, allVocalizedPairs))
 
                 %- find first combintation
-                index = cellfun(@(x) strcmp(checkOne, x), allVocalizedPairs, 'UniformOutput', 0);
-                if isempty(find([index{:}] == 1)) %- find second combination
-                    index = cellfun(@(x) strcmp(checkTwo, x), allVocalizedPairs, 'UniformOutput', 0);
+                ind = cellfun(@(x) strcmp(checkOne, x), allVocalizedPairs, 'UniformOutput', 0);
+                if isempty(find([ind{:}] == 1)) %- find second combination
+                    ind = cellfun(@(x) strcmp(checkTwo, x), allVocalizedPairs, 'UniformOutput', 0);
                 end
-                index = find([index{:}] == 1);
+                ind = find([ind{:}] == 1);
 
                 %- neither combination, then it is an incorrec vocalized
                 %word
-                if ~strcmp(allVocalizedPairs{index}, checkOne) &&...
-                        ~strcmp(allVocalizedPairs{index}, checkTwo)
+                if ~strcmp(allVocalizedPairs{ind}, checkOne) &&...
+                        ~strcmp(allVocalizedPairs{ind}, checkTwo)
                     disp('error?');
                 end
             end
-            
-            %%- 03: BUILD FEATURE MATRIX PER VOCALIZED WORD PAIR
-            if allVocalizedIndices(index) == 0
-                eventReinMat{index} = eventRein;
-                featureReinMat{index} = featureRein;
+
+            %%- 05: BUILD FEATURE MATRIX PER VOCALIZED WORD PAIR
+            if allVocalizedIndices(ind) == 0
+                eventReinMat{ind} = eventRein;
+                featureReinMat{ind} = featureRein;
             else
-                eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
-                featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
+                eventReinMat{ind} = cat(1, eventReinMat{ind}, eventRein);
+                featureReinMat{ind} = cat(1, featureReinMat{ind}, featureRein);
             end
-            
-            allVocalizedIndices(index) = 1;
+
+            allVocalizedIndices(ind) = 1;
         end
-           
+        size(eventReinMat)
+
+        %%- finished building reinstatement map of within-block targetWord
+        %%Pairs, and now save per session/block
         %%- SAVE MAT FILE PER BLOCK
         save(strcat(matFile, '.mat'), 'eventReinMat', 'featureReinMat', 'allVocalizedIndices');
-        
+
         %%- 04: PLOTTING
         fig = figure;
         clim = [0 0]; %initialize colorbar
@@ -204,7 +209,7 @@ for iSesh=1:length(sessions),
             wordSplit = strsplit(allVocalizedPairs{iPlot}, '_');
             wordone = wordSplit{1};
             wordtwo = wordSplit{2};
-            
+
             if allVocalizedIndices(iPlot) == 1
                 fa{iWord} = subplot(5, 2, iWord);
                 imagesc(squeeze(mean(eventRein(:,:,:),1)));
@@ -248,8 +253,8 @@ for iSesh=1:length(sessions),
         %%- Save the image
         print(figureFile, '-dpng', '-r0')
         savefig(figureFile)
-        
+
         close all
     end % loop through blocks
 end % loop through sessions
-% end
+

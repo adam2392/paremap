@@ -17,7 +17,7 @@ clc;
 
 % subj = 'NIH034';
 % timeLock = 'vocalization';
-% referenceType = 'global';
+% referenceType = 'bipolar';
 % winSize = 500;
 % stepSize = 100;
 % typeTransform = 'multitaper';
@@ -500,38 +500,38 @@ for iChan=1:numChannels
     end
     
     %%- SAVE 01: ENTIRE DATASET PER CHANNEL
-    targetWords = unique({events.targetWord});
-    for iTarget=1:length(targetWords)
-        THIS_TARGET = targetWords{iTarget};
-        
-        eventIndices = find(strcmp({events.targetWord}, THIS_TARGET));
-        thisPowMat = powerMatZ(eventIndices,:,:);
-        size(thisPowMat)
-        
-        if SAVE,
-            %%- Save this new power matrix Z-scored into data .mat file
-            data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
-            data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
-            data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
-            data.chanNum = thisChan;                        % store the corresponding channel number
-            data.chanStr = thisChanStr;                     % the string name of the channel
-            data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
-            data.freqBandYlabel = {freqBandAr.name};
-            data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
-            data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-            data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-%             data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-%             data.freq = freq;                       % ROBUSTSPECT: save the frequency points
-
-            fileDir = strcat(responseDir, '_targetWords/', THIS_TARGET);
-            chanFilePath = fullfile(fileDir, chanFileName);
-            
-            if ~exist(fileDir)
-                mkdir(fileDir);
-            end
-            save(chanFilePath, 'data');            
-        end
-    end % loop through targetwords
+%     targetWords = unique({events.targetWord});
+%     for iTarget=1:length(targetWords)
+%         THIS_TARGET = targetWords{iTarget};
+%         
+%         eventIndices = find(strcmp({events.targetWord}, THIS_TARGET));
+%         thisPowMat = powerMatZ(eventIndices,:,:);
+%         size(thisPowMat)
+%         
+%         if SAVE,
+%             %%- Save this new power matrix Z-scored into data .mat file
+%             data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
+%             data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
+%             data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
+%             data.chanNum = thisChan;                        % store the corresponding channel number
+%             data.chanStr = thisChanStr;                     % the string name of the channel
+%             data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
+%             data.freqBandYlabel = {freqBandAr.name};
+%             data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
+%             data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+%             data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
+% %             data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
+% %             data.freq = freq;                       % ROBUSTSPECT: save the frequency points
+% 
+%             fileDir = strcat(responseDir, '_targetWords/', THIS_TARGET);
+%             chanFilePath = fullfile(fileDir, chanFileName);
+%             
+%             if ~exist(fileDir)
+%                 mkdir(fileDir);
+%             end
+%             save(chanFilePath, 'data');            
+%         end
+%     end % loop through targetwords
 
     %%- SAVE 02: VOCALIZED WORDS PER SESSION/BLOCK
     % SPLIT INTO SESSIONS AND BLOCKS
@@ -545,7 +545,7 @@ for iChan=1:numChannels
              
             %%- ONLY ANALYZE TARGET WORDS -> VOCALIZATION OF 'S' SOUNDING
 %             targetWords = unique({events(sessionBlockIndices).targetWord});
-%             
+            
 %             for iTarget=1:length(targetWords)
 %                 THIS_TARGET = targetWords{iTarget};
 %                 eventIndices = find(strcmp({events.targetWord}, THIS_TARGET) & ...
@@ -571,41 +571,20 @@ for iChan=1:numChannels
 %                     data.freqBandYlabel = {freqBandAr.name};
 %                     data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
 %                     data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-%                     data.vocalization = data.timeZero + ceil([sessionBlockVocalWordEvents.responseTime]/OVERLAP);
 %                     data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
 %                     data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
 %                     data.freq = freq;                       % ROBUSTSPECT: save the frequency points
 %                     
 %                     %%- SAVING DIR PARAMETERS
-%                     if ROBUST_SPEC,
-%                         TYPE_SPECT = 'robust_spec';
-%                     else
-%                         TYPE_SPECT = 'morlet_spec';
-%                     end
-%                     if VOCALIZATION
-%                         TYPE_SPECT = strcat(TYPE_SPECT, '_vocalization');
-%                     elseif MATCHWORD
-%                         TYPE_SPECT = strcat(TYPE_SPECT, '_matchword');
-%                     end
-% 
-%                     chanFileName = strcat(num2str(thisChan), '_', thisChanStr, '_', TYPE_SPECT);
-% 
-%                     % data directories to save data into
-%                     workDir = '/Users/liaj/Documents/MATLAB/paremap';
-%                     homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-%                     jhuDir = '/home/adamli/paremap/';
-% 
-%                     % Determine which directory we're working with automatically
-%                     if     length(dir(workDir))>0, rootDir = workDir;
-%                     elseif length(dir(homeDir))>0, rootDir = homeDir;
-%                     elseif length(dir(jhuDir))>0, rootDir = jhuDir;
-%                     else   error('Neither Work nor Home EEG directories exist! Exiting'); end
-% 
-%                     dataDir = strcat('condensed_data_', subj);
-%                     typeTransformDir = fullfile(rootDir, dataDir, TYPE_SPECT);
-%                     fileDir = fullfile(typeTransformDir, subjSessions{iSesh}, subjBlocks{iBlock}, THIS_TARGET);
+%                     chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
+%                     word_name = strcat(THIS_TARGET);
+%                     fileDir = fullfile(strcat(responseDir, '_sessiontargetwords'), subjSessions{iSesh}, subjBlocks{iBlock}, word_name);
 %                     chanFilePath = fullfile(fileDir, chanFileName);; 
 % 
+%                     if ~exist(fileDir)
+%                         mkdir(fileDir);
+%                     end
+%                     
 %                     if ~exist(fileDir)
 %                         mkdir(fileDir);
 %                     end
@@ -672,6 +651,7 @@ for iChan=1:numChannels
                     end
                 end % loop through target
             end % loop through probe
+
         end % loop through block 
     end % loop through session
 end

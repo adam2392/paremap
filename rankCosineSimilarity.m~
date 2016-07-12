@@ -143,20 +143,20 @@ for iMat=1:length(sessionMats),
     %%PRE-VOCALIZATION
     size(preVocal)
     
+    % plot
+    figure
+    plot(preVocal)
+    title(['Feature Ranking of Cosine Similarity In a PreVocalization Block'])
+    hold on
+    xlabel('features (7 frequency bands for every electrode)');
+    ylabel('Different minus Same Pair Comparison');
+    ax = gca;
+    
     N = 30; % the first N largest feature differences
     % find max indice and the related channel/freq band
     [sortedX, sortingIndices] = sort(preVocal, 'descend'); % sorted in descending order
     maxValues = sortedX(1:N);
     maxValueIndices = sortingIndices(1:N);
-    
-    % plot
-%     figure
-%     plot(preVocal)
-%     title(['Feature Ranking of Cosine Similarity In a PreVocalization Block'])
-%     hold on
-%     xlabel('features (7 frequency bands for every electrode)');
-%     ylabel('Different minus Same Pair Comparison');
-%     ax = gca;
     
     % plot the preVocal max
 %     figure
@@ -168,10 +168,8 @@ for iMat=1:length(sessionMats),
     importantFreqs = importantFreqs + 1;
     importantFreqs = freqBands(importantFreqs);
 
-    fprintf(fid, '\n %6s \n', sessionMats{iMat}); % print which session it came from
+    fprintf(fid, '%6s \n', sessionMats{iMat}); % print which session it came from
     for i=1:N
         fprintf(fid, '%6s \n', [importantChannels{i}, ' , ', importantFreqs{i}]);
     end                                               
 end
-
-fclose(fid);
