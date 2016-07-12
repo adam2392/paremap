@@ -1,5 +1,7 @@
 % function createAcrossBlocksVocalizedGroupReinstatement(subj)
     close all;
+    clear all;
+    clc;
     
     subj = 'NIH039';
     sessNum = [0, 1, 2];
