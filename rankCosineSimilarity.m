@@ -8,7 +8,7 @@ clc
 close all
 
 subj = 'NIH034';
-typeTransform = 'morlet';
+typeTransform = 'multitaper';
 timeLock = 'vocalization';
 referenceType = 'bipolar';
 typeReinstatement = 'within_blocks';
@@ -106,14 +106,16 @@ freqBands = {'delta', 'theta', 'alpha', 'beta', 'low gamma', 'high gamma', 'HFO'
 
 clear chan1 chan2 chanFile chanNums chanRefs eventEEGpath chanTags correctIndices ...
     eventEEGpath eegRootDir eegRootDirHome eegRootDirJhu eegRootDirWork ...
-    iChan jackSheet labels talDir subjDir 
+    iChan jackSheet talDir subjDir 
 
 %%- OPEN UP LOG FILE TO PRINT OUT MOST IMPORTANT FEATURES
 logFile = strcat(featureMatDir, '/', subj, '.txt');
 fid = fopen(logFile, 'w');
+LT = 1.5;
 
 % loop through all session mat files -> extract same, reverse, different
 for iMat=1:length(sessionMats),
+    sessionMats{iMat}
     data = load(strcat(featureMatDir, '/', sessionMats{iMat}));
     featureSame = data.featureSame;
     featureDiff = data.featureDiff;
@@ -128,7 +130,7 @@ for iMat=1:length(sessionMats),
         featureSamePreVocal = squeeze(featureSame(i, timePeriod, timePeriod));
         featureDiffPreVocal = squeeze(featureDiff(i, timePeriod, timePeriod));
         
-        size(featureSamePreVocal)
+%         size(featureSamePreVocal)
         
         % compute the mean difference between same pairs and different
         % pairs -> computes a score for this feature and how different it is
@@ -149,7 +151,7 @@ for iMat=1:length(sessionMats),
     maxValues = sortedX(1:N);
     maxValueIndices = sortingIndices(1:N);
     
-    % plot
+    %%- plot
 %     figure
 %     plot(preVocal)
 %     title(['Feature Ranking of Cosine Similarity In a PreVocalization Block'])
@@ -158,20 +160,85 @@ for iMat=1:length(sessionMats),
 %     ylabel('Different minus Same Pair Comparison');
 %     ax = gca;
     
-    % plot the preVocal max
+    %%- plot the preVocal max
 %     figure
 %     plot(maxValues)
 
-    importantChannels = ceil(maxValueIndices/7);
-    importantChannels = chanStr(importantChannels);
-    importantFreqs = mod(maxValueIndices, 7);
-    importantFreqs = importantFreqs + 1;
-    importantFreqs = freqBands(importantFreqs);
+    importantChannelIndices = ceil(maxValueIndices/7);
+    importantChannels = chanStr(importantChannelIndices);
+    importantFreqIndices = mod(maxValueIndices, 7);
+    importantFreqIndices = importantFreqIndices + 1;
+    importantFreqs = freqBands(importantFreqIndices);
 
     fprintf(fid, '\n %6s \n', sessionMats{iMat}); % print which session it came from
     for i=1:N
         fprintf(fid, '%6s \n', [importantChannels{i}, ' , ', importantFreqs{i}]);
-    end                                               
+    end   
+    
+    %%- save the important feature indices in a mat file
+    toSave{iMat} = [importantChannelIndices, importantFreqIndices];
+    
+    %%- log any overlapping indices
+    figure
+    fig = {};
+    fig{end+1} = subplot(311)
+    imagesc(squeeze(mean(featureSame(maxValueIndices, :, :),1)));
+    title(['Same Pairs Cosine Similarity for ', sessionMats{iMat}])
+    colorbar();
+    clim = get(gca, 'clim');
+    axis square
+    hold on
+    xlabel('Time (seconds)');
+    ylabel('Time (seconds)');
+    ax = gca;
+    ax.YTick = ticks;
+    ax.YTickLabel = labels;
+    ax.XTick = ticks;
+    ax.XTickLabel = labels;
+    colormap('jet');
+    set(gca,'tickdir','out','YDir','normal');
+    set(gca, 'box', 'off');
+    plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+    plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+    
+    fig{end+1} = subplot(312);
+    imagesc(squeeze(mean(featureDiff(maxValueIndices, :, :),1)));
+    title(['Different Word Pairs Cosine Similarity for ', sessionMats{iMat}])
+    colorbar();
+    set(gca, 'clim', clim);
+    axis square
+    hold on
+    xlabel('Time (seconds)');
+    ylabel('Time (seconds)');
+    ax = gca;
+    ax.YTick = ticks;
+    ax.YTickLabel = labels;
+    ax.XTick = ticks;
+    ax.XTickLabel = labels;
+    colormap('jet');
+    set(gca,'tickdir','out','YDir','normal');
+    set(gca, 'box', 'off');
+    plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+    plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+
+    fig{end+1} = subplot(313);
+    imagesc(squeeze(mean(featureSame(maxValueIndices, :, :),1)) - squeeze(mean(featureDiff(maxValueIndices, :, :),1)));
+    title({'Within-Blocks', ['Same-Different Word Pairs Cosine Similarity']})
+    colorbar();
+    axis square
+    hold on
+    xlabel('Time (seconds)');
+    ylabel('Time (seconds)');
+    ax = gca;
+    ax.YTick = ticks;
+    ax.YTickLabel = labels;
+    ax.XTick = ticks;
+    ax.XTickLabel = labels;
+    colormap('jet');
+    set(gca,'tickdir','out','YDir','normal');
+    set(gca, 'box', 'off');
+    plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+    plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
 end
 
 fclose(fid);
