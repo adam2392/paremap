@@ -2,13 +2,13 @@ close all
 clc
 clear all
 
-<<<<<<< HEAD
+
 %%- Section for Pulling reinstatement matrices already produced and just
 %%make different plots
 ANALYSIS_TYPE = {'within_blocks', 'across_blocks'};
 EVENT_SYNC = {'probeon', 'vocalizationWord'};
 
-subj = 'NIH039';
+subj = 'NIH034';
 ANALYSIS = ANALYSIS_TYPE{2};
 SYNC = EVENT_SYNC{2};
 
@@ -24,24 +24,24 @@ dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, 'morlet_spec');
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-if strcmp(subj, 'NIH039')
-    sessions = sessions([1,2,4]);
-elseif strcmp(subj, 'NIH034')
-    sessions = sessions([3, 4]);
-=======
+% if strcmp(subj, 'NIH039')
+%     sessions = sessions([1,2,4]);
+% elseif strcmp(subj, 'NIH034')
+%     sessions = sessions([3, 4]);
+% end
+
 %%- Parameter settings
 subj = 'NIH034';
 timeLock = 'vocalization';
 referenceType = 'bipolar';
-typeTransform = 'multitaper';
-typeAnalysis = 'within_blocks_vocalizationWord';
+typeTransform = 'morlet';
+typeAnalysis = 'across_blocks_vocalizationWord';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
 REF_TYPES = {'noreref', 'bipolar', 'global'};
 if ~ismember(timeLock, expected_timeLocks)
     disp('timeLock should be vocalization, matchword, or probeword');
->>>>>>> 5eddda7bfc29ad8a09b47d5f902863b0409f8d5b
 end
 if ~ismember(referenceType, REF_TYPES)
     disp('reference types are noreref, bipolar, or global');

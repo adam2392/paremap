@@ -10,10 +10,11 @@ close all
 subj = 'NIH034';
 typeTransform = 'multitaper';
 timeLock = 'vocalization';
-referenceType = 'bipolar';
+referenceType = 'global';
 typeReinstatement = 'within_blocks';
 
 % set the directories with the reinstatements
+subjFigDir = fullfile('Figures', subj);
 reinstatementDir = strcat(typeTransform, '_', referenceType, '/', typeReinstatement, '_', timeLock);
 featureMatDir = strcat('./Figures/', subj, '/reinstatement_mat/', reinstatementDir);
 
@@ -106,12 +107,19 @@ freqBands = {'delta', 'theta', 'alpha', 'beta', 'low gamma', 'high gamma', 'HFO'
 
 clear chan1 chan2 chanFile chanNums chanRefs eventEEGpath chanTags correctIndices ...
     eventEEGpath eegRootDir eegRootDirHome eegRootDirJhu eegRootDirWork ...
-    iChan jackSheet talDir subjDir 
+    iChan jackSheet talDir 
 
 %%- OPEN UP LOG FILE TO PRINT OUT MOST IMPORTANT FEATURES
 logFile = strcat(featureMatDir, '/', subj, '.txt');
 fid = fopen(logFile, 'w');
 LT = 1.5;
+newFigDir = fullfile(subjFigDir, 'importantFeatures', strcat(typeTransform, referenceType, '_', typeReinstatement));
+
+allMaxValues = [];
+
+if ~exist(newFigDir)
+    mkdir(newFigDir);
+end
 
 % loop through all session mat files -> extract same, reverse, different
 for iMat=1:length(sessionMats),
@@ -125,7 +133,7 @@ for iMat=1:length(sessionMats),
     % average
     preVocal = zeros(size(featureSame, 1), 1);
     for i=1:size(featureSame, 1)
-        timePeriod = timeZero-1:timeZero;
+        timePeriod = timeZero-2:timeZero-1;
         % get a mini-square time period before the vocalization
         featureSamePreVocal = squeeze(featureSame(i, timePeriod, timePeriod));
         featureDiffPreVocal = squeeze(featureDiff(i, timePeriod, timePeriod));
@@ -151,6 +159,11 @@ for iMat=1:length(sessionMats),
     maxValues = sortedX(1:N);
     maxValueIndices = sortingIndices(1:N);
     
+    if isempty(allMaxValues)
+        allMaxValues = preVocal;
+    else
+        allMaxValues = cat(2, allMaxValues, preVocal);
+    end
     %%- plot
 %     figure
 %     plot(preVocal)
@@ -179,70 +192,79 @@ for iMat=1:length(sessionMats),
     toSave{iMat} = [importantChannelIndices, importantFreqIndices];
     
     %%- log any overlapping indices
-    figure
-    fig = {};
-    fig{end+1} = subplot(311)
-    imagesc(squeeze(mean(featureSame(maxValueIndices, :, :),1)));
-    title(['Same Pairs Cosine Similarity for ', sessionMats{iMat}])
-    colorbar();
-    clim = get(gca, 'clim');
-    axis square
-    hold on
-    xlabel('Time (seconds)');
-    ylabel('Time (seconds)');
-    ax = gca;
-    ax.YTick = ticks;
-    ax.YTickLabel = labels;
-    ax.XTick = ticks;
-    ax.XTickLabel = labels;
-    colormap('jet');
-    set(gca,'tickdir','out','YDir','normal');
-    set(gca, 'box', 'off');
-    plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
-    plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-    
-    fig{end+1} = subplot(312);
-    imagesc(squeeze(mean(featureDiff(maxValueIndices, :, :),1)));
-    title(['Different Word Pairs Cosine Similarity for ', sessionMats{iMat}])
-    colorbar();
-    set(gca, 'clim', clim);
-    axis square
-    hold on
-    xlabel('Time (seconds)');
-    ylabel('Time (seconds)');
-    ax = gca;
-    ax.YTick = ticks;
-    ax.YTickLabel = labels;
-    ax.XTick = ticks;
-    ax.XTickLabel = labels;
-    colormap('jet');
-    set(gca,'tickdir','out','YDir','normal');
-    set(gca, 'box', 'off');
-    plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
-    plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-
-    fig{end+1} = subplot(313);
-    imagesc(squeeze(mean(featureSame(maxValueIndices, :, :),1)) - squeeze(mean(featureDiff(maxValueIndices, :, :),1)));
-    title({'Within-Blocks', ['Same-Different Word Pairs Cosine Similarity']})
-    colorbar();
-    axis square
-    hold on
-    xlabel('Time (seconds)');
-    ylabel('Time (seconds)');
-    ax = gca;
-    ax.YTick = ticks;
-    ax.YTickLabel = labels;
-    ax.XTick = ticks;
-    ax.XTickLabel = labels;
-    colormap('jet');
-    set(gca,'tickdir','out','YDir','normal');
-    set(gca, 'box', 'off');
-    plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
-    plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+%     figure
+%     fig = {};
+%     fig{end+1} = subplot(311)
+%     imagesc(squeeze(mean(featureSame(maxValueIndices, :, :),1)));
+%     title(['Same Pairs Cosine Similarity for ', sessionMats{iMat}])
+%     colorbar();
+%     clim = get(gca, 'clim');
+%     axis square
+%     hold on
+%     xlabel('Time (seconds)');
+%     ylabel('Time (seconds)');
+%     ax = gca;
+%     ax.YTick = ticks;
+%     ax.YTickLabel = labels;
+%     ax.XTick = ticks;
+%     ax.XTickLabel = labels;
+%     colormap('jet');
+%     set(gca,'tickdir','out','YDir','normal');
+%     set(gca, 'box', 'off');
+%     plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+%     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+%     
+%     fig{end+1} = subplot(312);
+%     imagesc(squeeze(mean(featureDiff(maxValueIndices, :, :),1)));
+%     title(['Different Word Pairs Cosine Similarity for ', sessionMats{iMat}])
+%     colorbar();
+%     set(gca, 'clim', clim);
+%     axis square
+%     hold on
+%     xlabel('Time (seconds)');
+%     ylabel('Time (seconds)');
+%     ax = gca;
+%     ax.YTick = ticks;
+%     ax.YTickLabel = labels;
+%     ax.XTick = ticks;
+%     ax.XTickLabel = labels;
+%     colormap('jet');
+%     set(gca,'tickdir','out','YDir','normal');
+%     set(gca, 'box', 'off');
+%     plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+%     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+% 
+%     fig{end+1} = subplot(313);
+%     imagesc(squeeze(mean(featureSame(maxValueIndices, :, :),1)) - squeeze(mean(featureDiff(maxValueIndices, :, :),1)));
+%     title({'Within-Blocks', ['Same-Different Word Pairs Cosine Similarity']})
+%     colorbar();
+%     axis square
+%     hold on
+%     xlabel('Time (seconds)');
+%     ylabel('Time (seconds)');
+%     ax = gca;
+%     ax.YTick = ticks;
+%     ax.YTickLabel = labels;
+%     ax.XTick = ticks;
+%     ax.XTickLabel = labels;
+%     colormap('jet');
+%     set(gca,'tickdir','out','YDir','normal');
+%     set(gca, 'box', 'off');
+%     plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
+%     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
+%     
+%     %%- Save Image
+%     figureFile = fullfile(newFigDir, sessionMats{iMat}(1:end-4));
+%     print(figureFile, '-dpng', '-r0')
+%     savefig(figureFile)
 end
 
+test = squeeze(mean(allMaxValues, 2));
+size(test)
+plot(mean(allMaxValues, 2))
+
 % save mat file
-saveIndicesFile = fullfile(featureMatDir, strcat(subj, '_importantIndices'));
-save(saveIndicesFile, toSave);
+% saveIndicesFile = fullfile(newFigDir, strcat(subj, '_importantIndices'));
+% save(saveIndicesFile, 'toSave');
 
 fclose(fid);

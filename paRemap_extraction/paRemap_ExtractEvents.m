@@ -168,10 +168,23 @@ while true
 %             end
             %%
             disp(['On this file: ' annfilename])
-            annfid = fopen(annfilename, 'r');    % open file to read
+            [annfid, errmsg] = fopen(annfilename, 'r');    % open file to read
+            
+            % if there does not exist an annotation file yet, or there is
+            % an error reading it
+            if ~isempty(errmsg)
+                % set the response time=0, isCorrect=-1, vocalizedWord = Nan
+                responseTime = 0;
+                isCorrect = -1;
+                vocalizedWord = nan;
+                
+                annFileExists = 0;
+            else
+                annFileExists = 1;
+            end
             
             % get lines until reached annotated data
-            while true  
+            while true && annFileExists
                 try
                     tempLine = fgetl(annfid); % get new line
                 catch(e)
@@ -183,7 +196,7 @@ while true
             clear tempTot tempLine
             
             % read rest of annotation
-            while true
+            while true && annFileExists
                 line = fgetl(annfid);
                 if ~ischar(line); break; end  % reached EOF
                 %- Generic text scan to get time, offset, and type
@@ -209,12 +222,23 @@ while true
             % variable to help in finding response words/times
             annwordindex = 1; % loop through the annotated words 1:TOTAL_ANN
             probeFound = 0;
-            fclose(annfid); % close annotation file
+            
+            if annFileExists
+                fclose(annfid); % close annotation file
+            end
         case {'BLOCK_0', 'BLOCK_1', 'BLOCK_2', 'BLOCK_3', 'BLOCK_4', 'BLOCK_5'}
             blockTOT = textscan(thisLine, '%f%d%s%s%s'); 
             if strcmp(blockTOT{5}(1), 'TEST')
                 blocknumber = eventType;             % store the block number
-                miniblocknumber = blockTOT{4}(1);   % store miniblocknumber
+                miniblocknumber = blockTOT{4}{1};   % store miniblocknumber
+                
+                %%- modify text to only extract the numbers
+                blocknumber = strsplit(blocknumber, '_');
+                blocknumber = blocknumber{2};
+                miniblocknumber = strsplit(miniblocknumber, '_');
+                miniblocknumber = miniblocknumber{2};
+                
+                newminiblock = 1; % start new counting of pairIndices within a miniblock
             end  
         case {'FIXATION_ON'}
             fixationOnTime = xTOT{1}(1);
@@ -227,55 +251,64 @@ while true
             targetWord  = probeTOT{6}{1}; % store targetWord
             mstime = probeTOT{1}(1);      % store absolute time of this row
             type = probeTOT{3}{1};
-%             type = type;                  % store type of event
-            
-            %thisAnnFile = xTOT{7}{1};  %- one version has an annotation file associated with each word, eventually that was jettisoned.  
-            
-            probeFound = 1;
+
+            % get the pairIndex of this word pair 
+            if newminiblock
+                newminiblock = 0; % started a new miniblock index count
+                pairIndex = 1;
+            else
+                pairIndex = pairIndex + 1;
+            end
+            probeFound = 1; % set the flag to make sure probewordon comes first
         case {'MATCHWORD_ON'}
-            matchOnTime = xTOT{1}(1); % get the absolute mstime of matchWord coming on
+            matchOnTime = xTOT{1}(1) - mstime; % get the absolute mstime of matchWord coming on
             
-            %%- When matchword comes on, should have vocalized...
-            % determine timerange words can occur from 
-            % probewordon -> matchword on (0-timeRange)
-            timeRange = matchOnTime - mstime;                          % time Range the word can come on
-            timeVocalizations = timeAfterRec(:) - mstime;              % convert all vocalizations wrt to the mstime
-            validIndices = find(timeVocalizations > 0 & timeVocalizations < timeRange); % find valid indices of word by response times
+            if annFileExists % make sure there is an annotation file
+                %%- When matchword comes on, should have vocalized...
+                % determine timerange words can occur from 
+                % probewordon -> matchword on (0-timeRange)
+                timeRange = matchOnTime;                          % time Range the word can come on
+                timeVocalizations = timeAfterRec(:) - mstime;              % convert all vocalizations wrt to the mstime
+                validIndices = find(timeVocalizations > 0 & timeVocalizations < timeRange); % find valid indices of word by response times
 
-            %%- found one word that was correct, no other vocalizations
-            if length(validIndices) == 1, 
-                if strcmp(targetWord, vocalizedWord{validIndices})
-                    isCorrect = 1;
+                %%- found one word that was correct, no other vocalizations
+                if length(validIndices) == 1, 
+                    if strcmp(targetWord, vocalizedWord{validIndices})
+                        isCorrect = 1;
 
-                    % LOG THE EVENT FIELDS and increment index through ann file
-                    responseTime = timeVocalizations(validIndices); % responseTime
-                    responseWord = vocalizedWord{validIndices};
-                else % incorrect word vocalized
+                        % LOG THE EVENT FIELDS and increment index through ann file
+                        responseTime = timeVocalizations(validIndices); % responseTime
+                        responseWord = vocalizedWord{validIndices};
+                    else % incorrect word vocalized
+                        isCorrect = 0;
+                        responseTime = timeVocalizations(validIndices); % responseTime
+                        responseWord = vocalizedWord{validIndices};
+                    end
+                elseif isempty(validIndices), %%- no word response in this frame period
                     isCorrect = 0;
-                    responseTime = timeVocalizations(validIndices); % responseTime
-                    responseWord = vocalizedWord{validIndices};
-                    
-
+                    responseTime = 0;
+                    responseWord = 'none';
+                else %%- more then 1 word vocalization found within time frame
+                    isCorrect = 0; % defined since they vocalized more then 1 word
+                    if strcmp(targetWord, vocalizedWord{validIndices(1)}) % first try was correct
+                        responseTime = timeVocalizations(validIndices(1));
+                        responseWord = vocalizedWord{validIndices(1)};
+                    elseif strcmp(targetWord, vocalizedWord{validIndices(end)}) % last vocalization was correct
+                        responseTime = timeVocalizations(validIndices(end));
+                        responseWord = vocalizedWord{validIndices(end)};
+                    else % no vocalization was correct, or it was in the middle
+                        responseTime = timeVocalizations(validIndices(1)); % get the first response word
+                        responseWord = vocalizedWord{validIndices(1)}; % get the first vocalized word
+                    end
                 end
-            elseif isempty(validIndices), %%- no word response in this frame period
-                isCorrect = 0;
+            else
+                % set the response time=0, isCorrect=-1, vocalizedWord = Nan
                 responseTime = 0;
-                responseWord = 'none';
-            else %%- more then 1 word vocalization found within time frame
-                isCorrect = 0; % defined since they vocalized more then 1 word
-                if strcmp(targetWord, vocalizedWord{validIndices(1)}) % first try was correct
-                    responseTime = timeVocalizations(validIndices(1));
-                    responseWord = vocalizedWord{validIndices(1)};
-                elseif strcmp(targetWord, vocalizedWord{validIndices(end)}) % last vocalization was correct
-                    responseTime = timeVocalizations(validIndices(end));
-                    responseWord = vocalizedWord{validIndices(end)};
-                else % no vocalization was correct, or it was in the middle
-                    responseTime = timeVocalizations(validIndices(1)); % get the first response word
-                    responseWord = vocalizedWord{validIndices(1)}; % get the first vocalized word
-                end
+                isCorrect = -1;
+                responseWord = nan;
             end
         case {'PROBEWORD_OFF'} % SAME TIME MATCHWORD TURNS OFF
-            probeOffTime = xTOT{1}(1); % get the mstime of this line
+            probeOffTime = xTOT{1}(1) - mstime; % get the mstime of this line
                         
             if(probeFound == 1), index = index+1; end
     end
@@ -285,12 +318,11 @@ while true
     if index>length(events),
         
         % just making sure all the times are in order
-        if matchOnTime < mstime || probeOffTime < matchOnTime ...
-            || fixationOnTime > probeOffTime ...
-            || fixationOffTime < fixationOnTime
-            disp('error in times')
-        end
-        
+%         if matchOnTime < mstime || probeOffTime < matchOnTime ...
+%             || fixationOnTime > probeOffTime ...
+%             || fixationOffTime < fixationOnTime
+%             disp('error in times')
+%         end
         
         %- create dummy event structure that is upddated below based on type
         clear thisEvent
@@ -302,10 +334,7 @@ while true
         thisEvent.msoffset          = msoffset    ;
         thisEvent.mstime            = mstime      ;
         
-        %- event identity
-%         thisEvent.isProbe           = isProbe        ;   %- 1 or 0
-%         thisEvent.isResponce        = isResponse     ;   %- 1 or 0
-        
+        thisEvent.pairIndex         = pairIndex;
         thisEvent.probeWord         = probeWord     ;
         thisEvent.targetWord        = targetWord    ;
         thisEvent.isCorrect         = isCorrect     ;
@@ -313,8 +342,8 @@ while true
         thisEvent.miniblocknumber   = miniblocknumber;
         thisEvent.matchOnTime       = matchOnTime   ;
         thisEvent.probeOffTime      = probeOffTime  ;
-        thisEvent.fixationOnTime    = fixationOnTime;
-        thisEvent.fixationOffTime   = fixationOffTime;
+        thisEvent.fixationOnTime    = fixationOnTime - mstime;
+        thisEvent.fixationOffTime   = fixationOffTime - mstime;
         thisEvent.responseTime      = responseTime;
         thisEvent.vocalizedWord     = responseWord;
         
