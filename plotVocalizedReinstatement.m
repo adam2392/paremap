@@ -106,8 +106,8 @@ LT = 1.5 %line thickness
 
 if strcmp(typeTransform, 'morlet')
     ticks = [6:10:46];
-    labels = [-2:1:3];
-    timeZero = 26;
+    labels = [-1:1:3];
+    timeZero = 16;
 else
     timeZero = 5;
     ticks = [1:2:11];
