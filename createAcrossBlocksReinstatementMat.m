@@ -73,11 +73,11 @@ dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 
-if strcmp(subj, 'NIH039')
-    sessions = sessions([1,2,4]);
-elseif strcmp(subj, 'NIH034')
-    sessions = sessions([3, 4]);
-end
+% if strcmp(subj, 'NIH039')
+%     sessions = sessions([1,2,4]);
+% elseif strcmp(subj, 'NIH034')
+%     sessions = sessions([3, 4]);
+% end
 sessions
 
 blocks = dir(fullfile(dataDir, sessions{1}));
@@ -140,6 +140,9 @@ for iSesh=1:length(sessions),
         
         % build features matrix events X features X time
         [samePairFeatureMat1, samePairFeatureMat2] = buildAcrossDiffPairFeatureMat(sameWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
+        
+        size(samePairFeatureMat1)
+        
         [reversePairFeatureMat1, reversePairFeatureMat2] = buildAcrossDiffPairFeatureMat(reverseWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [diffPairFeatureMat1, diffPairFeatureMat2] = buildAcrossDiffPairFeatureMat(diffWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [probePairFeatureMat1, probePairFeatureMat2] = buildAcrossDiffPairFeatureMat(probeWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
@@ -166,6 +169,9 @@ for iSesh=1:length(sessions),
         [eventTarget, featureTarget] = compute_reinstatement(targetPairFeatureMat1, targetPairFeatureMat2);
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
+%         size(eventDiff)
+%         size(featureTarget)
+%         size(featureDiff)
         
         %%- Save Mat files
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));

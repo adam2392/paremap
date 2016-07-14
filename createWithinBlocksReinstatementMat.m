@@ -13,7 +13,7 @@ clc;
 % referenceType = 'bipolar';
 % % winSize = 500;
 % % stepSize = 100;
-% typeTransform = 'morlet';
+% typeTransform = 'multitaper';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
@@ -74,11 +74,11 @@ dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 
-if strcmp(subj, 'NIH039')
-    sessions = sessions([1,2,4]);
-elseif strcmp(subj, 'NIH034')
-    sessions = sessions([3, 4]);
-end
+% if strcmp(subj, 'NIH039')
+%     sessions = sessions([1,2,4]);
+% elseif strcmp(subj, 'NIH034')
+%     sessions = sessions([3, 4]);
+% end
 sessions
 
 blocks = dir(fullfile(dataDir, sessions{1}));
@@ -148,10 +148,10 @@ for iSesh=1:length(sessions),
         diffPairFeatureMat1 = permute(diffPairFeatureMat1, [1 3 2]);
         diffPairFeatureMat2 = permute(diffPairFeatureMat2, [1 3 2]);
         
-        size(samePairFeatureMat1)
-        size(samePairFeatureMat2)
-        size(diffPairFeatureMat1)
-        size(diffPairFeatureMat2)
+%         size(samePairFeatureMat1)
+%         size(samePairFeatureMat2)
+%         size(diffPairFeatureMat1)
+%         size(diffPairFeatureMat2)
         
         %%- Build Similarity Matrics
         % same Pairs
@@ -160,6 +160,10 @@ for iSesh=1:length(sessions),
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
+        size(eventSame)
+        size(featureDiff)
+        size(featureSame)
+        
         
         % rand sample down the different word pair feature mat -> match
         % size

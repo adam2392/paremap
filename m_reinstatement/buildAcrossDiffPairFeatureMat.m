@@ -10,11 +10,11 @@ function [pairFeatureMat1, pairFeatureMat2 ] = buildDiffPairFeatureMat(wordGroup
 
         % create directories to the channel files for this word in this
         % block
-        paironeDir = fullfile(sessionFirstBlockDir, pairone);
+        paironeDir = fullfile(sessionFirstBlockDir, pairone)
         paironeFiles = dir(fullfile(paironeDir));
         paironeFiles = {paironeFiles(3:end).name};
         
-        pairtwoDir = fullfile(sessionSecondBlockDir, pairtwo);
+        pairtwoDir = fullfile(sessionSecondBlockDir, pairtwo)
         pairtwoFiles = dir(fullfile(pairtwoDir));
         pairtwoFiles = {pairtwoFiles(3:end).name};
 

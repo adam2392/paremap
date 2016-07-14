@@ -241,4 +241,8 @@ for iMat=1:length(sessionMats),
     plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
 end
 
+% save mat file
+saveIndicesFile = fullfile(featureMatDir, strcat(subj, '_importantIndices'));
+save(saveIndicesFile, toSave);
+
 fclose(fid);
