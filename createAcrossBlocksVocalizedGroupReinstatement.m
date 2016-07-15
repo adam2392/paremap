@@ -35,47 +35,41 @@ dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-
-if strcmp(subj, 'NIH039')
-    sessions = sessions([1,2,4]);
-elseif strcmp(subj, 'NIH034')
-    sessions = sessions([3, 4]);
-end
-sessions
-
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
-    
+sessions
+
+% all target word comparisons that exist. A_B, vocalizations of A is compared with vocalizations of B
 allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...
                     'BRICK_JUICE', 'BRICK_PANTS', 'BRICK_BRICK', 'BRICK_GLASS', ...
                     'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', 'GLASS_JUICE', ...
                     'GLASS_GLASS', 'JUICE_JUICE'};
 
 % saving figures dir.
-if strcmp(typeTransform, 'morlet')
-    ticks = [6:10:46];
-    labels = [-2:1:3];
-    timeZero = 26;
-elseif strcmp(typeTransform, 'multitaper')
-    ticks = [1:2:11];
-    labels = [-2:1:3];
-    timeZero = 5;
-end
 figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/across_blocks_vocalizationWord/');
 matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/across_blocks_vocalizationWord/');
-LT = 1.5 %line thickness
+if ~exist(figureDir, 'dir'), mkdir(figureDir); end
+if ~exist(matDir, 'dir'), mkdir(matDir); end
 
-if ~exist(figureDir, 'dir')
-    mkdir(figureDir)
-end
-if ~exist(matDir, 'dir')
-    mkdir(matDir)
-end
+LT = 1.5 %line thickness
+% load in an example file to get the -> labels, ticks and timeZero
+pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
+exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
+channelData = dir(exampleDir);
+data = load(fullfile(exampleDir, channelData(4).name));
+data = data.data;
+timeTicks = data.waveT(:,2);
+
+ticks = 1:5:length(timeTicks);
+labels = timeTicks(ticks);
+timeZero = data.timeZero;
 
 %% RUN ANALYSIS
 %%- LOOP THROUGH SESSIONS AND BLOCKS
 for iSesh=1:length(sessions),
     for iBlock=1:length(blocks)-1, % loop through first 5 blocks and do across blocks analysis
+        fprintf('%6s \n', strcat('On session ', num2str(iSesh), ' and block ', num2str(iBlock)));
+        
         % initialize feature matrix cell
         allVocalizedIndices = zeros(length(allVocalizedPairs), 1);
 
@@ -102,6 +96,7 @@ for iSesh=1:length(sessions),
         fprintf(fid, '%6s \n', 'Word Pairs:');
         fprintf(fid, '%6s \n', wordPairs{:}); 
 
+        % session-block directories for each targetWord
         sessionFirstBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
         sessionSecondBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1});
 
@@ -119,11 +114,8 @@ for iSesh=1:length(sessions),
             % change time/features dimensions
             pairFeatureMat1 = permute(pairFeatureMat1, [1 3 2]);
             pairFeatureMat2 = permute(pairFeatureMat2, [1 3 2]);
-
             %%- 03: BUILD REINSTATEMENT MATRICES
             [eventRein, featureRein] = compute_reinstatement(pairFeatureMat1, pairFeatureMat2);
-            size(eventRein)
-            size(featureRein)
 
             %%- 02: DETERMINE INDEX IN OUR LIST OF WORD PAIRS
             allVocalizedPairs;
@@ -171,8 +163,8 @@ for iSesh=1:length(sessions),
         clim = [0 0]; %initialize colorbar
         fa = {};
         
+        %%- Loop and plot all targetWord comparisons
         for iPlot=1:length(eventReinMat)
-            iPlot
             eventRein = eventReinMat{iPlot};
             wordSplit = strsplit(allVocalizedPairs{iPlot}, '_');
             wordone = wordSplit{1};

@@ -563,7 +563,7 @@ for iChan=1:numChannels
                     %%- SAVING DIR PARAMETERS
                     chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
                     word_name = strcat(THIS_TARGET);
-                    fileDir = fullfile(strcat(responseDir, '_sessiontargetwords'), subjSessions{iSesh}, subjBlocks{iBlock}, word_name);
+                    fileDir = fullfile(strcat(responseDir, '_sessiontargetwords'), subjSessions{iSesh}, strcat('block_', subjBlocks{iBlock}), word_name);
                     chanFilePath = fullfile(fileDir, chanFileName);; 
 
                     if ~exist(fileDir)
@@ -626,7 +626,7 @@ for iChan=1:numChannels
                         %%- SAVING DIR PARAMETERS
                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
                         wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
-                        fileDir = fullfile(responseDir, subjSessions{iSesh}, subjBlocks{iBlock}, wordpair_name);
+                        fileDir = fullfile(responseDir, subjSessions{iSesh}, strcat('block_', subjBlocks{iBlock}), wordpair_name);
                         chanFilePath = fullfile(fileDir, chanFileName);; 
 
                         if ~exist(fileDir)

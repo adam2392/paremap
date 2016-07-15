@@ -2,11 +2,6 @@ function [pairFeatureMat1, pairFeatureMat2] = buildWithinPairFeatureMat(wordone,
     pairFeatureMat1 = []; % initialize returned pair feature matrices
     pairFeatureMat2 = [];
     
-    if strfind(sessionBlockDir, 'multitaper')
-        multitaper = 1;
-    else
-        multitaper = 0;
-    end
     %%- if within blocks same pair feature mat
     if strcmp(wordone, wordtwo)
         disp('same')

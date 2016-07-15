@@ -3,7 +3,6 @@
 %         -- This is done for ACROSS blocks analysis of the paremap task
 
 function createAcrossBlocksReinstatementMat(subj, typeTransform, timeLock, referenceType)
-
 close all;
 clc;
 
@@ -33,37 +32,6 @@ CUE_LOCK = strcat(timeLock);
 
 addpath('./m_reinstatement/');
 
-%% LOAD EVENTS STRUCT AND SET DIRECTORIES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-eegRootDirJhu = '/home/adamli/paremap';     % work
-eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap'; 
-eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-
-% Determine which directory we're working with automatically
-if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
-elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
-elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
-else   error('Neither Work nor Home EEG directories exist! Exiting'); end
-
-% Either go through all the sessions, or a specific session
-disp('STEP 1: Going through all sessions')
-session = 'Meta Session [all]';
-behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap');
-subjDir = fullfileEEG(eegRootDir,subj); % directory to subject (e.g. NIH034)
-docsDir = fullfileEEG(subjDir,'docs');  % directory to the docs (electordes.m, tagNames.txt, etc.)
-talDir  = fullfileEEG(subjDir,'tal');
-defaultEEGfile = fullfileEEG('/Volumes/Shares/FRNU/data/eeg/',subj,'/eeg.reref/');  % default event eegfile fields point here... switch to local before loading
-
-%%-Load in the Events For This Task/Patient/Session
-events = struct([]);                    %%- in functional form this is required so there is no confusion about events the function and events the variable
-load(sprintf('%s/events.mat',behDir));  %%- load the events file
-fprintf('Loaded %d events from %s\n', length(events), behDir);
-%%- GET CORRECT EVENTS ONLY
-correctIndices = find([events.isCorrect]==1);
-events = events(correctIndices);
-
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
@@ -72,58 +40,45 @@ dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
-
-% if strcmp(subj, 'NIH039')
-%     sessions = sessions([1,2,4]);
-% elseif strcmp(subj, 'NIH034')
-%     sessions = sessions([3, 4]);
-% end
-sessions
-
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
 
+sessions % display which sessions we're working with
+
 %%- SAVING FIGURES OPTIONS
 if strcmp(CUE_LOCK, 'vocalization')
-    if strcmp(typeTransform, 'morlet')
-        ticks = [6:10:46];
-        labels = [-2:1:3];
-        timeZero = 26;
-    elseif strcmp(typeTransform, 'multitaper')
-        ticks = [1:2:11];
-        labels = [-2:1:3];
-        timeZero = 5;
-    end
     figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/across_blocks_vocalization/');
     matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/across_blocks_vocalization/');
 elseif strcmp(CUE_LOCK, 'matchword')
-    ticks = [6:10:56];
-    labels = [-4:1:1];
-    timeZero = 46;
-    
     figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/across_blocks_matchword/');
     matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/across_blocks_matchword/');
 elseif strcmp(CUE_LOCK, 'probeword')
-    ticks = [6:10:56];
-    labels = [0:1:5];
-    timeZero = 6;
-    
     figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/across_blocks_probeon/');
     matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/across_blocks_probeon/');
 end
-if ~exist(figureDir)
-    mkdir(figureDir)
-end
-if ~exist(matDir)
-    mkdir(matDir)
-end
+if ~exist(figureDir) mkdir(figureDir); end
+if ~exist(matDir)    mkdir(matDir);    end
+
 % set linethickness
 LT = 1.5;
+% load in an example file to get the labels, ticks and timeZero
+pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
+exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
+channelData = dir(exampleDir);
+data = load(fullfile(exampleDir, channelData(4).name));
+data = data.data;
+timeTicks = data.waveT(:,2);
+
+ticks = 1:5:length(timeTicks);
+labels = timeTicks(ticks);
+timeZero = data.timeZero;
 
 %%- LOOP THROUGH SESSIONS
 for iSesh=1:length(sessions),
     %%- LOOP THROUGH BLOCKS
     for iBlock=1:length(blocks)-1,
+        fprintf('%6s \n', strcat('On session ', num2str(iSesh), ' and block ', num2str(iBlock)));
+        
         % get word pairs in this session-block (i)
         firstwordpairs = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock}));
         firstwordpairs = {firstwordpairs(3:end).name};
@@ -138,11 +93,8 @@ for iSesh=1:length(sessions),
         sessionFirstBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
         sessionSecondBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock+1});
         
-        % build features matrix events X features X time
+        %%- BUILD FEATURE MAT events X features X time
         [samePairFeatureMat1, samePairFeatureMat2] = buildAcrossDiffPairFeatureMat(sameWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
-        
-        size(samePairFeatureMat1)
-        
         [reversePairFeatureMat1, reversePairFeatureMat2] = buildAcrossDiffPairFeatureMat(reverseWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [diffPairFeatureMat1, diffPairFeatureMat2] = buildAcrossDiffPairFeatureMat(diffWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
         [probePairFeatureMat1, probePairFeatureMat2] = buildAcrossDiffPairFeatureMat(probeWordGroup, sessionFirstBlockDir, sessionSecondBlockDir);
@@ -160,7 +112,7 @@ for iSesh=1:length(sessions),
         targetPairFeatureMat1 = permute(targetPairFeatureMat1, [1 3 2]);
         targetPairFeatureMat2 = permute(targetPairFeatureMat2, [1 3 2]);
         
-        %%- Build Similarity Matrics
+        %%- BUILD REINSTATEMENT MATRICES
         % same Pairs
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
         [eventDiff, featureDiff] = compute_reinstatement(diffPairFeatureMat1, diffPairFeatureMat2);
@@ -169,9 +121,9 @@ for iSesh=1:length(sessions),
         [eventTarget, featureTarget] = compute_reinstatement(targetPairFeatureMat1, targetPairFeatureMat2);
         
         size(squeeze(mean(eventDiff(:, :, :),1)))
-%         size(eventDiff)
-%         size(featureTarget)
-%         size(featureDiff)
+        size(eventDiff)
+        size(featureTarget)
+        size(featureDiff)
         
         %%- Save Mat files
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
@@ -182,13 +134,13 @@ for iSesh=1:length(sessions),
                                         'eventDiff', 'featureDiff', ...
                                         'eventTarget', 'featureTarget', ...
                                         'eventProbe', 'featureProbe');
+        
         % write debugging output to .txt file
         sameWordGroup = [sameWordGroup{:}];
         reverseWordGroup = [reverseWordGroup{:}];
         diffWordGroup = [diffWordGroup{:}];
         probeWordGroup = [probeWordGroup{:}];
         targetWordGroup = [targetWordGroup{:}];
-        
         logFile = strcat(matDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}), '.txt');
         fid = fopen(logFile, 'w');
         fprintf(fid, '%6s \n', 'Block(i) word pairs:');
@@ -369,4 +321,4 @@ for iSesh=1:length(sessions),
         pause(0.1);
     end
 end
-% end
+end
