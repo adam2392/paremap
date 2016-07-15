@@ -1,7 +1,7 @@
 function createAcrossBlocksVocalizedGroupReinstatement(subj, typeTransform, timeLock, referenceType)
-    close all;
-    clear all;
-    clc;
+close all;
+%     clear all;
+clc;
     
 %% PARAMETERS FOR RUNNING PREPROCESS
 % subj = 'NIH034';

@@ -14,7 +14,7 @@ OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 
 % VOCALIZED WORD GROUPS
 % createWithinBlocksVocalizedGroupReinstatement('NIH034', 'morlet', 'vocalization', 'bipolar');
-createAcrossBlocksVocalizedGroupReinstatement('NIH034', 'morlet', 'vocalization', 'bipolar');
+% createAcrossBlocksVocalizedGroupReinstatement('NIH034', 'morlet', 'vocalization', 'bipolar');
 % createWithinBlocksVocalizedGroupReinstatement('NIH034', 'multitaper', 'vocalization', 'bipolar');
 createAcrossBlocksVocalizedGroupReinstatement('NIH034', 'multitaper', 'vocalization', 'bipolar');
 
