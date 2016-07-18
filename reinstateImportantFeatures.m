@@ -4,8 +4,8 @@ clc; clear all; close all;
 subj = 'NIH034';
 typeTransform = 'multitaper';
 timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeReinstatement = 'within_blocks';
+referenceType = 'global';
+typeReinstatement = 'across_blocks';
 
 %% LOAD IN CHANNEL STRING
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
@@ -210,7 +210,7 @@ for iMat=1:length(sessionMats),
     print(figureFile, '-dpng', '-r0')
     savefig(figureFile)
 end
-
+close all
 %%- PLOT AVERAGED
 figure;
 fig = {};
@@ -293,3 +293,10 @@ set(gca, 'box', 'off');
 plot(get(gca, 'xlim'), [timeZero timeZero], 'k', 'LineWidth', LT)
 plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
 
+fig = gcf;
+fig.PaperUnits = 'inches';
+pos = [0    0.6667   17.5972   10.4028];
+fig.PaperPosition = pos;
+figureFile = fullfile(newFigDir, strcat(subj, '_summary'));
+print(figureFile, '-dpng', '-r0')
+savefig(figureFile)

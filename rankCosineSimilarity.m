@@ -8,10 +8,10 @@ clc
 close all
 
 subj = 'NIH034';
-typeTransform = 'morlet';
+typeTransform = 'multitaper';
 timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeReinstatement = 'within_blocks';
+referenceType = 'global';
+typeReinstatement = 'across_blocks';
 
 % set the directories with the reinstatements
 subjFigDir = fullfile('Figures', subj);
