@@ -205,7 +205,7 @@ for iSesh=1:length(sessions),
         % change figure dimensions before saving
         fig = gcf;
         fig.PaperUnits = 'inches';
-        pos = [5.1667 0.6806 9.9722 10.3889];
+        pos = [0    0.6667   17.5972   10.4028];
         fig.PaperPosition = pos;
 
         %%- Save the image

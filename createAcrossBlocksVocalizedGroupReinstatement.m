@@ -4,10 +4,10 @@ close all;
 clc;
     
 %% PARAMETERS FOR RUNNING PREPROCESS
-% subj = 'NIH034';
-% timeLock = 'vocalization';
-% referenceType = 'bipolar';
-% typeTransform = 'morlet';
+subj = 'NIH034';
+timeLock = 'vocalization';
+referenceType = 'bipolar';
+typeTransform = 'morlet';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
@@ -42,8 +42,9 @@ sessions
 % all target word comparisons that exist. A_B, vocalizations of A is compared with vocalizations of B
 allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...
                     'BRICK_JUICE', 'BRICK_PANTS', 'BRICK_BRICK', 'BRICK_GLASS', ...
-                    'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', 'GLASS_JUICE', ...
-                    'GLASS_GLASS', 'JUICE_JUICE'};
+                    'PANTS_JUICE', 'PANTS_PANTS', 'PANTS_GLASS', ...
+                    'GLASS_JUICE', 'GLASS_GLASS', ...
+                    'JUICE_JUICE'};
 
 % saving figures dir.
 figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/across_blocks_vocalizationWord/');
@@ -118,9 +119,10 @@ for iSesh=1:length(sessions),
             [eventRein, featureRein] = compute_reinstatement(pairFeatureMat1, pairFeatureMat2);
 
             %%- 02: DETERMINE INDEX IN OUR LIST OF WORD PAIRS
-            allVocalizedPairs;
             checkOne = strjoin({firstWord, secondWord}, '_');
             checkTwo = strjoin({secondWord, firstWord}, '_');
+%             checkOne
+%             checkTwo
 
             %%- FIND INDEX IN MASTER LIST OF WORDPAIRS
             % Check if this pair is in our list of 15 vocalization pairs
@@ -128,35 +130,37 @@ for iSesh=1:length(sessions),
                 ismember(checkTwo, allVocalizedPairs))
 
                 %- find first combintation
-                index = cellfun(@(x) strcmp(checkOne, x), allVocalizedPairs, 'UniformOutput', 0);
-                if isempty(find([index{:}] == 1)) %- find second combination
-                    index = cellfun(@(x) strcmp(checkTwo, x), allVocalizedPairs, 'UniformOutput', 0);
+                ind = cellfun(@(x) strcmp(checkOne, x), allVocalizedPairs, 'UniformOutput', 0);
+                if isempty(find([ind{:}] == 1)) %- find second combination
+                    ind = cellfun(@(x) strcmp(checkTwo, x), allVocalizedPairs, 'UniformOutput', 0);
                 end
-                index = find([index{:}] == 1);
+                ind = find([ind{:}] == 1);
 
-                %- neither combination, then it is an incorrec vocalized
+                %- neither combination, then it is an incorrect vocalized
                 %word
-                if ~strcmp(allVocalizedPairs{index}, checkOne) &&...
-                        ~strcmp(allVocalizedPairs{index}, checkTwo)
+                if ~strcmp(allVocalizedPairs{ind}, checkOne) &&...
+                        ~strcmp(allVocalizedPairs{ind}, checkTwo)
                     disp('error?');
                 end
             end
-
+%             ind
             %%- 03: BUILD FEATURE MATRIX UP USING CELL ARRAY
             % build onto feature matrices in cell mat
-            if allVocalizedIndices(index) == 0
-                eventReinMat{index} = eventRein;
-                featureReinMat{index} = featureRein;
+            if allVocalizedIndices(ind) == 0
+                eventReinMat{ind} = eventRein;
+                featureReinMat{ind} = featureRein;
             else
-                eventReinMat{index} = cat(1, eventReinMat{index}, eventRein);
-                featureReinMat{index} = cat(1, featureReinMat{index}, featureRein);
+                eventReinMat{ind} = cat(1, eventReinMat{ind}, eventRein);
+                featureReinMat{ind} = cat(1, featureReinMat{ind}, featureRein);
             end
 
-            allVocalizedIndices(index) = 1;
+            allVocalizedIndices(ind) = 1;
         end %loop through word pairs -> built feature matrix
 
         %%- SAVE MAT FILE PER BLOCK
         save(strcat(matFile, '.mat'), 'eventReinMat', 'featureReinMat', 'allVocalizedIndices');
+        
+        size(eventReinMat)
         
         %%- 04: PLOTTING
         fig = figure;
@@ -208,7 +212,7 @@ for iSesh=1:length(sessions),
         % change figure dimensions before saving
         fig = gcf;
         fig.PaperUnits = 'inches';
-        pos = [5.1667 0.6806 9.9722 10.3889];
+        pos = [0    0.6667   17.5972   10.4028];
         fig.PaperPosition = pos;
 
         %%- Save the image

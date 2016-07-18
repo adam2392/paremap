@@ -8,9 +8,9 @@ clc
 close all
 
 subj = 'NIH034';
-typeTransform = 'multitaper';
+typeTransform = 'morlet';
 timeLock = 'vocalization';
-referenceType = 'global';
+referenceType = 'bipolar';
 typeReinstatement = 'within_blocks';
 
 % set the directories with the reinstatements
@@ -24,17 +24,27 @@ featureMatDir = strcat('./Figures/', subj, '/reinstatement_mat/', reinstatementD
 sessionMats = dir(strcat(featureMatDir, '/*.mat'));
 sessionMats = {sessionMats.name};
 
-if strcmp(timeLock, 'vocalization')
-    if strcmp(typeTransform, 'morlet')
-        ticks = [6:10:46];
-        labels = [-2:1:3];
-        timeZero = 16;
-    elseif strcmp(typeTransform, 'multitaper')
-        ticks = [1:2:11];
-        labels = [-2:1:3];
-        timeZero = 5;
-    end
-end
+% load in an example file to get the -> labels, ticks and timeZero
+THIS_REF_TYPE = referenceType; 
+TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
+CUE_LOCK = strcat(timeLock);
+
+dataDir = strcat('./condensed_data_', subj);
+dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
+sessions = dir(dataDir);
+sessions = {sessions(3:end).name};
+blocks = dir(fullfile(dataDir, sessions{1}));
+blocks = {blocks(3:end).name};
+pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
+exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
+channelData = dir(exampleDir);
+data = load(fullfile(exampleDir, channelData(4).name));
+data = data.data;
+timeTicks = data.waveT(:,2);
+
+ticks = 1:5:length(timeTicks);
+labels = timeTicks(ticks);
+timeZero = data.timeZero;
 
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
@@ -115,11 +125,13 @@ fid = fopen(logFile, 'w');
 LT = 1.5;
 newFigDir = fullfile(subjFigDir, 'importantFeatures', strcat(typeTransform, referenceType, '_', typeReinstatement));
 
-allMaxValues = [];
+allmaxValues = [];
 
 if ~exist(newFigDir)
     mkdir(newFigDir);
 end
+
+sessions = {'session_1', 'session_2'};
 
 % loop through all session mat files -> extract same, reverse, different
 for iMat=1:length(sessionMats),
@@ -159,10 +171,10 @@ for iMat=1:length(sessionMats),
     maxValues = sortedX(1:N);
     maxValueIndices = sortingIndices(1:N);
     
-    if isempty(allMaxValues)
-        allMaxValues = preVocal;
+    if isempty(allmaxValues)
+        allmaxValues = preVocal;
     else
-        allMaxValues = cat(2, allMaxValues, preVocal);
+        allmaxValues = cat(2, allmaxValues, preVocal);
     end
     %%- plot
 %     figure
@@ -259,12 +271,34 @@ for iMat=1:length(sessionMats),
 %     savefig(figureFile)
 end
 
-test = squeeze(mean(allMaxValues, 2));
-size(test)
-plot(mean(allMaxValues, 2))
+subjPreVocalAvge = squeeze(mean(allmaxValues, 2));
+Z = zscore(subjPreVocalAvge);
+
+size(subjPreVocalAvge)
+figure;
+subplot(211);
+plot(subjPreVocalAvge);
+hold on;
+title([subj, ' Same-Different Pair Reinstatement Block PreVocalization']);
+xlabel('Features (channels and 7 frequency bands)');
+ylabel('Reinstatement Difference (metric = cosine similarity)');
+subplot(212);
+hist(Z, 20);
+title([subj, ' ZScored Same-Different Pair Reinstatement Block PreVocalization']);
+xlabel('Reinstatement Difference (metric = cosine similarity)');
+ylabel('Frequency (n)');
+
+%%- Save Image
+fig = gcf;
+fig.PaperUnits = 'inches';
+pos = [0    0.6667   17.5972   10.4028];
+fig.PaperPosition = pos;
+figureFile = fullfile(newFigDir, strcat(subj, '_featureImportance'));
+print(figureFile, '-dpng', '-r0')
+savefig(figureFile)
 
 % save mat file
-% saveIndicesFile = fullfile(newFigDir, strcat(subj, '_importantIndices'));
-% save(saveIndicesFile, 'toSave');
+saveIndicesFile = fullfile(newFigDir, strcat(subj, '_importantIndices'));
+save(saveIndicesFile, 'toSave', 'Z', 'allmaxValues');
 
 fclose(fid);

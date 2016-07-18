@@ -2,34 +2,6 @@ close all
 clc
 clear all
 
-
-%%- Section for Pulling reinstatement matrices already produced and just
-%%make different plots
-ANALYSIS_TYPE = {'within_blocks', 'across_blocks'};
-EVENT_SYNC = {'probeon', 'vocalizationWord'};
-
-subj = 'NIH034';
-ANALYSIS = ANALYSIS_TYPE{2};
-SYNC = EVENT_SYNC{2};
-
-disp(ANALYSIS)
-disp(SYNC)
-
-% file dir for all the saved mat files
-fileDir = strcat('./Figures/', subj, '/reinstatement_mat/', ANALYSIS, '_', SYNC, '/')
-
-
-% load in an example data directory to get session names and block number
-dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, 'morlet_spec');
-sessions = dir(dataDir);
-sessions = {sessions(3:end).name};
-% if strcmp(subj, 'NIH039')
-%     sessions = sessions([1,2,4]);
-% elseif strcmp(subj, 'NIH034')
-%     sessions = sessions([3, 4]);
-% end
-
 %%- Parameter settings
 subj = 'NIH034';
 timeLock = 'vocalization';
@@ -68,7 +40,7 @@ allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS',
                     'GLASS_GLASS', 'JUICE_JUICE'};
 allVocalizedIndices = zeros(15, 1);
 avgeEventReinMat = cell(15,1);
-avgeFeatureReinMat = cell(15,1);
+% avgeFeatureReinMat = cell(15,1);
 
 %%- average results across the entire subject tests
 for iFile=1:length(matFiles)
@@ -77,26 +49,38 @@ for iFile=1:length(matFiles)
     %%- extract event and feature reinstatements
     tempVocalizedIndices = data.allVocalizedIndices;
     eventReinMat = data.eventReinMat;
-    featureReinMat = data.featureReinMat;
+%     featureReinMat = data.featureReinMat;
     
-    buffIndex = 1;
+    % loop through each index of targetword comparisons
     for iVocal=1:length(tempVocalizedIndices)
         if tempVocalizedIndices(iVocal) == 1 % this target pair is stored in this file
             if isempty(avgeEventReinMat{iVocal})
-                avgeEventReinMat{iVocal} = eventReinMat{buffIndex};
-                avgeFeatureReinMat{iVocal} = featureReinMat{buffIndex};
+                avgeEventReinMat{iVocal} = eventReinMat{iVocal};
+%                 avgeFeatureReinMat{iVocal} = featureReinMat{iVocal};
             else   
-                avgeEventReinMat{iVocal} = cat(1, avgeEventReinMat{iVocal}, eventReinMat{buffIndex});
-                avgeFeatureReinMat{iVocal} = cat(1, avgeFeatureReinMat{iVocal}, featureReinMat{buffIndex});
+                avgeEventReinMat{iVocal} = cat(1, avgeEventReinMat{iVocal}, eventReinMat{iVocal});
+%                 avgeFeatureReinMat{iVocal} = cat(1, avgeFeatureReinMat{iVocal}, featureReinMat{iVocal});
             end
-            
-            % increment index for reinstatement maps
-            buffIndex = buffIndex + 1;
         end
     end
 end
 
 size(avgeEventReinMat)
+for iCell=1:length(avgeEventReinMat)
+    if iCell==1
+        minNumEvents = size(avgeEventReinMat{iCell}, 1);
+    else
+        minNumEvents = min(minNumEvents, size(avgeEventReinMat{iCell}, 1));
+    end
+end
+% downsample all events from targetword comparisons
+for iCell=1:length(avgeEventReinMat)
+    randIndices = randsample(size(avgeEventReinMat{iCell},1), minNumEvents);
+    events = avgeEventReinMat{iCell};
+    events = events(randIndices,:,:);
+    
+    avgeEventReinMat{iCell} = events;
+end
 
 %%- 04: PLOTTING
 fig = figure;
@@ -104,21 +88,29 @@ clim = [0 0]; %initialize colorbar
 fa = {};
 LT = 1.5 %line thickness
 
-if strcmp(typeTransform, 'morlet')
-    ticks = [6:10:46];
-    labels = [-1:1:3];
-    timeZero = 16;
-else
-    timeZero = 5;
-    ticks = [1:2:11];
-    labels = [-2:1:3];
-end
+% load in an example file to get the -> labels, ticks and timeZero
+dataDir = strcat('./condensed_data_', subj);
+dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
+sessions = dir(dataDir);
+sessions = {sessions(3:end).name};
+blocks = dir(fullfile(dataDir, sessions{1}));
+blocks = {blocks(3:end).name};
 
+pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
+exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
+channelData = dir(exampleDir);
+data = load(fullfile(exampleDir, channelData(4).name));
+data = data.data;
+timeTicks = data.waveT(:,2);
+
+ticks = 1:5:length(timeTicks);
+labels = timeTicks(ticks);
+timeZero = data.timeZero;
 
 %%- Plot each word pairing separately
 for iPlot=1:length(allVocalizedPairs)
     eventRein = avgeEventReinMat{iPlot};
-    featureRein = avgeFeatureReinMat{iPlot};
+%     featureRein = avgeFeatureReinMat{iPlot};
 
     % split words
     wordSplit = strsplit(allVocalizedPairs{iPlot}, '_');
@@ -157,8 +149,9 @@ end
 
 % change figure dimensions before saving
 fig = gcf;
+fig.Units = 'inches';
 fig.PaperUnits = 'inches';
-pos = [0    0.6806   20.0000   10.2917];
+pos = [0    0.6667   17.5972   10.4028];
 fig.PaperPosition = pos;
 
 %%- Save the image
