@@ -8,16 +8,18 @@
 % close all
 function rankCosineSimilarity(subj, typeTransform, timeLock, referenceType, typeReinstatement)
 
-subj = 'NIH034';
-typeTransform = 'morlet';
-timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeReinstatement = 'within_blocks';
+% subj = 'NIH034';
+% typeTransform = 'morlet';
+% timeLock = 'vocalization';
+% referenceType = 'bipolar';
+% typeReinstatement = 'within_blocks';
 
 % set the directories with the reinstatements
 subjFigDir = fullfile('Figures', subj);
 reinstatementDir = strcat(typeTransform, '_', referenceType, '/', typeReinstatement, '_', timeLock);
 featureMatDir = strcat('./Figures/', subj, '/reinstatement_mat/', reinstatementDir);
+
+% reinstatementDir = strcat(typeTransform, '_', referenceType, '/', typeReinstatement, '_', timeLock);
 
 %%- FOR WITHIN BLOCKS RIGHT NOW
 %%- GET LIST OF MAT FILES TO EXTRACT DATA FROM
@@ -30,22 +32,9 @@ THIS_REF_TYPE = referenceType;
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
 CUE_LOCK = strcat(timeLock);
 
-dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
-sessions = dir(dataDir);
-sessions = {sessions(3:end).name};
-blocks = dir(fullfile(dataDir, sessions{1}));
-blocks = {blocks(3:end).name};
-pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
-exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
-channelData = dir(exampleDir);
-data = load(fullfile(exampleDir, channelData(4).name));
-data = data.data;
-timeTicks = data.waveT(:,2);
-
-ticks = 1:5:length(timeTicks);
-labels = timeTicks(ticks);
-timeZero = data.timeZero;
+% load in an example file to get the -> labels, ticks and timeZero
+exDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH039/morlet_bipolar/vocalization_allPairs/BRICK_CLOCK/2  3_G2-G3.mat';
+[ticks, labels, timeZero] = getPlotMetaData(exDir);
 
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
@@ -124,7 +113,7 @@ clear chan1 chan2 chanFile chanNums chanRefs eventEEGpath chanTags correctIndice
 logFile = strcat(featureMatDir, '/', subj, '.txt');
 fid = fopen(logFile, 'w');
 LT = 1.5;
-newFigDir = fullfile(subjFigDir, 'importantFeatures', strcat(typeTransform, referenceType, '_', typeReinstatement));
+newFigDir = fullfile(subjFigDir, 'importantFeatures', strcat(typeTransform, referenceType, '_', timeLock, '_', typeReinstatement));
 
 allmaxValues = [];
 
@@ -146,7 +135,7 @@ for iMat=1:length(sessionMats),
     % average
     preVocal = zeros(size(featureSame, 1), 1);
     for i=1:size(featureSame, 1)
-        timePeriod = timeZero-2:timeZero-1;
+        timePeriod = timeZero-3:timeZero-1;
         % get a mini-square time period before the vocalization
         featureSamePreVocal = squeeze(featureSame(i, timePeriod, timePeriod));
         featureDiffPreVocal = squeeze(featureDiff(i, timePeriod, timePeriod));
