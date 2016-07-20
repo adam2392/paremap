@@ -3,15 +3,16 @@
 % Used to rank cosine similarities based on the features inside feature
 % vector
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all
-clc
-close all
+% clear all
+% clc
+% close all
+function rankCosineSimilarity(subj, typeTransform, timeLock, referenceType, typeReinstatement)
 
 subj = 'NIH034';
-typeTransform = 'multitaper';
+typeTransform = 'morlet';
 timeLock = 'vocalization';
-referenceType = 'global';
-typeReinstatement = 'across_blocks';
+referenceType = 'bipolar';
+typeReinstatement = 'within_blocks';
 
 % set the directories with the reinstatements
 subjFigDir = fullfile('Figures', subj);
@@ -302,3 +303,5 @@ saveIndicesFile = fullfile(newFigDir, strcat(subj, '_importantIndices'));
 save(saveIndicesFile, 'toSave', 'Z', 'allmaxValues');
 
 fclose(fid);
+
+end

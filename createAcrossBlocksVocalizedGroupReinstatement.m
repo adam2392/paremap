@@ -4,10 +4,10 @@ close all;
 clc;
     
 %% PARAMETERS FOR RUNNING PREPROCESS
-subj = 'NIH034';
-timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeTransform = 'morlet';
+% subj = 'NIH034';
+% timeLock = 'vocalization';
+% referenceType = 'bipolar';
+% typeTransform = 'morlet';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
@@ -35,6 +35,7 @@ dataDir = strcat('./condensed_data_', subj);
 dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
+sessions
 blocks = dir(fullfile(dataDir, sessions{1}));
 blocks = {blocks(3:end).name};
 sessions

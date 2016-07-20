@@ -8,7 +8,7 @@ close all;
 clc;
 
 %% PARAMETERS FOR RUNNING PREPROCESS
-% subj = 'NIH034';
+% subj = 'NIH039';
 % timeLock = 'vocalization';
 % referenceType = 'bipolar';
 % typeTransform = 'morlet';
@@ -101,6 +101,17 @@ for iSesh=1:length(sessions),
         diffPairFeatureMat1 = permute(diffPairFeatureMat1, [1 3 2]);
         diffPairFeatureMat2 = permute(diffPairFeatureMat2, [1 3 2]);
         
+        randIndices = randsample(size(reversePairFeatureMat1, 1), size(samePairFeatureMat1, 1));
+        reversePairFeatureMat1 = reversePairFeatureMat1(randIndices, :, :);
+        reversePairFeatureMat2 = reversePairFeatureMat2(randIndices, :, :);
+        randIndices = randsample(size(diffPairFeatureMat1, 1), size(samePairFeatureMat1, 1));
+        diffPairFeatureMat1 = diffPairFeatureMat1(randIndices, :, :);
+        diffPairFeatureMat2 = diffPairFeatureMat2(randIndices, :, :);
+        
+        size(samePairFeatureMat1)
+        size(reversePairFeatureMat1)
+        size(diffPairFeatureMat1)
+        
         %%- BUILD REINSTATEMENT MATRICES
         % same Pairs
         fprintf('Computing reinstatement matrices \n');
@@ -120,10 +131,10 @@ for iSesh=1:length(sessions),
 
         % rand sample down the different word pair feature mat -> match
         % size
-        randIndices = randsample(size(eventDiff,1), size(eventSame,1));
-        eventDiff = eventDiff(randIndices,:,:);
-        randIndices = randsample(size(eventReverse,1), size(eventSame,1));
-        eventReverse = eventReverse(randIndices,:,:);
+%         randIndices = randsample(size(eventDiff,1), size(eventSame,1));
+%         eventDiff = eventDiff(randIndices,:,:);
+%         randIndices = randsample(size(eventReverse,1), size(eventSame,1));
+%         eventReverse = eventReverse(randIndices,:,:);
         
         %%- Save Mat Files
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}));

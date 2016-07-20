@@ -112,6 +112,31 @@ for iSesh=1:length(sessions),
         targetPairFeatureMat1 = permute(targetPairFeatureMat1, [1 3 2]);
         targetPairFeatureMat2 = permute(targetPairFeatureMat2, [1 3 2]);
         
+        minSampleSize = min([size(reversePairFeatureMat1,1), size(samePairFeatureMat1,1), ...
+                            size(targetPairFeatureMat1,1), size( probePairFeatureMat1, 1), ...
+                            size(diffPairFeatureMat1,1)]);
+                        
+        randIndices = randsample(size(reversePairFeatureMat1, 1), minSampleSize);
+        reversePairFeatureMat1 = reversePairFeatureMat1(randIndices, :, :);
+        reversePairFeatureMat2 = reversePairFeatureMat2(randIndices, :, :);
+        randIndices = randsample(size(diffPairFeatureMat1, 1), minSampleSize);
+        diffPairFeatureMat1 = diffPairFeatureMat1(randIndices, :, :);
+        diffPairFeatureMat2 = diffPairFeatureMat2(randIndices, :, :);
+        randIndices = randsample(size(samePairFeatureMat1, 1), minSampleSize);
+        samePairFeatureMat1 = samePairFeatureMat1(randIndices, :, :);
+        samePairFeatureMat2 = samePairFeatureMat2(randIndices, :, :);
+        
+        randIndices = randsample(size(targetPairFeatureMat1, 1), minSampleSize);
+        targetPairFeatureMat1 = targetPairFeatureMat1(randIndices, :, :);
+        targetPairFeatureMat2 = targetPairFeatureMat2(randIndices, :, :);
+        randIndices = randsample(size(probePairFeatureMat1, 1), minSampleSize);
+        probePairFeatureMat1 = probePairFeatureMat1(randIndices, :, :);
+        probePairFeatureMat2 = probePairFeatureMat2(randIndices, :, :);
+        
+        size(samePairFeatureMat1)
+        size(reversePairFeatureMat1)
+        size(diffPairFeatureMat1)
+        
         %%- BUILD REINSTATEMENT MATRICES
         % same Pairs
         [eventSame, featureSame] = compute_reinstatement(samePairFeatureMat1, samePairFeatureMat2);
@@ -124,6 +149,23 @@ for iSesh=1:length(sessions),
         size(eventDiff)
         size(featureTarget)
         size(featureDiff)
+        
+        % rand sample down the different word pair feature mat -> match
+        % size
+%         minSampleSize = min([size(eventSame,1), size(eventDiff,1), ...
+%                             size(eventReverse,1), size(eventProbe, 1), ...
+%                             size(eventTarget,1)]);
+%         
+%         randIndices = randsample(size(eventSame,1), minSampleSize);
+%         eventSame = eventSame(randIndices,:,:);
+%         randIndices = randsample(size(eventDiff,1), minSampleSize);
+%         eventDiff = eventDiff(randIndices,:,:);
+%         randIndices = randsample(size(eventReverse,1), minSampleSize);
+%         eventReverse = eventReverse(randIndices,:,:);
+%         randIndices = randsample(size(eventProbe,1), minSampleSize);
+%         eventProbe = eventProbe(randIndices,:,:);
+%         randIndices = randsample(size(eventTarget,1), minSampleSize);
+%         eventTarget = eventTarget(randIndices,:,:);
         
         %%- Save Mat files
         figureFile = strcat(figureDir, sessions{iSesh}, '-', num2str(blocks{iBlock}), 'vs',num2str(blocks{iBlock+1}));
@@ -157,23 +199,6 @@ for iSesh=1:length(sessions),
         fprintf(fid, '%6s vs %6s \n', probeWordGroup{:});
         fprintf(fid, '\n %s \n', 'Target Overlap Pair Group:');
         fprintf(fid, '%6s vs %6s \n', targetWordGroup{:});
-                                    
-        % rand sample down the different word pair feature mat -> match
-        % size
-        minSampleSize = min([size(eventSame,1), size(eventDiff,1), ...
-                            size(eventReverse,1), size(eventProbe, 1), ...
-                            size(eventTarget,1)]);
-        
-        randIndices = randsample(size(eventSame,1), minSampleSize);
-        eventSame = eventSame(randIndices,:,:);
-        randIndices = randsample(size(eventDiff,1), minSampleSize);
-        eventDiff = eventDiff(randIndices,:,:);
-        randIndices = randsample(size(eventReverse,1), minSampleSize);
-        eventReverse = eventReverse(randIndices,:,:);
-        randIndices = randsample(size(eventProbe,1), minSampleSize);
-        eventProbe = eventProbe(randIndices,:,:);
-        randIndices = randsample(size(eventTarget,1), minSampleSize);
-        eventTarget = eventTarget(randIndices,:,:);
         
         %%- Plotting
         fig = {};

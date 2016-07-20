@@ -1,10 +1,10 @@
 % script to analyze reinstatement plots of important features 
 clc; clear all; close all;
 
-subj = 'NIH034';
-typeTransform = 'multitaper';
+subj = 'NIH039';
+typeTransform = 'morlet';
 timeLock = 'vocalization';
-referenceType = 'global';
+referenceType = 'bipolar';
 typeReinstatement = 'across_blocks';
 
 %% LOAD IN CHANNEL STRING
@@ -97,7 +97,7 @@ for i=1:length(importantChannels)
 end 
 
 % get the ticks, labels and timezero for reinstatement from example struct
-exData = load('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH034/morlet_bipolar/vocalization/session_1/0/BRICK_CLOCK/1  2_G1-G2.mat');
+exData = load('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH039/morlet_bipolar/vocalization/session_1/0/BRICK_CLOCK/1  2_G1-G2.mat');
 exData = exData.data;
 timeTicks = exData.waveT(:,2);
 
