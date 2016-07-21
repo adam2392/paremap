@@ -7,13 +7,12 @@ close all;
 clc;
 clear all;
 
-addpath('./m_reinstatementhelp/');
-addpath('./m_reinstatement/');
+addpath('./reinstatement_allPairs/');
 %% 1) Without session separation
-subj = 'NIH039';
+subj = 'NIH034';
 timeLock = 'vocalization_allPairs';
 referenceType = 'bipolar';
-typeTransform = 'multitaper';
+typeTransform = 'morlet';
 
 THIS_REF_TYPE = referenceType; 
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
@@ -35,10 +34,8 @@ if ~exist(matDir)    mkdir(matDir);    end
 LT = 1.5;
 
 % load in an example file to get the -> labels, ticks and timeZero
-exDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH039/morlet_bipolar/vocalization_allPairs/BRICK_CLOCK/2  3_G2-G3.mat';
+exDir = strcat('/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_', subj, '/morlet_bipolar/vocalization_allPairs/BRICK_CLOCK/2  3_G2-G3.mat');
 [ticks, labels, timeZero] = getPlotMetaData(exDir);
-
-blockNumbers = 0:5;
 
 %%- 1. LOOP THROUGH EACH WORDPAIR DIRECTORY
 for iPair=1:length(allWordPairs)
@@ -46,42 +43,6 @@ for iPair=1:length(allWordPairs)
     % get the channel names
     channels = dir(wordPairDir);
     channels = {channels(3:end).name};
-    
-    for iChan=1:length(channels)
-        % load in the channel
-        data = load(fullfile(wordPairDir, channels{iChan}));
-        data = data.data;
-        sessions = data.sessions;
-        blocks = data.blocks;
-        
-        
-        blockIndices = zeros(length(blocks), 1);
-        
-        sessions
-        % separate by session/block
-        for iSesh=1:length(sessions)
-            currentSesh = sessions{iSesh};
-            sessionIndices = find(sessions==currentSesh);
-            currentSessionData = data(sessionIndices); % get the session data sets
-            sessionBlocks = blocks(sessionIndices);
-            
-            for iBlock=1:length(blockNumbers)-1
-                % get current block data
-                currentBlockIndices = find(sessionBlocks == blockNumbers(iBlock));
-                currentBlockData = currentSessionData(currentBlockIndices);
-                currentBlockPowerMat = currentBlockData.powerMatZ;
-                
-                % get next block data
-                nextBlockIndices = find(sessionBlocks == blockNumbers(iBlock+1));
-                nextBlockData = currentSessionData(nextBlockIndices);
-                nextBlockPowerMat = nextBlockData.powerMatZ;
-                
-                % line up power matrices
-                
-                
-            end
-        end
-    end
     
     %%- A. CREATE SAME PAIR REINSTATEMENT INPUT
     [samePairFeatureMat1, samePairFeatureMat2] = createSamePairReinInput(channels, wordPairDir);

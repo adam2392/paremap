@@ -13,7 +13,7 @@
 
 subj = 'NIH039';
 % rankCosineSimilarity(subj, 'morlet', 'vocalization', 'bipolar', 'across_blocks');
-rankCosineSimilarity(subj, 'morlet', 'vocalization_allPairs', 'bipolar', 'within_blocks');
+% rankCosineSimilarity(subj, 'morlet', 'vocalization_allPairs', 'bipolar', 'within_blocks');
 % rankCosineSimilarity(subj, 'multitaper', 'vocalization', 'bipolar', 'across_blocks');
 rankCosineSimilarity(subj, 'multitaper', 'vocalization_allPairs', 'bipolar', 'within_blocks');
 % rankCosineSimilarity(subj, 'multitaper', 'vocalization', 'global', 'across_blocks');

@@ -1,19 +1,15 @@
 function createWithinBlocksVocalizedGroupReinstatement(subj, typeTransform, timeLock, referenceType)    
 clc;
 close all;
-    
-%% PARAMETERS FOR RUNNING PREPROCESS
+
 % subj = 'NIH034';
 % timeLock = 'vocalization';
 % referenceType = 'bipolar';
 % typeTransform = 'morlet';
-
-expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
+addpath('./reinstatement_vocalizedWords/');
+%% PARAMETERS FOR RUNNING PREPROCESS
 expected_transforms = {'morlet', 'multitaper'};
 REF_TYPES = {'noreref', 'bipolar', 'global'};
-if ~ismember(timeLock, expected_timeLocks)
-    disp('timeLock should be vocalization, matchword, or probeword');
-end
 if ~ismember(referenceType, REF_TYPES)
     disp('reference types are noreref, bipolar, or global');
 end
@@ -23,8 +19,6 @@ end
 THIS_REF_TYPE = referenceType; 
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
 CUE_LOCK = strcat(timeLock);
-
-addpath('./m_reinstatement/');
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%

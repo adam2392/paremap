@@ -65,19 +65,10 @@ for iPair=1:length(allWordPairs)
             currentSessionData = data(sessionIndices); % get the session data sets
             sessionBlocks = blocks(sessionIndices);
             
-            for iBlock=1:length(blockNumbers)-1
+            for iBlock=1:length(blockNumbers)
                 % get current block data
                 currentBlockIndices = find(sessionBlocks == blockNumbers(iBlock));
-                currentBlockData = currentSessionData(currentBlockIndices);
-                currentBlockPowerMat = currentBlockData.powerMatZ;
-                
-                % get next block data
-                nextBlockIndices = find(sessionBlocks == blockNumbers(iBlock+1));
-                nextBlockData = currentSessionData(nextBlockIndices);
-                nextBlockPowerMat = nextBlockData.powerMatZ;
-                
-                % line up power matrices
-                
+                currentBlockData = currentSessionData(
                 
             end
         end
