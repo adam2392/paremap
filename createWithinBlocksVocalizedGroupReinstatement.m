@@ -1,11 +1,11 @@
-function createWithinBlocksVocalizedGroupReinstatement(subj, typeTransform, timeLock, referenceType)    
+function createWithinBlocksVocalizedGroupReinstatement(subj, typeTransform, referenceType)    
 clc;
 close all;
 
-subj = 'NIH034';
-timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeTransform = 'multitaper';
+% subj = 'NIH034';
+% timeLock = 'vocalization';
+% referenceType = 'bipolar';
+% typeTransform = 'multitaper';
 
 addpath('./reinstatement_general/');
 addpath('./reinstatement_vocalizedWords/');
@@ -27,8 +27,12 @@ CUE_LOCK = strcat(timeLock);
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subjDataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_allPairsNew'));
-[allWordPairs, allWordPairDirs] = loadAllPairs(dataDir);
+dataDir = fullfile(subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_sessiontargetwords'));
+sessions = dir(dataDir);
+sessions = {sessions(3:end).name};
+blocks = dir(fullfile(dataDir, sessions{1}));
+blocks = {blocks(3:end).name};
+sessions
 
 % all target word comparisons that exist 
 allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...

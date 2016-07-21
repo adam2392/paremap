@@ -36,8 +36,8 @@ addpath('./m_reinstatement/');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, TYPE_TRANSFORM, CUE_LOCK)
+subjDir = strcat('./condensed_data_', subj);
+dataDir = fullfile(subjDir, strcat(typeTransform, '_', referenceType, '_', timeLock));
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 blocks = dir(fullfile(dataDir, sessions{1}));
