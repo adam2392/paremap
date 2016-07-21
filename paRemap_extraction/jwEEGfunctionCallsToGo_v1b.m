@@ -8,13 +8,13 @@
 
 %-----------------------------------------------------------------------------------------------------%
 %----------------------  Choose the subject of interest and root EEG directory -----------------------%
-subj       = 'NIH039';
+subj       = 'NIH037';
 
 rootEEGdirWork  = '/Volumes/JW24TB/data24TB/eeg';                        %office-local
 rootEEGdirWork = '/Users/liaj/Documents/MATLAB/paremap';   %office-local
 rootEEGdirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';   %home
 % rootEEGdirHome = '/home/adamli/paremap';
-rootEEGdirHome = '/Volumes/NIL_PASS';
+% rootEEGdirHome = '/Volumes/NIL_PASS';
 
 if      exist(rootEEGdirWork, 'dir'), rootEEGdir = rootEEGdirWork; 
 elseif  exist(rootEEGdirHome, 'dir'), rootEEGdir = rootEEGdirHome; 

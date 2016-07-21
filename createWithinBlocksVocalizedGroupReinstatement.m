@@ -2,10 +2,12 @@ function createWithinBlocksVocalizedGroupReinstatement(subj, typeTransform, time
 clc;
 close all;
 
-% subj = 'NIH034';
-% timeLock = 'vocalization';
-% referenceType = 'bipolar';
-% typeTransform = 'morlet';
+subj = 'NIH034';
+timeLock = 'vocalization';
+referenceType = 'bipolar';
+typeTransform = 'multitaper';
+
+addpath('./reinstatement_general/');
 addpath('./reinstatement_vocalizedWords/');
 %% PARAMETERS FOR RUNNING PREPROCESS
 expected_transforms = {'morlet', 'multitaper'};
@@ -19,16 +21,14 @@ end
 THIS_REF_TYPE = referenceType; 
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
 CUE_LOCK = strcat(timeLock);
+
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
-sessions = dir(dataDir);
-sessions = {sessions(3:end).name};
-blocks = dir(fullfile(dataDir, sessions{1}));
-blocks = {blocks(3:end).name};
+subjDataDir = strcat('./condensed_data_', subj);
+dataDir = fullfile(subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_allPairsNew'));
+[allWordPairs, allWordPairDirs] = loadAllPairs(dataDir);
 
 % all target word comparisons that exist 
 allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...
@@ -37,8 +37,8 @@ allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS',
                     'GLASS_GLASS', 'JUICE_JUICE'};
     
 %%- SAVING FIGURES OPTIONS
-figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM, '/within_blocks_vocalizationWord/');
-matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM, '/within_blocks_vocalizationWord/');         
+figureDir = strcat('./Figures/', subj, '/reinstatement/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalizationWord/');
+matDir = strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalizationWord/');
 if ~exist(figureDir, 'dir') mkdir(figureDir); end
 if ~exist(matDir, 'dir')    mkdir(matDir);    end
 

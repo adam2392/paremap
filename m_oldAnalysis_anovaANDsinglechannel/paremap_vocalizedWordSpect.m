@@ -1,4 +1,4 @@
-%         -- preprocess data with notch filter, wavelet transform
+ %         -- preprocess data with notch filter, wavelet transform
 %         -- select subset of behavioral events (filter out incorrect
 %         responses)
 %         -- get waveform, power, phase for a time window around the event of interest

@@ -7,10 +7,10 @@ close all;
 clc;
 clear all;
 
-addpath('./m_reinstatementhelp/');
-addpath('./m_reinstatement/');
+addpath('./reinstatement_allPairs');
+addpath('./reinstatement_general/');
 %% 1) Without session separation
-subj = 'NIH039';
+subj = 'NIH034';
 timeLock = 'vocalization_allPairs';
 referenceType = 'bipolar';
 typeTransform = 'multitaper';
