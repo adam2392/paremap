@@ -17,4 +17,4 @@
 % ALParemap_eCog_PreProcess('NIH037', 'morlet', 'vocalization', 'global', 500, 100);
 % ALParemap_eCog_PreProcess('NIH037', 'morlet', 'vocalization', 'bipolar', 500, 100);
 % ALParemap_eCog_PreProcess('NIH037', 'multitaper', 'vocalization', 'global', 500, 100);
-ALParemap_eCog_PreProcess('NIH037', 'multitaper', 'vocalization', 'bipolar', 500, 100);
+% ALParemap_eCog_PreProcess('NIH037', 'multitaper', 'vocalization', 'bipolar', 500, 100);
