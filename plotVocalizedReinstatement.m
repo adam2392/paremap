@@ -1,20 +1,16 @@
+function plotVocalizedReinstatement(subj, typeTransform, referenceType, typeAnalysis)
 close all
 clc
-clear all
 
 %%- Parameter settings
-subj = 'NIH034';
-timeLock = 'vocalization';
-referenceType = 'bipolar';
-typeTransform = 'morlet';
-typeAnalysis = 'across_blocks_vocalizationWord';
+% subj = 'NIH034';
+% referenceType = 'bipolar';
+% typeTransform = 'morlet';
+% typeAnalysis = 'within_blocks_vocalizationWord';
 
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};
 REF_TYPES = {'noreref', 'bipolar', 'global'};
-if ~ismember(timeLock, expected_timeLocks)
-    disp('timeLock should be vocalization, matchword, or probeword');
-end
 if ~ismember(referenceType, REF_TYPES)
     disp('reference types are noreref, bipolar, or global');
 end
@@ -23,15 +19,25 @@ if ~ismember(typeTransform, expected_transforms)
 end
 THIS_REF_TYPE = referenceType; 
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
-CUE_LOCK = strcat(timeLock);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/Volumes/NIL_PASS';
+eegRootDirJhu = '/home/adamli/paremap';
+% Determine which directory we're working with automatically
+if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
+elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
+else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+
 dataDir = strcat('./Figures/', subj);
-dataDir = fullfile(dataDir, 'reinstatement_mat', TYPE_TRANSFORM, typeAnalysis);
+analysisDir = strcat(typeTransform, '_', referenceType, '_', typeAnalysis);
+dataDir = fullfile(eegRootDir, dataDir, 'reinstatement_mat', analysisDir);
 matFiles = dir(strcat(dataDir, '/*.mat')); % get all the mat files for this analysis
-matFiles = {matFiles(:).name};
+matFiles = {matFiles(:).name}
 
 % initialize
 allVocalizedPairs = {'CLOCK_JUICE', 'CLOCK_PANTS', 'CLOCK_BRICK', 'CLOCK_GLASS', 'CLOCK_CLOCK',...
@@ -65,6 +71,7 @@ for iFile=1:length(matFiles)
     end
 end
 
+% get the min number of events, so everything is same # of events
 size(avgeEventReinMat)
 for iCell=1:length(avgeEventReinMat)
     if iCell==1
@@ -90,7 +97,7 @@ LT = 1.5 %line thickness
 
 % load in an example file to get the -> labels, ticks and timeZero
 dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, TYPE_TRANSFORM, 'vocalization_sessiontargetwords')
+dataDir = fullfile(dataDir, strcat(typeTransform, '_', referenceType,  '_vocalization_sessiontargetwords'));
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 blocks = dir(fullfile(dataDir, sessions{1}));
@@ -156,8 +163,9 @@ fig.PaperPosition = pos;
 
 %%- Save the image
 dataDir = strcat('./Figures/', subj);
-dataDir = fullfile(dataDir, 'reinstatement', TYPE_TRANSFORM, typeAnalysis);
+dataDir = fullfile(dataDir, 'reinstatement', analysisDir);
 figureFile = fullfile(dataDir, 'subject_summary');
 
 print(figureFile, '-dpng', '-r0')
 savefig(figureFile)
+end
