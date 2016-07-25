@@ -31,26 +31,37 @@ OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 % createWithinBlocksReinstatementMat('NIH039', 'multitaper', 'vocalization', 'bipolar');
 % createAcrossBlocksReinstatementMat('NIH039', 'multitaper', 'vocalization', 'bipolar');
 
+plotVocalizedReinstatement('NIH034', 'morlet', 'bipolar', 'within_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH034', 'morlet', 'bipolar', 'across_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH034', 'multitaper', 'bipolar', 'within_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH034', 'multitaper', 'bipolar', 'across_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH039', 'morlet', 'bipolar', 'within_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH039', 'morlet', 'bipolar', 'across_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH039', 'multitaper', 'bipolar', 'within_blocks_vocalizationWord');
+plotVocalizedReinstatement('NIH039', 'multitaper', 'bipolar', 'across_blocks_vocalizationWord');
+% plotVocalizedReinstatement('NIH037', 'morlet', 'bipolar', 'within_blocks_vocalizationWord');
+% plotVocalizedReinstatement('NIH037', 'morlet', 'bipolar', 'across_blocks_vocalizationWord');
+% plotVocalizedReinstatement('NIH037', 'multitaper', 'bipolar', 'within_blocks_vocalizationWord');
+% plotVocalizedReinstatement('NIH037', 'multitaper', 'bipolar', 'across_blocks_vocalizationWord');
 
-
-setupSessionBlocksSpect('NIH034', 'morlet', 'bipolar', 'within_blocks');
-setupSessionBlocksSpect('NIH034', 'multitaper', 'bipolar', 'within_blocks');
-
-setupSessionBlocksSpect('NIH034', 'morlet', 'bipolar', 'across_blocks');
-setupSessionBlocksSpect('NIH034', 'multitaper', 'bipolar', 'across_blocks');
-
-setupSessionBlocksSpect('NIH039', 'morlet', 'bipolar', 'within_blocks');
-setupSessionBlocksSpect('NIH039', 'multitaper', 'bipolar', 'within_blocks');
-
-setupSessionBlocksSpect('NIH039', 'morlet', 'bipolar', 'across_blocks');
-setupSessionBlocksSpect('NIH039', 'multitaper', 'bipolar', 'across_blocks');
-
-% NIH037
-createWithinBlocksReinstatementMat('NIH037', 'morlet', 'vocalization', 'bipolar');
-createAcrossBlocksReinstatementMat('NIH037', 'morlet', 'vocalization', 'bipolar');
-createWithinBlocksReinstatementMat('NIH037', 'multitaper', 'vocalization', 'bipolar');
-createAcrossBlocksReinstatementMat('NIH037', 'multitaper', 'vocalization', 'bipolar');
-createWithinBlocksVocalizedGroupReinstatement('NIH037', 'morlet', 'bipolar');
-createAcrossBlocksVocalizedGroupReinstatement('NIH037', 'morlet', 'bipolar');
-createWithinBlocksVocalizedGroupReinstatement('NIH037', 'multitaper', 'bipolar');
-createAcrossBlocksVocalizedGroupReinstatement('NIH037', 'multitaper', 'bipolar');
+% setupSessionBlocksSpect('NIH034', 'morlet', 'bipolar', 'within_blocks');
+% setupSessionBlocksSpect('NIH034', 'multitaper', 'bipolar', 'within_blocks');
+% 
+% setupSessionBlocksSpect('NIH034', 'morlet', 'bipolar', 'across_blocks');
+% setupSessionBlocksSpect('NIH034', 'multitaper', 'bipolar', 'across_blocks');
+% 
+% setupSessionBlocksSpect('NIH039', 'morlet', 'bipolar', 'within_blocks');
+% setupSessionBlocksSpect('NIH039', 'multitaper', 'bipolar', 'within_blocks');
+% 
+% setupSessionBlocksSpect('NIH039', 'morlet', 'bipolar', 'across_blocks');
+% setupSessionBlocksSpect('NIH039', 'multitaper', 'bipolar', 'across_blocks');
+% 
+% % NIH037
+% createWithinBlocksReinstatementMat('NIH037', 'morlet', 'vocalization', 'bipolar');
+% createAcrossBlocksReinstatementMat('NIH037', 'morlet', 'vocalization', 'bipolar');
+% createWithinBlocksReinstatementMat('NIH037', 'multitaper', 'vocalization', 'bipolar');
+% createAcrossBlocksReinstatementMat('NIH037', 'multitaper', 'vocalization', 'bipolar');
+% createWithinBlocksVocalizedGroupReinstatement('NIH037', 'morlet', 'bipolar');
+% createAcrossBlocksVocalizedGroupReinstatement('NIH037', 'morlet', 'bipolar');
+% createWithinBlocksVocalizedGroupReinstatement('NIH037', 'multitaper', 'bipolar');
+% createAcrossBlocksVocalizedGroupReinstatement('NIH037', 'multitaper', 'bipolar');

@@ -163,7 +163,7 @@ fig.PaperPosition = pos;
 
 %%- Save the image
 dataDir = strcat('./Figures/', subj);
-dataDir = fullfile(dataDir, 'reinstatement', analysisDir);
+dataDir = fullfile(eegRootDir, dataDir, 'reinstatement', analysisDir);
 figureFile = fullfile(dataDir, 'subject_summary');
 
 print(figureFile, '-dpng', '-r0')
