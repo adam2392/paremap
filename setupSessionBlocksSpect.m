@@ -1,10 +1,11 @@
+function setupSessionBlocksSpect(subj, typeTransform, referenceType, blocksComp)
 clc;
 close all;
 
-subj = 'NIH034';
-typeTransform = 'multitaper';
-referenceType = 'bipolar';
-blocksComp = 'within_blocks';
+% subj = 'NIH034';
+% typeTransform = 'multitaper';
+% referenceType = 'bipolar';
+% blocksComp = 'within_blocks';
 
 %% PARAMETERS FOR RUNNING PREPROCESS
 expected_transforms = {'morlet', 'multitaper'};
@@ -117,4 +118,5 @@ for iSesh=1:length(sessions),
     
     %%- save mat per session
     save(strcat(matSessionFile, '.mat'), 'sessionPowerMat', 'allVocalizedWords');
+end
 end

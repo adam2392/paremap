@@ -20,7 +20,7 @@ if ~ismember(typeTransform, expected_transforms)
 end
 THIS_REF_TYPE = referenceType; 
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
-CUE_LOCK = strcat(timeLock);
+% CUE_LOCK = strcat(timeLock);
 
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

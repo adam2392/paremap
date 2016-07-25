@@ -11,12 +11,12 @@ function ALParemap_eCog_PreProcess(subj, typeTransform, timeLock, referenceType,
 close all;
 clc;
 
-subj = 'NIH034';
-timeLock = 'vocalization';
-referenceType = 'bipolar';
-winSize = 500;
-stepSize = 100;
-typeTransform = 'morlet';
+% subj = 'NIH034';
+% timeLock = 'vocalization';
+% referenceType = 'bipolar';
+% winSize = 500;
+% stepSize = 100;
+% typeTransform = 'morlet';
 LOWERTIME = -2;             % beginning of processing timelocked to 'timelock'
 UPPERTIME = 3;              % end of processing timelocked to 'timelock'
 SAVE = 1;
@@ -25,7 +25,7 @@ ROBUST_SPEC = 0; % carry out robust spectrogram on data instead
 ALPHA = 300;    % l1 regularization parameter
 
 addpath('./preprocessing');
-USE_CHAN_SUBSET = 1; % 0=all channels, 1=process the subset
+USE_CHAN_SUBSET = 0; % 0=all channels, 1=process the subset
 %% PARAMETERS FOR RUNNING PREPROCESS
 expected_timeLocks = {'vocalization', 'matchword', 'probeword'};
 expected_transforms = {'morlet', 'multitaper'};

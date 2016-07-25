@@ -44,19 +44,20 @@ blocks = {blocks(3:end).name};
 
 %%- SAVING FIGURES OPTIONS
 if strcmp(CUE_LOCK, 'vocalization')
-    figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/within_blocks_vocalization/');
-    matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/within_blocks_vocalization/');
+    figureDir = strcat('./Figures/', subj, '/reinstatement/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalization/');
+    matDir = strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalization/');
 elseif strcmp(CUE_LOCK, 'matchword')
-    figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/within_blocks_matchword/');
-    matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/within_blocks_matchword/');
+    figureDir = strcat('./Figures/', subj, '/reinstatement/', typeTransform, '_', referenceType, '_', 'within_blocks_matchword/');
+    matDir =strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', referenceType, '_', 'within_blocks_matchword/');
 elseif strcmp(CUE_LOCK, 'probeword')
-    figureDir = strcat('./Figures/', subj, '/reinstatement/', TYPE_TRANSFORM,'/within_blocks_probeon/');
-    matDir = strcat('./Figures/', subj, '/reinstatement_mat/', TYPE_TRANSFORM,'/within_blocks_probeon/');
+    figureDir = strcat('./Figures/', subj, '/reinstatement/', typeTransform, '_', referenceType, '_', 'within_blocks_probeon/');
+    matDir = strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', referenceType, '_', 'within_blocks_probeon/');
 end
 
-% make directory, if doens't already exist
-if ~exist(figureDir) mkdir(figureDir); end
-if ~exist(matDir)    mkdir(matDir);    end
+%%- SAVING FIGURES OPTIONS
+if ~exist(figureDir, 'dir') mkdir(figureDir); end
+if ~exist(matDir, 'dir')    mkdir(matDir);    end
+
 % set linethickness
 LT = 1.5;
 
