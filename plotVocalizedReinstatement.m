@@ -55,17 +55,17 @@ for iFile=1:length(matFiles)
     %%- extract event and feature reinstatements
     tempVocalizedIndices = data.allVocalizedIndices;
     eventReinMat = data.eventReinMat;
-%     featureReinMat = data.featureReinMat;
+    featureReinMat = data.featureReinMat;
     
     % loop through each index of targetword comparisons
     for iVocal=1:length(tempVocalizedIndices)
         if tempVocalizedIndices(iVocal) == 1 % this target pair is stored in this file
             if isempty(avgeEventReinMat{iVocal})
                 avgeEventReinMat{iVocal} = eventReinMat{iVocal};
-%                 avgeFeatureReinMat{iVocal} = featureReinMat{iVocal};
+                avgeFeatureReinMat{iVocal} = featureReinMat{iVocal};
             else   
                 avgeEventReinMat{iVocal} = cat(1, avgeEventReinMat{iVocal}, eventReinMat{iVocal});
-%                 avgeFeatureReinMat{iVocal} = cat(1, avgeFeatureReinMat{iVocal}, featureReinMat{iVocal});
+                avgeFeatureReinMat{iVocal} = cat(1, avgeFeatureReinMat{iVocal}, featureReinMat{iVocal});
             end
         end
     end
@@ -97,7 +97,7 @@ LT = 1.5 %line thickness
 
 % load in an example file to get the -> labels, ticks and timeZero
 dataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(dataDir, strcat(typeTransform, '_', referenceType,  '_vocalization_sessiontargetwords'));
+dataDir = fullfile(eegRootDir, dataDir, strcat(typeTransform, '_', referenceType,  '_vocalization_sessiontargetwords'));
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 blocks = dir(fullfile(dataDir, sessions{1}));

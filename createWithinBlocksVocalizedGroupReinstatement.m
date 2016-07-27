@@ -18,10 +18,6 @@ end
 if ~ismember(typeTransform, expected_transforms)
     disp('transform types are morlet, multitaper');
 end
-THIS_REF_TYPE = referenceType; 
-TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
-% CUE_LOCK = strcat(timeLock);
-
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%

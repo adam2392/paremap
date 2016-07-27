@@ -22,8 +22,18 @@ TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/Volumes/NIL_PASS';
+eegRootDirJhu = '/home/adamli/paremap';
+% Determine which directory we're working with automatically
+if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
+elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
+else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+
 subjDataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_sessiontargetwords'));
+dataDir = fullfile(eegRootDir, subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_sessiontargetwords'));
 sessions = dir(dataDir);
 sessions = {sessions(3:end).name};
 blocks = dir(fullfile(dataDir, sessions{1}));
@@ -34,8 +44,8 @@ sessions
 allVocalizedWords = {'CLOCK', 'JUICE', 'PANTS', 'BRICK', 'GLASS'};
 
 %%- SAVING FIGURES OPTIONS
-figureDir = strcat('./Figures/', subj, '/reinstatement/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalizationWord/');
-matDir = strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalizationWord/');
+figureDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/reinstatement/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalizationWord/'));
+matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', referenceType, '_', 'within_blocks_vocalizationWord/'));
 if ~exist(figureDir, 'dir') mkdir(figureDir); end
 if ~exist(matDir, 'dir')    mkdir(matDir);    end
 

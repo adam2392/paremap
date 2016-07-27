@@ -1,10 +1,10 @@
 % plot spectrogram per targetword
 % put into struct and plot spectrogram
-
-subj = 'NIH034';
-typeTransform = 'multitaper';
-referenceType = 'bipolar';
-blocksComp = 'within_blocks';
+function plotSessionsVocalizedSpect(subj, typeTransform, referenceType, blocksComp)
+% subj = 'NIH034';
+% typeTransform = 'multitaper';
+% referenceType = 'bipolar';
+% blocksComp = 'within_blocks';
 
 addpath('./preprocessing');
 
@@ -53,50 +53,51 @@ freqBandYticks  = unique([freqBandAr(1:7).rangeF]);
 for iFB=1:length(freqBandYticks), freqBandYtickLabels{iFB} = sprintf('%.0f Hz', freqBandYticks(iFB)); end
 freqBandYtickLabels = {freqBandAr.label};
 
-% eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
-% eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-% eegRootDirHome = '/Volumes/NIL_PASS';
-% eegRootDirJhu = '/home/adamli/paremap';
-% 
-% % Determine which directory we're working with automatically
-% if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
-% elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
-% elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
-% else   error('Neither Work nor Home EEG directories exist! Exiting'); end
-% 
-% % Either go through all the sessions, or a specific session
-% disp(['STEP 1: Going through all sessions with ', typeTransform, ' transform'])
-% session = 'Meta Session [all]';
-% behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap');
-% 
-% subjDir = fullfileEEG(eegRootDir,subj); % directory to subject (e.g. NIH034)
-% docsDir = fullfileEEG(subjDir,'docs');  % directory to the docs (electordes.m, tagNames.txt, etc.)
-% talDir  = fullfileEEG(subjDir,'tal');
-% defaultEEGfile = fullfileEEG('/Volumes/Shares/FRNU/data/eeg/',subj,'/eeg.reref/');  % default event eegfile fields point here... switch to local before loading
-% 
-% %%-Load in the Events For This Task/Patient/Session
-% events = struct([]);                    %%- in functional form this is required so there is no confusion about events the function and events the variable
-% load(sprintf('%s/events.mat',behDir));  %%- load the events file
-% fprintf('Loaded %d events from %s\n', length(events), behDir);
-% 
-% %%- GET CORRECT EVENTS ONLY
-% % POST MODIFY EVENTS based on fields we want (e.g. is it correct or not)?
-% correctIndices = find([events.isCorrect]==1);
-% events = events(correctIndices);
-% [chanList, chanStr, numChannels, eventEEGpath] = loadChannels(docsDir, talDir, THIS_REF_TYPE, USE_CHAN_SUBSET);
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/Volumes/NIL_PASS';
+eegRootDirJhu = '/home/adamli/paremap';
+
+% Determine which directory we're working with automatically
+if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
+elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
+else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+
+% Either go through all the sessions, or a specific session
+disp(['STEP 1: Going through all sessions with ', typeTransform, ' transform'])
+session = 'Meta Session [all]';
+behDir=fullfileEEG(eegRootDir, subj, '/behavioral/paRemap');
+
+subjDir = fullfileEEG(eegRootDir,subj); % directory to subject (e.g. NIH034)
+docsDir = fullfileEEG(subjDir,'docs');  % directory to the docs (electordes.m, tagNames.txt, etc.)
+talDir  = fullfileEEG(subjDir,'tal');
+defaultEEGfile = fullfileEEG('/Volumes/Shares/FRNU/data/eeg/',subj,'/eeg.reref/');  % default event eegfile fields point here... switch to local before loading
+
+%%-Load in the Events For This Task/Patient/Session
+events = struct([]);                    %%- in functional form this is required so there is no confusion about events the function and events the variable
+load(sprintf('%s/events.mat',behDir));  %%- load the events file
+fprintf('Loaded %d events from %s\n', length(events), behDir);
+
+%%- GET CORRECT EVENTS ONLY
+% POST MODIFY EVENTS based on fields we want (e.g. is it correct or not)?
+correctIndices = find([events.isCorrect]==1);
+events = events(correctIndices);
+USE_CHAN_SUBSET=0;
+[chanList, chanStr, numChannels, eventEEGpath] = loadChannels(docsDir, talDir, referenceType, USE_CHAN_SUBSET);
 
 
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%- SAVING FIGURES OPTIONS
-matDir = strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', ...
-    referenceType, '_', blocksComp, '_vocalizationWord/channels_vocalized_session/');
+%%- SAVING FIGURES OPTIONS®
+matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', ...
+    referenceType, '_', blocksComp, '_vocalizationWord/channels_vocalized_session/'));
 
 sessionMats = dir(strcat(matDir, '*.mat'));
+LT = 1.5;
 
-figure;
 for iMat=1:length(sessionMats)
     name = sessionMats(iMat).name
     sessionFile = fullfile(matDir, sessionMats(iMat).name);
@@ -113,6 +114,8 @@ for iMat=1:length(sessionMats)
     end
     
     for iChan=1:numChans
+        figure;
+        
         %%- plot spectrograms and label
         subplot(511);
         powerMat = sessionPowerMat{1};
@@ -120,7 +123,7 @@ for iMat=1:length(sessionMats)
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', ' CLOCK timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' CLOCK timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
@@ -129,6 +132,7 @@ for iMat=1:length(sessionMats)
         ax = gca;
         ax.XTick = ticks;
         ax.XTickLabel = labels;
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(512);
         powerMat = sessionPowerMat{2};
@@ -136,7 +140,7 @@ for iMat=1:length(sessionMats)
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', ' JUICE timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' JUICE timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
@@ -145,6 +149,7 @@ for iMat=1:length(sessionMats)
         ax = gca;
         ax.XTick = ticks;
         ax.XTickLabel = labels;
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(513);
         powerMat = sessionPowerMat{3};
@@ -152,7 +157,7 @@ for iMat=1:length(sessionMats)
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', ' PANTS timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' PANTS timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
@@ -161,6 +166,7 @@ for iMat=1:length(sessionMats)
         ax = gca;
         ax.XTick = ticks;
         ax.XTickLabel = labels;
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(514);
         powerMat = sessionPowerMat{4};
@@ -168,7 +174,7 @@ for iMat=1:length(sessionMats)
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', ' BRICK timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' BRICK timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
@@ -177,6 +183,7 @@ for iMat=1:length(sessionMats)
         ax = gca;
         ax.XTick = ticks;
         ax.XTickLabel = labels;
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
         subplot(515);
         powerMat = sessionPowerMat{5};
@@ -184,7 +191,7 @@ for iMat=1:length(sessionMats)
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', ' GLASS timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' GLASS timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
@@ -193,16 +200,20 @@ for iMat=1:length(sessionMats)
         ax = gca;
         ax.XTick = ticks;
         ax.XTickLabel = labels;
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-%         %%- SAVE THE FIGURE AFTER CHANGING IT
-%         fig = gcf;
-%         fig.PaperUnits = 'inches';
-%         pos = [0.35, 3.65, 12.55, 7.50];
-%         fig.PaperPosition = pos;
-%         
-%         %%- Save Image
-%         figureFile = fullfile(seshDir, chanStr(iChan));
-%         print(figureFile, '-dpng', '-r0')
-%         savefig(figureFile)
+        %%- SAVE THE FIGURE AFTER CHANGING IT
+        fig = gcf;
+        fig.PaperUnits = 'inches';
+        pos = [0.35, 3.65, 12.55, 7.50];
+        fig.PaperPosition = pos;
+        
+        %%- Save Image
+        figureFile = fullfile(seshDir, strcat(chanStr(iChan), '.png'));
+        print(figureFile{:}, '-dpng', '-r0')
+        
+        pause(0.01);
+        close all;
     end
+end
 end

@@ -6,20 +6,35 @@
 % clear all
 % clc
 % close all
-function rankCosineSimilarity(subj, typeTransform, timeLock, referenceType, typeReinstatement)
+function rankCosineSimilarity(subj, typeTransform, timeLock, referenceType, blocksComp)
 
-% subj = 'NIH034';
-% typeTransform = 'morlet';
-% timeLock = 'vocalization';
-% referenceType = 'bipolar';
-% typeReinstatement = 'within_blocks';
+subj = 'NIH034';
+typeTransform = 'morlet';
+timeLock = 'vocalizationWord';
+referenceType = 'bipolar';
+blocksComp = 'within_blocks';
+
+if strcmp(subj, 'NIH034')
+    sessions = {'session_1', 'session_2'};
+elseif strcmp(subj, 'NIH039')
+    sessions = {'session_0', 'session_1', 'session_3'};
+end
+
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/Volumes/NIL_PASS';
+eegRootDirJhu = '/home/adamli/paremap';
+
+% Determine which directory we're working with automatically
+if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
+elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
+else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
 % set the directories with the reinstatements
-subjFigDir = fullfile('Figures', subj);
-reinstatementDir = strcat(typeTransform, '_', referenceType, '/', typeReinstatement, '_', timeLock);
-featureMatDir = strcat('./Figures/', subj, '/reinstatement_mat/', reinstatementDir);
-
-% reinstatementDir = strcat(typeTransform, '_', referenceType, '/', typeReinstatement, '_', timeLock);
+subjFigDir = fullfile(eegRootDir, 'Figures', subj);
+reinstatementDir = strcat(typeTransform, '_', referenceType, '_', blocksComp, '_', timeLock);
+featureMatDir = fullfile(subjFigDir, strcat('/reinstatement_mat/', reinstatementDir));
 
 %%- FOR WITHIN BLOCKS RIGHT NOW
 %%- GET LIST OF MAT FILES TO EXTRACT DATA FROM
@@ -30,21 +45,10 @@ sessionMats = {sessionMats.name};
 % load in an example file to get the -> labels, ticks and timeZero
 THIS_REF_TYPE = referenceType; 
 TYPE_TRANSFORM = strcat(typeTransform, '_', referenceType);
-CUE_LOCK = strcat(timeLock);
 
 % load in an example file to get the -> labels, ticks and timeZero
-exDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/condensed_data_NIH039/morlet_bipolar/vocalization_allPairs/BRICK_CLOCK/2  3_G2-G3.mat';
+exDir = fullfile(eegRootDir, 'condensed_data_NIH039/morlet_bipolar/vocalization_allPairs/BRICK_CLOCK/2  3_G2-G3.mat');
 [ticks, labels, timeZero] = getPlotMetaData(exDir);
-
-eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
-eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirJhu = '/home/adamli/paremap';
-
-% Determine which directory we're working with automatically
-if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
-elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
-elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
-else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
 % Either go through all the sessions, or a specific session
 disp('STEP 1: Going through all sessions')
@@ -65,41 +69,8 @@ fprintf('Loaded %d events from %s\n', length(events), behDir);
 % POST MODIFY EVENTS based on fields we want (e.g. is it correct or not)?
 correctIndices = find([events.isCorrect]==1);
 events = events(correctIndices);
-
-jackSheet = fullfileEEG(docsDir, 'jacksheetMaster.txt');
-[chanNums chanTags] = textread(jackSheet,'%d%s%*s');
-
-%%% always look at all electrodes... worry about "good" and "bad" later (bad means inter-ictal activity or seizure activity)
-%- three referencing options:  noreref (should manually subtract reference channel), reref bioploar, and reref laplacian
-chanStr = {};   % cell for all the channel names
-chanFile = 0;   % file for the channels (e.g. ~/NIH034/tal/leads.txt) 
-chanList = [];  % list of the channels (e.g. 1-96)
-
-switch referenceType
-    case 'noreref'  
-    case 'bipolar'
-        fprintf('Bipolar referencing');
-        chanFile      = [talDir '/leads_bp.txt'];
-        [chan1 chan2] = textread(chanFile,'%d%*c%d');
-        chanList      = [chan1 chan2];
-        for iChan=1:size(chanList,1),
-            %    chanStr{iChan} = sprintf('%d-%d (%s-%s)', chan1(iChan), chan2(iChan), chanTags{find(chanNums==chan1(iChan))}, chanTags{find(chanNums==chan2(iChan))} );
-            chanStr{iChan} = sprintf('%s-%s', chanTags{find(chanNums==chan1(iChan))}, chanTags{find(chanNums==chan2(iChan))} );
-        end
-        eventEEGpath  = '/eeg.reref/';
-    case 'global' % look at global electrodes / monopolar
-        fprintf('STEP 1: Using Global referencing\n');
-        chanFile      = [talDir '/leads.txt'];
-        chanList      = textread(chanFile,'%d'); % read in the list of channels nums
-
-        % set the names for each channel
-        for iChan=1:size(chanList,1),
-            chanStr{iChan} = sprintf('%s-global', chanTags{find(chanNums==chanList(iChan))} );
-        end
-        eventEEGpath  = '/eeg.reref/';
-    otherwise
-        fprintf('Error, no referencing scheme selected');
-end
+USE_CHAN_SUBSET=0;
+[chanList, chanStr, numChannels, eventEEGpath] = loadChannels(docsDir, talDir, referenceType, USE_CHAN_SUBSET);
 
 %%- get the information about each entry in the feature's row (1st
 %%dimension), which contains frequency bands and electrodes
@@ -113,15 +84,13 @@ clear chan1 chan2 chanFile chanNums chanRefs eventEEGpath chanTags correctIndice
 logFile = strcat(featureMatDir, '/', subj, '.txt');
 fid = fopen(logFile, 'w');
 LT = 1.5;
-newFigDir = fullfile(subjFigDir, 'importantFeatures', strcat(typeTransform, referenceType, '_', timeLock, '_', typeReinstatement));
+newFigDir = fullfile(subjFigDir, 'importantFeatures', strcat(typeTransform, '_', referenceType, '_', timeLock, '_', blocksComp));
 
 allmaxValues = [];
 
 if ~exist(newFigDir)
     mkdir(newFigDir);
 end
-
-sessions = {'session_1', 'session_2'};
 
 % loop through all session mat files -> extract same, reverse, different
 for iMat=1:length(sessionMats),
