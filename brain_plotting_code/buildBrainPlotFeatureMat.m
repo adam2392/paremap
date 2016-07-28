@@ -1,5 +1,5 @@
 % return featureMat events X channels X time
-function featureMat = buildFeatureMat(targetWord, sessionBlockDir, freqIndex)
+function featureMat = buildBrainPlotFeatureMat(targetWord, sessionBlockDir, freqIndex)
     fileDir = fullfile(sessionBlockDir, targetWord);
     chanfiles = dir(fileDir);
     chanfiles = {chanfiles(3:end).name};

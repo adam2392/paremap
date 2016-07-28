@@ -99,9 +99,18 @@ for iSesh=1:length(sessions),
         [same2reinstatement_inputone, same2reinstatement_inputtwo] = buildReinstatementInput(featureMatGroupTwo, featureMatGroupTwo, 1);
         [diffreinstatement_inputone, diffreinstatement_inputtwo] = buildReinstatementInput(featureMatGroupOne, featureMatGroupTwo, 0);
         
-        randIndices = randsample(size(diffreinstatement_inputone, 1), size(same1reinstatement_inputone, 1));
+        minSamples = min([size(same1reinstatement_inputone, 1), size(same2reinstatement_inputone,1), size(diffreinstatement_inputone,1)]);
+        randIndices = randsample(size(diffreinstatement_inputone, 1), minSamples);
         diffreinstatement_inputone = diffreinstatement_inputone(randIndices, :, :);
         diffreinstatement_inputtwo = diffreinstatement_inputtwo(randIndices, :, :);
+        
+        randIndices = randsample(size(same1reinstatement_inputone, 1), minSamples);
+        same1reinstatement_inputone = same1reinstatement_inputone(randIndices, :, :);
+        same1reinstatement_inputtwo = same1reinstatement_inputtwo(randIndices, :, :);
+        
+        randIndices = randsample(size(same2reinstatement_inputone, 1), minSamples);
+        same2reinstatement_inputone = same2reinstatement_inputone(randIndices, :, :);
+        same2reinstatement_inputtwo = same2reinstatement_inputtwo(randIndices, :, :);
 
         [eventSame1, featureSame1] = compute_reinstatement(same1reinstatement_inputone, same1reinstatement_inputtwo);
         [eventSame2, featureSame2] = compute_reinstatement(same2reinstatement_inputone, same2reinstatement_inputtwo);

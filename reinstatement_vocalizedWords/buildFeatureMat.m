@@ -1,5 +1,5 @@
 % return featureMat events X channels X time
-function featureMat = buildFeatureMat(targetWord, sessionBlockDir, freqIndex)
+function featureMat = buildFeatureMat(targetWord, sessionBlockDir)
     fileDir = fullfile(sessionBlockDir, targetWord);
     chanfiles = dir(fileDir);
     chanfiles = {chanfiles(3:end).name};
@@ -11,7 +11,7 @@ function featureMat = buildFeatureMat(targetWord, sessionBlockDir, freqIndex)
     
     % initialize matrix to increase speed
     featureMat = zeros(size(data.powerMatZ, 1), ...
-        length(chanfiles), ...
+        size(data.powerMatZ,2)*length(chanfiles), ...
         size(data.powerMatZ, 3));
     for iChan=1:length(chanfiles)
         chanFile = fullfile(fileDir, chanfiles{iChan});
@@ -19,6 +19,6 @@ function featureMat = buildFeatureMat(targetWord, sessionBlockDir, freqIndex)
         data = data.data;
         
         %%- Concatenate all frequency vectors into feature vector
-        featureMat(:, iChan, :) = data.powerMatZ(:, freqIndex,:);
+        featureMat(:, (iChan-1)*7+1:(iChan)*7, :) = data.powerMatZ;
     end
 end
