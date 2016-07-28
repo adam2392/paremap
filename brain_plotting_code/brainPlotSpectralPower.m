@@ -34,8 +34,8 @@ eegRootDirVolume = '/Volumes/NIL_PASS';
 eegRootDirJhu = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
-if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
-elseif ~isempty(dir(eegRootDirVolume)), eegRootDir = eegRootDirVolume;
+if ~isempty(dir(eegRootDirVolume)), eegRootDir = eegRootDirVolume;
+elseif ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
 elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
 elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end

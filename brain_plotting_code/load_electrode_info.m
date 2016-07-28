@@ -14,9 +14,9 @@ function els = load_electrode_info(pat_s,bp_flag)
     eegRootDirJhu = fullfile('/home/adamli/paremap/', pat_s);
 
     % Determine which directory we're working with automatically
-    if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+    if ~isempty(dir(eegRootDirVolume)), eegRootDir = eegRootDirVolume;
     elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
-    elseif ~isempty(dir(eegRootDirVolume)), eegRootDir = eegRootDirVolume;
+    elseif     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
     elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
     else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
