@@ -1,8 +1,12 @@
-subj = 'NIH034';
-typeTransform = 'morlet';
-referenceType = 'bipolar';
-frequencyBand = 'high gamma';
+function brainPlotSpectralPower(subj, typeTransform, referenceType, frequencyBand)
+% subj = 'NIH034';
+% typeTransform = 'morlet';
+% referenceType = 'bipolar';
+% frequencyBand = 'high gamma';
 radius = 12.5;
+subj
+typeTransform
+frequencyBand
 
 % array of frequency bands
 freqBandAr(1).name    = 'delta';
@@ -153,4 +157,5 @@ for iSesh=1:length(sessions)
         end
         toc;
     end
+end
 end
