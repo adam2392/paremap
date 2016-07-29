@@ -18,6 +18,7 @@ elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
 elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 
+eegRootDir
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%

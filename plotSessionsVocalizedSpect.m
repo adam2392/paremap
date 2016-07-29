@@ -1,10 +1,10 @@
 % plot spectrogram per targetword
 % put into struct and plot spectrogram
 function plotSessionsVocalizedSpect(subj, typeTransform, referenceType, blocksComp)
-% subj = 'NIH034';
-% typeTransform = 'multitaper';
-% referenceType = 'bipolar';
-% blocksComp = 'within_blocks';
+subj = 'NIH034';
+typeTransform = 'morlet';
+referenceType = 'bipolar';
+blocksComp = 'within_blocks';
 
 addpath('./preprocessing');
 
@@ -115,16 +115,21 @@ for iMat=1:length(sessionMats)
     
     for iChan=1:numChans
         figure;
-        
+                %%- save02: reinstatement plots
+        clim = [3 -4];
+        FA = {};
         %%- plot spectrograms and label
-        subplot(511);
-        powerMat = sessionPowerMat{1};
+        FA{1} = subplot(511);
+        powerMat = sessionPowerMat{5};
         featureRange = (iChan-1)*7+1:(iChan-1)*7+7
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' CLOCK timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' GLASS timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
         set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
@@ -134,7 +139,7 @@ for iMat=1:length(sessionMats)
         ax.XTickLabel = labels;
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-        subplot(512);
+        FA{2} = subplot(512);
         powerMat = sessionPowerMat{2};
         featureRange = (iChan-1)*7+1:(iChan-1)*7+7
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
@@ -144,6 +149,9 @@ for iMat=1:length(sessionMats)
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
         set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
         set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
         ax = gca;
@@ -151,7 +159,7 @@ for iMat=1:length(sessionMats)
         ax.XTickLabel = labels;
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-        subplot(513);
+        FA{3} = subplot(513);
         powerMat = sessionPowerMat{3};
         featureRange = (iChan-1)*7+1:(iChan-1)*7+7
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
@@ -161,6 +169,9 @@ for iMat=1:length(sessionMats)
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
         set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
         set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
         ax = gca;
@@ -168,7 +179,7 @@ for iMat=1:length(sessionMats)
         ax.XTickLabel = labels;
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-        subplot(514);
+        FA{4} = subplot(514);
         powerMat = sessionPowerMat{4};
         featureRange = (iChan-1)*7+1:(iChan-1)*7+7
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
@@ -178,6 +189,9 @@ for iMat=1:length(sessionMats)
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
         set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
         set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
         ax = gca;
@@ -185,16 +199,19 @@ for iMat=1:length(sessionMats)
         ax.XTickLabel = labels;
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
-        subplot(515);
-        powerMat = sessionPowerMat{5};
+        FA{5} = subplot(515);
+        powerMat = sessionPowerMat{1};
         featureRange = (iChan-1)*7+1:(iChan-1)*7+7
         imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' GLASS timelocked to vocalization']); %chanStr(iChan),
+        title(['Spectrogram for ', chanStr(iChan),' CLOCK timelocked to vocalization']); %chanStr(iChan),
         xlabel('Time (seconds)');
         set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
         % set the heat map settings
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
         set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
         set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
         ax = gca;
@@ -202,10 +219,17 @@ for iMat=1:length(sessionMats)
         ax.XTickLabel = labels;
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
         
+        % change the color limit to the max in the group for comparison
+        for i=1:length(FA)
+            FA{i}.CLim = clim;
+        end
+        
         %%- SAVE THE FIGURE AFTER CHANGING IT
         fig = gcf;
         fig.PaperUnits = 'inches';
-        pos = [0.35, 3.65, 12.55, 7.50];
+        fig.Units = 'inches';
+        pos = [1.8472    0.6389   14.9861   10.5278];
+        fig.Position = pos;
         fig.PaperPosition = pos;
         
         %%- Save Image
