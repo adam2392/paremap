@@ -1,8 +1,8 @@
 function brainPlotSpectralPower(subj, typeTransform, referenceType, frequencyBand)
-subj = 'NIH034';
-typeTransform = 'morlet';
-referenceType = 'bipolar';
-frequencyBand = 'high gamma';
+% subj = 'NIH034';
+% typeTransform = 'morlet';
+% referenceType = 'bipolar';
+% frequencyBand = 'high gamma';
 radius = 12.5;
 subj
 typeTransform

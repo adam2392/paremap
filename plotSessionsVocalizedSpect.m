@@ -7,26 +7,6 @@ referenceType = 'bipolar';
 blocksComp = 'within_blocks';
 
 addpath('./preprocessing');
-
-subjDataDir = strcat('./condensed_data_', subj);
-dataDir = fullfile(subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_sessiontargetwords'));
-sessions = dir(dataDir);
-sessions = {sessions(3:end).name};
-blocks = dir(fullfile(dataDir, sessions{1}));
-blocks = {blocks(3:end).name};
-sessions
-
-% load in an example file to get the labels, ticks and timeZero
-pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
-exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
-channelData = dir(exampleDir);
-data = load(fullfile(exampleDir, channelData(4).name));
-data = data.data;
-timeTicks = data.waveT(:,2);
-
-ticks = 1:5:length(timeTicks);
-labels = timeTicks(ticks);
-timeZero = data.timeZero;
 %% array of frequency bands
 freqBandAr(1).name    = 'delta';
 freqBandAr(1).rangeF  = [2 4];          %[2 4]
@@ -86,158 +66,91 @@ events = events(correctIndices);
 USE_CHAN_SUBSET=0;
 [chanList, chanStr, numChannels, eventEEGpath] = loadChannels(docsDir, talDir, referenceType, USE_CHAN_SUBSET);
 
+subjDataDir = strcat('./condensed_data_', subj);
+dataDir = fullfile(eegRootDir, subjDataDir, strcat(typeTransform, '_', referenceType, '_targetWords'));
+targetWords = dir(dataDir);
+targetWords = {targetWords(3:end).name};
+% dataDir = fullfile(subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_sessiontargetwords'));
+% sessions = dir(dataDir);
+% sessions = {sessions(3:end).name};
+% blocks = dir(fullfile(dataDir, sessions{1}));
+% blocks = {blocks(3:end).name};
+% sessions
 
+% load in an example file to get the labels, ticks and timeZero
+pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
+exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
+channelData = dir(exampleDir);
+data = load(fullfile(exampleDir, channelData(4).name));
+data = data.data;
+timeTicks = data.waveT(:,2);
+
+ticks = 1:5:length(timeTicks);
+labels = timeTicks(ticks);
+timeZero = data.timeZero;
 %% LOAD PREPROCESSED DATA DIR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%- SAVING FIGURES OPTIONS®
-matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/reinstatement_mat/', typeTransform, '_', ...
-    referenceType, '_', blocksComp, '_vocalizationWord/channels_vocalized_session/'));
+% matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/spectrograms/', typeTransform, '_', ...
+%     referenceType, '_', blocksComp, '_vocalizationWord/channels_vocalized_session/'));
+matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/spectrograms/', typeTransform, '_', ...
+    referenceType, '_targetWords/'));
+if ~exist(matDir, 'dir')
+    mkdir(matDir);
+end
+numChannels = length(dir(fullfile(dataDir, targetWords{1}, '*.mat')));
 
-sessionMats = dir(strcat(matDir, '*.mat'));
 LT = 1.5;
 
-for iMat=1:length(sessionMats)
-    name = sessionMats(iMat).name
-    sessionFile = fullfile(matDir, sessionMats(iMat).name);
-    data = load(sessionFile);
-    allVocalizedWords = data.allVocalizedWords
-    sessionPowerMat = data.sessionPowerMat
-    
-    %%- loop through number of channels and save in corresponding session
-    numChans = size(sessionPowerMat{1}, 2)/7;
-    
-    seshDir = fullfile(matDir, name(1:end-4));
-    if ~exist(seshDir, 'dir')
-        mkdir(seshDir);
+for iChan=1:numChannels
+    figure;
+    FA={};
+    clim = [3 -4];
+    for iTarget=1:length(targetWords)
+        chanFiles = dir(fullfile(dataDir, targetWords{1}, '*.mat'));
+        chanFile = fullfile(dataDir, targetWords{iTarget}, chanFiles{iChan});
+        data = load(chanFile);
+        targetPowerMat = data.powerMatZ;
+        
+        % plot
+        FA{iTarget} = subplot(5, 1, iTarget);
+        imagesc(squeeze(mean(targetPowerMat,1)));
+        hold on; colormap(jet); 
+        hCbar = colorbar('east');
+        title(['Spectrogram for ', chanStr(iChan), ' ', targetWords{iTarget}, ' timelocked to vocalization']); %chanStr(iChan),
+        xlabel('Time (seconds)');
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
+        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
+        % set the heat map settings
+        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
+        set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
+        ax = gca;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
     end
-    
-    for iChan=1:numChans
-        figure;
-                %%- save02: reinstatement plots
-        clim = [3 -4];
-        FA = {};
-        %%- plot spectrograms and label
-        FA{1} = subplot(511);
-        powerMat = sessionPowerMat{5};
-        featureRange = (iChan-1)*7+1:(iChan-1)*7+7
-        imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
-        hold on; colormap(jet); 
-        hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' GLASS timelocked to vocalization']); %chanStr(iChan),
-        xlabel('Time (seconds)');
-        tempclim = get(gca, 'clim');
-        clim(1) = min(tempclim(1), clim(1));
-        clim(2) = max(tempclim(2), clim(2));
-        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
-        % set the heat map settings
-        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
-        set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
-        ax = gca;
-        ax.XTick = ticks;
-        ax.XTickLabel = labels;
-        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-        
-        FA{2} = subplot(512);
-        powerMat = sessionPowerMat{2};
-        featureRange = (iChan-1)*7+1:(iChan-1)*7+7
-        imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
-        hold on; colormap(jet); 
-        hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' JUICE timelocked to vocalization']); %chanStr(iChan),
-        xlabel('Time (seconds)');
-        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
-        % set the heat map settings
-        tempclim = get(gca, 'clim');
-        clim(1) = min(tempclim(1), clim(1));
-        clim(2) = max(tempclim(2), clim(2));
-        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
-        set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
-        ax = gca;
-        ax.XTick = ticks;
-        ax.XTickLabel = labels;
-        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-        
-        FA{3} = subplot(513);
-        powerMat = sessionPowerMat{3};
-        featureRange = (iChan-1)*7+1:(iChan-1)*7+7
-        imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
-        hold on; colormap(jet); 
-        hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' PANTS timelocked to vocalization']); %chanStr(iChan),
-        xlabel('Time (seconds)');
-        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
-        % set the heat map settings
-        tempclim = get(gca, 'clim');
-        clim(1) = min(tempclim(1), clim(1));
-        clim(2) = max(tempclim(2), clim(2));
-        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
-        set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
-        ax = gca;
-        ax.XTick = ticks;
-        ax.XTickLabel = labels;
-        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-        
-        FA{4} = subplot(514);
-        powerMat = sessionPowerMat{4};
-        featureRange = (iChan-1)*7+1:(iChan-1)*7+7
-        imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
-        hold on; colormap(jet); 
-        hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' BRICK timelocked to vocalization']); %chanStr(iChan),
-        xlabel('Time (seconds)');
-        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
-        % set the heat map settings
-        tempclim = get(gca, 'clim');
-        clim(1) = min(tempclim(1), clim(1));
-        clim(2) = max(tempclim(2), clim(2));
-        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
-        set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
-        ax = gca;
-        ax.XTick = ticks;
-        ax.XTickLabel = labels;
-        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-        
-        FA{5} = subplot(515);
-        powerMat = sessionPowerMat{1};
-        featureRange = (iChan-1)*7+1:(iChan-1)*7+7
-        imagesc(squeeze(mean(powerMat(:,featureRange,:),1)));
-        hold on; colormap(jet); 
-        hCbar = colorbar('east');
-        title(['Spectrogram for ', chanStr(iChan),' CLOCK timelocked to vocalization']); %chanStr(iChan),
-        xlabel('Time (seconds)');
-        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
-        % set the heat map settings
-        tempclim = get(gca, 'clim');
-        clim(1) = min(tempclim(1), clim(1));
-        clim(2) = max(tempclim(2), clim(2));
-        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
-        set(gca,'tickdir','out','YDir','normal'); % spectrogram should have low freq on the bottom
-        ax = gca;
-        ax.XTick = ticks;
-        ax.XTickLabel = labels;
-        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
-        
-        % change the color limit to the max in the group for comparison
-        for i=1:length(FA)
-            FA{i}.CLim = clim;
-        end
-        
-        %%- SAVE THE FIGURE AFTER CHANGING IT
-        fig = gcf;
-        fig.PaperUnits = 'inches';
-        fig.Units = 'inches';
-        pos = [1.8472    0.6389   14.9861   10.5278];
-        fig.Position = pos;
-        fig.PaperPosition = pos;
-        
-        %%- Save Image
-        figureFile = fullfile(seshDir, strcat(chanStr(iChan), '.png'));
-        print(figureFile{:}, '-dpng', '-r0')
-        
-        pause(0.01);
-        close all;
+    % change the color limit to the max in the group for comparison
+    for i=1:length(FA)
+        FA{i}.CLim = clim;
     end
+
+    %%- SAVE THE FIGURE AFTER CHANGING IT
+    fig = gcf;
+    fig.PaperUnits = 'inches';
+    fig.Units = 'inches';
+    pos = [1.8472    0.6389   14.9861   10.5278];
+    fig.Position = pos;
+    fig.PaperPosition = pos;
+
+    %%- Save Image
+    figureFile = fullfile(matDir, strcat(chanStr(iChan), '.png'));
+    print(figureFile{:}, '-dpng', '-r0')
+
+    pause(0.01);
+    close all;
 end
 end
