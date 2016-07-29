@@ -1,8 +1,8 @@
 function brainPlotSpectralPower(subj, typeTransform, referenceType, frequencyBand)
-% subj = 'NIH034';
-% typeTransform = 'morlet';
-% referenceType = 'bipolar';
-% frequencyBand = 'high gamma';
+subj = 'NIH034';
+typeTransform = 'morlet';
+referenceType = 'bipolar';
+frequencyBand = 'high gamma';
 radius = 12.5;
 subj
 typeTransform
@@ -45,11 +45,19 @@ else   error('Neither Work nor Home EEG directories exist! Exiting'); end
 %%------------------ STEP 1: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subjDataDir = strcat('/condensed_data_', subj);
-dataDir = fullfile(eegRootDir, subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'vocalization_sessiontargetwords'));
-sessions = dir(dataDir);
-sessions = {sessions(3:end).name};
-blocks = dir(fullfile(dataDir, sessions{1}));
-blocks = {blocks(3:end).name};
+dataDir = fullfile(eegRootDir, subjDataDir, strcat(typeTransform, '_', referenceType, '_', 'targetWords'));
+
+% load in an example file to get the labels, ticks and timeZero
+pairDirs = dir(fullfile(dataDir, 'BRICK'));
+exampleDir = fullfile(dataDir, 'BRICK', pairDirs(4).name);
+channelData = dir(exampleDir);
+data = load(fullfile(exampleDir, channelData(4).name));
+data = data.data;
+timeTicks = data.waveT(:,2);
+
+ticks = 1:5:length(timeTicks);
+labels = timeTicks(ticks);
+timeZero = data.timeZero;
 
 els = load_electrode_info(subj, 1);
 elec_locs = [[els.x]' [els.y]' [els.z]'];%Create matrix of size electrodes X 3 containing the x,y,z, coordinates of each electrode
@@ -69,93 +77,90 @@ brainMatDir = fullfile(eegRootDir, '/brain_plotting_code/Mats/', ...
 if ~exist(brainFigDir, 'dir') mkdir(brainFigDir); end
 if ~exist(brainMatDir, 'dir')    mkdir(brainMatDir);    end
 
-for iSesh=1:length(sessions)
-    for iBlock=1:length(blocks)
-        fprintf('%6s \n', strcat('On session ', num2str(iSesh), ' and block ', num2str(iBlock)));
-        
-        % get word pairs in this session-block
-        targetWords = dir(fullfile(dataDir, sessions{iSesh}, blocks{iBlock}));
-        targetWords = {targetWords(3:end).name};
-        sessionBlockDir = fullfile(dataDir, sessions{iSesh}, blocks{iBlock});
-        
-        % concatenated Z-scored power matrices
-        featureMatGroupOne = [];
-        featureMatGroupTwo = [];
-        targetOne = {}; % clcok and brikc
-        targetTwo = {}; % pants, glass and juice
-        %%- LOOP THROUGH TARGET WORDS AND PUT INTO 1 OF 2 GROUPS
-        for iWord=1:length(targetWords)
-            featureMat = buildBrainPlotFeatureMat(targetWords{iWord}, sessionBlockDir, freqIndice);
-            if find(strcmp(group_one, targetWords{iWord}))
-                targetOne{end+1} = targetWords{iWord};
-                
-                if isempty(featureMatGroupOne)
-                    featureMatGroupOne = featureMat;
-                else
-                    featureMatGroupOne = cat(1, featureMatGroupOne, featureMat);
-                end
-            else
-                targetTwo{end+1} = targetWords{iWord};
-                
-                if isempty(featureMatGroupTwo)
-                    featureMatGroupTwo = featureMat;
-                else
-                    featureMatGroupTwo = cat(1, featureMatGroupTwo, featureMat);
-                end
-            end
-        end
-        
-        % average across events within this session-block
-        featureMatGroupOne = squeeze(mean(featureMatGroupOne, 1));
-        featureMatGroupTwo = squeeze(mean(featureMatGroupTwo, 1));
-        
-        roi_vals_one = elecToROI * featureMatGroupOne; % roi values for each time point
-        roi_vals_two = elecToROI * featureMatGroupTwo; 
-        
-        % save mat files
-        matFile = fullfile(brainMatDir, strcat(sessions{iSesh}, '-', blocks{iBlock}));
-        save(matFile, 'roi_vals_one', 'roi_vals_two', 'targetOne', 'targetTwo');
-        
-        %% CARRY OUT PLOTTING AND SAVE OF BRAIN FIGS
-        close all;
-        [plots1,brains1]=plot3brains_base(1);%This plots 3 brains and returns the handles to the axes and the brain surfaces
-        maxclim = max(max(roi_vals_one(:)), max(roi_vals_two(:)));
-        minclim = min(min(roi_vals_one(:)), min(roi_vals_two(:)));
+fprintf('%6s \n', strcat('On session ', num2str(iSesh), ' and block ', num2str(iBlock)));
 
-        tic;
-        for iTime=1:size(featureMatGroupOne, 2) 
-            s1 = struct();
-            s1.clim = [minclim, maxclim];
-            h1 = [];
-            use_rwb = 0;
-            h1 = update3brains_v2(brains1,roi_vals_one(:, iTime),s1,...
-                ['Looking at CLOCK/BRICK GROUP ', frequencyBand, ' for ', sessions{iSesh}, blocks{iBlock}],'Z-scored Spectral Power',...
-                use_rwb,h1);
-            
-            %%- save image
-            figureFile = fullfile(brainFigDir, strcat('groupone-',sessions{iSesh}, '-', blocks{iBlock}, '-', num2str(iTime)));
-            print(figureFile, '-dpng', '-r0')
+% get word pairs in this session-block
+targetWords = dir(fullfile(dataDir));
+targetWords = {targetWords(3:end).name};
+targetWordDir = fullfile(dataDir);
+
+% concatenated Z-scored power matrices
+featureMatGroupOne = [];
+featureMatGroupTwo = [];
+targetOne = {}; % clcok and brikc
+targetTwo = {}; % pants, glass and juice
+%%- LOOP THROUGH TARGET WORDS AND PUT INTO 1 OF 2 GROUPS
+for iWord=1:length(targetWords)
+    featureMat = buildBrainPlotFeatureMat(targetWords{iWord}, dataDir, freqIndice);
+    if find(strcmp(group_one, targetWords{iWord}))
+        targetOne{end+1} = targetWords{iWord};
+
+        if isempty(featureMatGroupOne)
+            featureMatGroupOne = featureMat;
+        else
+            featureMatGroupOne = cat(1, featureMatGroupOne, featureMat);
         end
-        toc;
-        
-        close all;
-        [plots2,brains2]=plot3brains_base(2);%This plots 3 brains and returns the handles to the axes and the brain surfaces  
-        tic;
-        for iTime=1:size(featureMatGroupTwo, 2) 
-            s1 = struct();
-            s1.clim = [minclim, maxclim];
-            h1 = [];
-            use_rwb = 0;
-            h1 = update3brains_v2(brains2,roi_vals_two(:, iTime),s1,...
-                ['Looking at GLASS/PANTS/JUICE GROUP ', frequencyBand, ...
-                ' for ', sessions{iSesh}, blocks{iBlock}],'Z-scored Spectral Power',...
-                use_rwb,h1);
-            
-            %%- save image
-            figureFile = fullfile(brainFigDir, strcat('grouptwo-',sessions{iSesh}, '-', blocks{iBlock}, '-', num2str(iTime)));
-            print(figureFile, '-dpng', '-r0')
+    else
+        targetTwo{end+1} = targetWords{iWord};
+
+        if isempty(featureMatGroupTwo)
+            featureMatGroupTwo = featureMat;
+        else
+            featureMatGroupTwo = cat(1, featureMatGroupTwo, featureMat);
         end
-        toc;
     end
 end
+
+% average across events within this session-block
+featureMatGroupOne = squeeze(mean(featureMatGroupOne, 1));
+featureMatGroupTwo = squeeze(mean(featureMatGroupTwo, 1));
+
+roi_vals_one = elecToROI * featureMatGroupOne; % roi values for each time point
+roi_vals_two = elecToROI * featureMatGroupTwo; 
+
+% save mat files
+matFile = fullfile(brainMatDir, strcat(subj, '-', 'targetWordComp'));
+save(matFile, 'roi_vals_one', 'roi_vals_two', 'targetOne', 'targetTwo');
+
+%% CARRY OUT PLOTTING AND SAVE OF BRAIN FIGS
+close all;
+[plots1,brains1]=plot3brains_base(1);%This plots 3 brains and returns the handles to the axes and the brain surfaces
+maxclim = max(max(roi_vals_one(:)), max(roi_vals_two(:)));
+minclim = min(min(roi_vals_one(:)), min(roi_vals_two(:)));
+
+tic;
+h1 = [];
+for iTime=1:size(featureMatGroupOne, 2) 
+    s1 = struct();
+    s1.clim = [minclim, maxclim];
+
+    use_rwb = 0;
+    h1 = update3brains_v2(brains1,roi_vals_one(:, iTime),s1,...
+        ['Looking at CLOCK/BRICK GROUP ', frequencyBand, ' for ', subj, ' at ', num2str(timeTick(iTime))],'Z-scored Spectral Power',...
+        use_rwb,h1);
+
+    %%- save image
+    figureFile = fullfile(brainFigDir, strcat('groupone-',subj, '-', num2str(iTime)));
+    print(figureFile, '-dpng', '-r0')
+end
+toc;
+
+close all;
+[plots2,brains2]=plot3brains_base(2);%This plots 3 brains and returns the handles to the axes and the brain surfaces  
+tic;
+h1 = [];
+for iTime=1:size(featureMatGroupTwo, 2) 
+    s1 = struct();
+    s1.clim = [minclim, maxclim];
+    use_rwb = 0;
+    h1 = update3brains_v2(brains2,roi_vals_two(:, iTime),s1,...
+        ['Looking at GLASS/PANTS/JUICE GROUP ', frequencyBand, ...
+        ' for ', subj, ' at ', num2str(timeTick(iTime))],'Z-scored Spectral Power',...
+        use_rwb,h1);
+
+    %%- save image
+    figureFile = fullfile(brainFigDir, strcat('grouptwo-',subj, '-', num2str(iTime)));
+    print(figureFile, '-dpng', '-r0')
+end
+toc;
 end

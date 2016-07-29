@@ -73,16 +73,16 @@ OPTIONS = [0, 1]; % PROBEWORDON, VOCALIZATION, MATCHWORD
 % plotVocalizedReinstatement('NIH037', 'multitaper', 'bipolar', 'within_blocks_vocalizationWord');
 % plotVocalizedReinstatement('NIH037', 'multitaper', 'bipolar', 'across_blocks_vocalizationWord');
 
-reinstatement_VocalizationSounds('NIH034', 'morlet', 'bipolar');
-reinstatement_VocalizationSounds('NIH034', 'multitaper', 'bipolar');
-reinstatement_VocalizationSounds('NIH037', 'morlet', 'bipolar');
-reinstatement_VocalizationSounds('NIH037', 'multitaper', 'bipolar');
-reinstatement_VocalizationSounds('NIH039', 'morlet', 'bipolar');
-reinstatement_VocalizationSounds('NIH039', 'multitaper', 'bipolar');
-
-summarizeReinstatementVocalizationSounds('NIH034', 'morlet', 'bipolar');
-summarizeReinstatementVocalizationSounds('NIH034', 'multitaper', 'bipolar');
-summarizeReinstatementVocalizationSounds('NIH037', 'morlet', 'bipolar');
-summarizeReinstatementVocalizationSounds('NIH037', 'multitaper', 'bipolar');
-summarizeReinstatementVocalizationSounds('NIH039', 'morlet', 'bipolar');
-summarizeReinstatementVocalizationSounds('NIH039', 'multitaper', 'bipolar');
+% reinstatement_VocalizationSounds('NIH034', 'morlet', 'bipolar');
+% reinstatement_VocalizationSounds('NIH034', 'multitaper', 'bipolar');
+% reinstatement_VocalizationSounds('NIH037', 'morlet', 'bipolar');
+% reinstatement_VocalizationSounds('NIH037', 'multitaper', 'bipolar');
+% reinstatement_VocalizationSounds('NIH039', 'morlet', 'bipolar');
+% reinstatement_VocalizationSounds('NIH039', 'multitaper', 'bipolar');
+% 
+% summarizeReinstatementVocalizationSounds('NIH034', 'morlet', 'bipolar');
+% summarizeReinstatementVocalizationSounds('NIH034', 'multitaper', 'bipolar');
+% summarizeReinstatementVocalizationSounds('NIH037', 'morlet', 'bipolar');
+% summarizeReinstatementVocalizationSounds('NIH037', 'multitaper', 'bipolar');
+% summarizeReinstatementVocalizationSounds('NIH039', 'morlet', 'bipolar');
+% summarizeReinstatementVocalizationSounds('NIH039', 'multitaper', 'bipolar');

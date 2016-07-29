@@ -76,11 +76,11 @@ for iFB=1:length(freqBandYticks), freqBandYtickLabels{iFB} = sprintf('%.0f Hz', 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 1: Load events and set behavioral directories                   ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% data directories to save data into - choose one
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
 eegRootDirHome = '/Volumes/NIL_PASS';
 eegRootDirJhu = '/home/adamli/paremap';
-
 % Determine which directory we're working with automatically
 if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
 elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
@@ -168,16 +168,18 @@ fprintf('Duration of analysis is: %d milliseconds. \n', DurationMS)
 %%------------------ STEP 4: Loop through the channels: extract, filter, processes, and save... ----------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data directories to save data into - choose one
-workDir = '/Users/liaj/Documents/MATLAB/paremap';
-homeDir = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation/';
-jhuDir = '/home/adamli/paremap/';
+eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
+eegRootDirHome = '/Volumes/NIL_PASS';
+eegRootDirJhu = '/home/adamli/paremap';
 % Determine which directory we're working with automatically
-if     ~isempty(dir(workDir)), rootDir = workDir;
-elseif ~isempty(dir(homeDir)), rootDir = homeDir;
-elseif ~isempty(dir(jhuDir)), rootDir = jhuDir;
+if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
+elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
+
 subjDir = strcat('condensed_data_', subj);
-responseDir = fullfile(rootDir, subjDir, strcat(typeTransform, '_', referenceType, '_', timeLock));
+responseDir = fullfile(eegRootDir, subjDir, strcat(typeTransform, '_', referenceType, '_', timeLock));
 
 %%- MAIN LOOP THROUGH CHANNELS
 for iChan=1:numChannels
@@ -353,127 +355,163 @@ for iChan=1:numChannels
     end
     
     %% C. SAVE CHANNEL DATA
+     %%- SAVE 01: ENTIRE DATASET PER CHANNEL
+    targetWords = unique({events.targetWord});
+    for iTarget=1:length(targetWords)
+        THIS_TARGET = targetWords{iTarget};
+        
+        eventIndices = find(strcmp({events.targetWord}, THIS_TARGET));
+        thisPowMat = powerMatZ(eventIndices,:,:);
+        size(thisPowMat)
+        
+        if SAVE,
+            %%- Save this new power matrix Z-scored into data .mat file
+            data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
+            data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
+            data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
+            data.chanNum = thisChan;                        % store the corresponding channel number
+            data.chanStr = thisChanStr;                     % the string name of the channel
+            data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
+            data.freqBandYlabel = {freqBandAr.name};
+            data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
+            data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+            data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
+%             data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
+%             data.freq = freq;                       % ROBUSTSPECT: save the frequency points
+            
+            responseDir2 = fullfile(eegRootDir, subjDir, strcat(typeTransform, '_', referenceType, '_targetWords'));
+            chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
+            fileDir = fullfile(responseDir2, THIS_TARGET);
+            chanFilePath = fullfile(fileDir, chanFileName);
+            
+            if ~exist(fileDir)
+                mkdir(fileDir);
+            end
+            save(chanFilePath, 'data');            
+        end
+    end % loop through targetwords
+    
     %% SAVE 02: PER SESSION/BLOCK
     % SPLIT INTO SESSIONS AND BLOCKS
-    subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
-    subjBlocks = unique({events.blocknumber});   % e.g. blocks 0,1,2,3,4,5
-    
-    if strcmp(subj, 'NIH039')
-        subjSessions = subjSessions([1,2,4]);
-    elseif strcmp(subj, 'NIH034')
-        subjSessions = subjSessions([3, 4]);
-    end
-    
-    for iSesh=1:length(subjSessions),
-        for iBlock=1:length(subjBlocks),
-            sessionBlockIndices = strcmp({events.sessionName}, subjSessions(iSesh)) & ...
-                                    strcmp({events.blocknumber}, subjBlocks(iBlock));
-             
-            %%- SAVE i: ONLY ANALYZE TARGET WORDS -> VOCALIZATION OF 'S' SOUNDING
-            targetWords = unique({events(sessionBlockIndices).targetWord});   
-            for iTarget=1:length(targetWords)
-                THIS_TARGET = targetWords{iTarget};
-                eventIndices = find(strcmp({events.targetWord}, THIS_TARGET) & ...
-                                    sessionBlockIndices);
-                
-                sessionBlockVocalWordEvents = events(eventIndices); 
-                blockNum = unique({sessionBlockVocalWordEvents.blocknumber});
-                sessionNumber = sessionBlockVocalWordEvents(1).sessionNum;
-                    
-                thisPowMat = powerMatZ(eventIndices,:,:);
-                
-                %% SAVE PROCESSED DATA IN A MATLAB STRUCT
-                if SAVE,
-                    %%- Save this new power matrix Z-scored into data .mat file
-                    data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
-                    data.sessionNum = sessionNumber;                % the session number
-                    data.blockNum = blockNum;                       % the block number
-                    data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
-                    data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
-                    data.chanNum = thisChan;                        % store the corresponding channel number
-                    data.chanStr = thisChanStr;                     % the string name of the channel
-                    data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
-                    data.freqBandYlabel = {freqBandAr.name};
-                    data.descriptor = 'Initial processing -2 seconds to 3 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
-                    data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-                    data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-                    data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-                    data.freqs = freqs;                       % ROBUSTSPECT: save the frequency points
-                    
-                    %%- SAVING DIR PARAMETERS
-                    chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
-                    word_name = strcat(THIS_TARGET);
-                    fileDir = fullfile(strcat(responseDir, '_sessiontargetwords'), subjSessions{iSesh}, strcat('block_', subjBlocks{iBlock}), word_name);
-                    chanFilePath = fullfile(fileDir, chanFileName);; 
-
-                    if ~exist(fileDir)
-                        mkdir(fileDir);
-                    end
-                    save(chanFilePath, 'data');            
-                end
-            end
-            
-            %%- SAVE ii: WORD PAIRS PER SESSION/BLOCK
-            %%- CARRY OUT REGULAR ANALYSIS ON WORD PAIR GROUPS
-            %%- LOOP THROUGH PROBEWORDS
-            probeWords = unique({events(sessionBlockIndices).probeWord});
-            for iProbe=1:length(probeWords),
-                THIS_PROBE = probeWords{iProbe};
-                
-                % events for this probeWord and their targetWords
-                probeIndices = strcmp({events.probeWord}, THIS_PROBE);
-                tempEvents = events(probeIndices & sessionBlockIndices);
-                targetWords = unique({tempEvents.targetWord});
-                
-                %%- LOOP THROUGH TARGETWORDS FOR EACH PROBEWORD
-                for iTarget=1:length(targetWords),
-                    THIS_TARGET = targetWords{iTarget};
-                    
-                    % match probe, target, session and block
-                    eventIndices = find(strcmp({events.probeWord}, THIS_PROBE) & ...
-                                    strcmp({events.targetWord}, THIS_TARGET) & ...
-                                    sessionBlockIndices);
-                    sessionBlockWordPairEvents = events(eventIndices);
-                    
-                    blockNum = unique({sessionBlockWordPairEvents.blocknumber});
-                    sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
-                    
-                    thisPowMat = powerMatZ(eventIndices,:,:);
-                    
-                    %% SAVE PROCESSED DATA IN A MATLAB STRUCT
-                    if SAVE,
-                        %%- Save this new power matrix Z-scored into data .mat file
-                        data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
-                        data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
-                        data.sessionNum = sessionNumber;                % the session number
-                        data.blockNum = blockNum;                       % the block number
-                        data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
-                        data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
-                        data.chanNum = thisChan;                        % store the corresponding channel number
-                        data.chanStr = thisChanStr;                     % the string name of the channel
-                        data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
-                        data.freqBandYlabel = {freqBandAr.name};
-                        data.descriptor = 'Initial processing -2 seconds to 3 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
-                        data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
-                        data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-                        data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-                        data.freqs = freqs;                       % ROBUSTSPECT: save the frequency points
-
-                        %%- SAVING DIR PARAMETERS
-                        chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
-                        wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
-                        fileDir = fullfile(responseDir, subjSessions{iSesh}, strcat('block_', subjBlocks{iBlock}), wordpair_name);
-                        chanFilePath = fullfile(fileDir, chanFileName);; 
-
-                        if ~exist(fileDir)
-                            mkdir(fileDir);
-                        end
-                        save(chanFilePath, 'data');            
-                    end
-                end % loop through target
-            end % loop through probe
-
-        end % loop through block 
-    end % loop through session
+%     subjSessions = unique({events.sessionName}); % e.g. sessions 0, 1, 2
+%     subjBlocks = unique({events.blocknumber});   % e.g. blocks 0,1,2,3,4,5
+%     
+%     if strcmp(subj, 'NIH039')
+%         subjSessions = subjSessions([1,2,4]);
+%     elseif strcmp(subj, 'NIH034')
+%         subjSessions = subjSessions([3, 4]);
+%     end
+%     
+%     for iSesh=1:length(subjSessions),
+%         for iBlock=1:length(subjBlocks),
+%             sessionBlockIndices = strcmp({events.sessionName}, subjSessions(iSesh)) & ...
+%                                     strcmp({events.blocknumber}, subjBlocks(iBlock));
+%              
+%             %%- SAVE i: ONLY ANALYZE TARGET WORDS -> VOCALIZATION OF 'S' SOUNDING
+%             targetWords = unique({events(sessionBlockIndices).targetWord});   
+%             for iTarget=1:length(targetWords)
+%                 THIS_TARGET = targetWords{iTarget};
+%                 eventIndices = find(strcmp({events.targetWord}, THIS_TARGET) & ...
+%                                     sessionBlockIndices);
+%                 
+%                 sessionBlockVocalWordEvents = events(eventIndices); 
+%                 blockNum = unique({sessionBlockVocalWordEvents.blocknumber});
+%                 sessionNumber = sessionBlockVocalWordEvents(1).sessionNum;
+%                     
+%                 thisPowMat = powerMatZ(eventIndices,:,:);
+%                 
+%                 %% SAVE PROCESSED DATA IN A MATLAB STRUCT
+%                 if SAVE,
+%                     %%- Save this new power matrix Z-scored into data .mat file
+%                     data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
+%                     data.sessionNum = sessionNumber;                % the session number
+%                     data.blockNum = blockNum;                       % the block number
+%                     data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
+%                     data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
+%                     data.chanNum = thisChan;                        % store the corresponding channel number
+%                     data.chanStr = thisChanStr;                     % the string name of the channel
+%                     data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
+%                     data.freqBandYlabel = {freqBandAr.name};
+%                     data.descriptor = 'Initial processing -2 seconds to 3 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
+%                     data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+%                     data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
+%                     data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
+%                     data.freqs = freqs;                       % ROBUSTSPECT: save the frequency points
+%                     
+%                     %%- SAVING DIR PARAMETERS
+%                     chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
+%                     word_name = strcat(THIS_TARGET);
+%                     fileDir = fullfile(strcat(responseDir, '_sessiontargetwords'), subjSessions{iSesh}, strcat('block_', subjBlocks{iBlock}), word_name);
+%                     chanFilePath = fullfile(fileDir, chanFileName);; 
+% 
+%                     if ~exist(fileDir)
+%                         mkdir(fileDir);
+%                     end
+%                     save(chanFilePath, 'data');            
+%                 end
+%             end
+%             
+%             %%- SAVE ii: WORD PAIRS PER SESSION/BLOCK
+%             %%- CARRY OUT REGULAR ANALYSIS ON WORD PAIR GROUPS
+%             %%- LOOP THROUGH PROBEWORDS
+%             probeWords = unique({events(sessionBlockIndices).probeWord});
+%             for iProbe=1:length(probeWords),
+%                 THIS_PROBE = probeWords{iProbe};
+%                 
+%                 % events for this probeWord and their targetWords
+%                 probeIndices = strcmp({events.probeWord}, THIS_PROBE);
+%                 tempEvents = events(probeIndices & sessionBlockIndices);
+%                 targetWords = unique({tempEvents.targetWord});
+%                 
+%                 %%- LOOP THROUGH TARGETWORDS FOR EACH PROBEWORD
+%                 for iTarget=1:length(targetWords),
+%                     THIS_TARGET = targetWords{iTarget};
+%                     
+%                     % match probe, target, session and block
+%                     eventIndices = find(strcmp({events.probeWord}, THIS_PROBE) & ...
+%                                     strcmp({events.targetWord}, THIS_TARGET) & ...
+%                                     sessionBlockIndices);
+%                     sessionBlockWordPairEvents = events(eventIndices);
+%                     
+%                     blockNum = unique({sessionBlockWordPairEvents.blocknumber});
+%                     sessionNumber = sessionBlockWordPairEvents(1).sessionNum;
+%                     
+%                     thisPowMat = powerMatZ(eventIndices,:,:);
+%                     
+%                     %% SAVE PROCESSED DATA IN A MATLAB STRUCT
+%                     if SAVE,
+%                         %%- Save this new power matrix Z-scored into data .mat file
+%                         data.probeWords = THIS_PROBE;                   % the probe words for all events in this struct
+%                         data.targetWords = THIS_TARGET;                 % the target words for all events in this struct
+%                         data.sessionNum = sessionNumber;                % the session number
+%                         data.blockNum = blockNum;                       % the block number
+%                         data.eegWaveV = eegWaveV(eventIndices,:);       % eeg wave form
+%                         data.eegWaveT = eegWaveT;                       % time series for eeg voltage wave
+%                         data.chanNum = thisChan;                        % store the corresponding channel number
+%                         data.chanStr = thisChanStr;                     % the string name of the channel
+%                         data.freqBandYtick = 1:length(freqBandYticks);            % store frequency bands if using wavelet transform
+%                         data.freqBandYlabel = {freqBandAr.name};
+%                         data.descriptor = 'Initial processing -2 seconds to 3 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
+%                         data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
+%                         data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
+%                         data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
+%                         data.freqs = freqs;                       % ROBUSTSPECT: save the frequency points
+% 
+%                         %%- SAVING DIR PARAMETERS
+%                         chanFileName = strcat(num2str(thisChan), '_', thisChanStr);
+%                         wordpair_name = strcat(THIS_PROBE, '_', THIS_TARGET);
+%                         fileDir = fullfile(responseDir, subjSessions{iSesh}, strcat('block_', subjBlocks{iBlock}), wordpair_name);
+%                         chanFilePath = fullfile(fileDir, chanFileName);; 
+% 
+%                         if ~exist(fileDir)
+%                             mkdir(fileDir);
+%                         end
+%                         save(chanFilePath, 'data');            
+%                     end
+%                 end % loop through target
+%             end % loop through probe
+% 
+%         end % loop through block 
+%     end % loop through session
 end
 end
