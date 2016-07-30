@@ -50,8 +50,7 @@ dataDir = fullfile(eegRootDir, subjDataDir, strcat(typeTransform, '_', reference
 % load in an example file to get the labels, ticks and timeZero
 pairDirs = dir(fullfile(dataDir, 'BRICK'));
 exampleDir = fullfile(dataDir, 'BRICK', pairDirs(4).name);
-channelData = dir(exampleDir);
-data = load(fullfile(exampleDir, channelData(4).name));
+data = load(fullfile(exampleDir));
 data = data.data;
 timeTicks = data.waveT(:,2);
 
@@ -77,7 +76,7 @@ brainMatDir = fullfile(eegRootDir, '/brain_plotting_code/Mats/', ...
 if ~exist(brainFigDir, 'dir') mkdir(brainFigDir); end
 if ~exist(brainMatDir, 'dir')    mkdir(brainMatDir);    end
 
-fprintf('%6s \n', strcat('On session ', num2str(iSesh), ' and block ', num2str(iBlock)));
+fprintf('%6s \n', strcat('On subject ', subj));
 
 % get word pairs in this session-block
 targetWords = dir(fullfile(dataDir));
@@ -96,7 +95,11 @@ for iWord=1:length(targetWords)
         targetOne{end+1} = targetWords{iWord};
 
         if isempty(featureMatGroupOne)
-            featureMatGroupOne = featureMat;
+            featureMatGroupOne = featureMat;subj = 'NIH034';
+typeTransform = 'morlet';
+referenceType = 'bipolar';
+frequencyBand = 'high gamma';
+
         else
             featureMatGroupOne = cat(1, featureMatGroupOne, featureMat);
         end
@@ -130,16 +133,22 @@ minclim = min(min(roi_vals_one(:)), min(roi_vals_two(:)));
 
 tic;
 h1 = [];
-for iTime=1:size(featureMatGroupOne, 2) 
+for iTime=12:size(featureMatGroupOne, 2)-9
     s1 = struct();
     s1.clim = [minclim, maxclim];
 
     use_rwb = 0;
     h1 = update3brains_v2(brains1,roi_vals_one(:, iTime),s1,...
-        ['Looking at CLOCK/BRICK GROUP ', frequencyBand, ' for ', subj, ' at ', num2str(timeTick(iTime))],'Z-scored Spectral Power',...
+        ['Looking at CLOCK/BRICK GROUP ', frequencyBand, ' for ', subj, ' at ', num2str(timeTicks(iTime))],'Z-scored Spectral Power',...
         use_rwb,h1);
 
     %%- save image
+    fig = gcf;
+    fig.Units = 'inches';
+    fig.PaperUnits = 'inches';
+    pos = [11.9375   -7.4896   19.3021   11.3750];
+    fig.PaperPosition = pos;
+    
     figureFile = fullfile(brainFigDir, strcat('groupone-',subj, '-', num2str(iTime)));
     print(figureFile, '-dpng', '-r0')
 end
@@ -149,13 +158,13 @@ close all;
 [plots2,brains2]=plot3brains_base(2);%This plots 3 brains and returns the handles to the axes and the brain surfaces  
 tic;
 h1 = [];
-for iTime=1:size(featureMatGroupTwo, 2) 
+for iTime=12:size(featureMatGroupTwo, 2)-9
     s1 = struct();
     s1.clim = [minclim, maxclim];
     use_rwb = 0;
     h1 = update3brains_v2(brains2,roi_vals_two(:, iTime),s1,...
         ['Looking at GLASS/PANTS/JUICE GROUP ', frequencyBand, ...
-        ' for ', subj, ' at ', num2str(timeTick(iTime))],'Z-scored Spectral Power',...
+        ' for ', subj, ' at ', num2str(timeTicks(iTime))],'Z-scored Spectral Power',...
         use_rwb,h1);
 
     %%- save image

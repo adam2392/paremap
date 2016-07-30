@@ -376,8 +376,8 @@ for iChan=1:numChannels
             data.descriptor = 'Initial processing -2 seconds to 4 seconds after VOCALIZATION. Time binned with 500ms window and 100ms overlap';
             data.timeZero = timeZero; %ceil((TIMEZERO-LOWERTIME)/OVERLAP);
             data.powerMatZ = thisPowMat;            % save the condensed power Mat Z-scored
-%             data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
-%             data.freq = freq;                       % ROBUSTSPECT: save the frequency points
+            data.waveT = tWin;                      % ROBUSTSPECT: save the binned Wave T
+            data.freqs = freqs;                       % ROBUSTSPECT: save the frequency points
             
             responseDir2 = fullfile(eegRootDir, subjDir, strcat(typeTransform, '_', referenceType, '_targetWords'));
             chanFileName = strcat(num2str(thisChan), '_', thisChanStr);

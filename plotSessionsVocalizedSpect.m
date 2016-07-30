@@ -1,10 +1,10 @@
 % plot spectrogram per targetword
 % put into struct and plot spectrogram
-function plotSessionsVocalizedSpect(subj, typeTransform, referenceType, blocksComp)
-subj = 'NIH034';
-typeTransform = 'morlet';
-referenceType = 'bipolar';
-blocksComp = 'within_blocks';
+function plotSessionsVocalizedSpect(subj, typeTransform, referenceType)
+% subj = 'NIH034';
+% typeTransform = 'morlet';
+% referenceType = 'bipolar';
+% blocksComp = 'within_blocks';
 
 addpath('./preprocessing');
 %% array of frequency bands
@@ -33,13 +33,16 @@ freqBandYticks  = unique([freqBandAr(1:7).rangeF]);
 for iFB=1:length(freqBandYticks), freqBandYtickLabels{iFB} = sprintf('%.0f Hz', freqBandYticks(iFB)); end
 freqBandYtickLabels = {freqBandAr.label};
 
+% determine which directory path to use
 eegRootDirWork = '/Users/liaj/Documents/MATLAB/paremap';     % work
+% eegRootDirWork = '/media/adamli/NIL_PASS';
 eegRootDirHome = '/Users/adam2392/Documents/MATLAB/Johns Hopkins/NINDS_Rotation';  % home
-eegRootDirHome = '/Volumes/NIL_PASS';
+eegRootDirVolume = '/Volumes/NIL_PASS';
 eegRootDirJhu = '/home/adamli/paremap';
 
 % Determine which directory we're working with automatically
-if     ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
+if ~isempty(dir(eegRootDirVolume)), eegRootDir = eegRootDirVolume;
+elseif ~isempty(dir(eegRootDirWork)), eegRootDir = eegRootDirWork;
 elseif ~isempty(dir(eegRootDirHome)), eegRootDir = eegRootDirHome;
 elseif ~isempty(dir(eegRootDirJhu)), eegRootDir = eegRootDirJhu;
 else   error('Neither Work nor Home EEG directories exist! Exiting'); end
@@ -78,10 +81,9 @@ targetWords = {targetWords(3:end).name};
 % sessions
 
 % load in an example file to get the labels, ticks and timeZero
-pairDirs = dir(fullfile(dataDir, sessions{1}, blocks{1}));
-exampleDir = fullfile(dataDir, sessions{1}, blocks{1}, pairDirs(4).name);
-channelData = dir(exampleDir);
-data = load(fullfile(exampleDir, channelData(4).name));
+pairDirs = dir(fullfile(dataDir, targetWords{1}));
+exampleDir = fullfile(dataDir, targetWords{1}, pairDirs(4).name);
+data = load(fullfile(exampleDir));
 data = data.data;
 timeTicks = data.waveT(:,2);
 
@@ -92,7 +94,7 @@ timeZero = data.timeZero;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%------------------ STEP 2: Load data from Dir and create eventsXfeaturesxTime    ---------------------------------------%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%- SAVING FIGURES OPTIONS®
+%%- SAVING FIGURES OPTIONSï¿½
 % matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/spectrograms/', typeTransform, '_', ...
 %     referenceType, '_', blocksComp, '_vocalizationWord/channels_vocalized_session/'));
 matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/spectrograms/', typeTransform, '_', ...
@@ -110,8 +112,10 @@ for iChan=1:numChannels
     clim = [3 -4];
     for iTarget=1:length(targetWords)
         chanFiles = dir(fullfile(dataDir, targetWords{1}, '*.mat'));
+        chanFiles = {chanFiles.name};
         chanFile = fullfile(dataDir, targetWords{iTarget}, chanFiles{iChan});
         data = load(chanFile);
+        data = data.data;
         targetPowerMat = data.powerMatZ;
         
         % plot

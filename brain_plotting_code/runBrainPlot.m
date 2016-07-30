@@ -9,7 +9,7 @@ disp('runnning')
 % brainPlotSpectralPower('NIH034', 'multitaper', 'bipolar', 'beta');
 % % % brainPlotSpectralPower('NIH034', 'multitaper', 'bipolar', 'low gamma');
 % brainPlotSpectralPower('NIH034', 'multitaper', 'bipolar', 'high gamma');
-brainPlotSpectralPower('NIH034', 'morlet', 'bipolar', 'HFO');
+% brainPlotSpectralPower('NIH034', 'morlet', 'bipolar', 'HFO');
 
 disp('nih037')
 % brainPlotSpectralPower('NIH037', 'multitaper', 'bipolar', 'delta');
@@ -18,7 +18,7 @@ disp('nih037')
 % brainPlotSpectralPower('NIH037', 'multitaper', 'bipolar', 'beta');
 % brainPlotSpectralPower('NIH037', 'multitaper', 'bipolar', 'low gamma');
 % brainPlotSpectralPower('NIH037', 'multitaper', 'bipolar', 'high gamma');
-brainPlotSpectralPower('NIH037', 'morlet', 'bipolar', 'HFO');
+% brainPlotSpectralPower('NIH037', 'morlet', 'bipolar', 'HFO');
 
 % brainPlotSpectralPower('NIH039', 'multitaper', 'bipolar', 'delta');
 % brainPlotSpectralPower('NIH039', 'multitaper', 'bipolar', 'theta');
