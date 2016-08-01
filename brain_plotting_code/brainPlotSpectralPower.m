@@ -95,11 +95,7 @@ for iWord=1:length(targetWords)
         targetOne{end+1} = targetWords{iWord};
 
         if isempty(featureMatGroupOne)
-            featureMatGroupOne = featureMat;subj = 'NIH034';
-typeTransform = 'morlet';
-referenceType = 'bipolar';
-frequencyBand = 'high gamma';
-
+            featureMatGroupOne = featureMat;
         else
             featureMatGroupOne = cat(1, featureMatGroupOne, featureMat);
         end
@@ -149,7 +145,7 @@ for iTime=12:size(featureMatGroupOne, 2)-9
     pos = [11.9375   -7.4896   19.3021   11.3750];
     fig.PaperPosition = pos;
     
-    figureFile = fullfile(brainFigDir, strcat('groupone-',subj, '-', num2str(iTime)));
+    figureFile = fullfile(brainFigDir, 'groupone', strcat('groupone-',subj, '-', num2str(iTime)));
     print(figureFile, '-dpng', '-r0')
 end
 toc;
@@ -168,7 +164,13 @@ for iTime=12:size(featureMatGroupTwo, 2)-9
         use_rwb,h1);
 
     %%- save image
-    figureFile = fullfile(brainFigDir, strcat('grouptwo-',subj, '-', num2str(iTime)));
+    fig = gcf;
+    fig.Units = 'inches';
+    fig.PaperUnits = 'inches';
+    pos = [11.9375   -7.4896   19.3021   11.3750];
+    fig.PaperPosition = pos;
+    
+    figureFile = fullfile(brainFigDir, 'grouptwo',strcat('grouptwo-',subj, '-', num2str(iTime)));
     print(figureFile, '-dpng', '-r0')
 end
 toc;
