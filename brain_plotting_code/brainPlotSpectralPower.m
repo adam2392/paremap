@@ -1,8 +1,8 @@
 function brainPlotSpectralPower(subj, typeTransform, referenceType, frequencyBand)
-% subj = 'NIH034';
-% typeTransform = 'morlet';
-% referenceType = 'bipolar';
-% frequencyBand = 'high gamma';
+subj = 'NIH037';
+typeTransform = 'morlet';
+referenceType = 'bipolar';
+frequencyBand = 'HFO';
 radius = 12.5;
 subj
 typeTransform
@@ -113,6 +113,10 @@ end
 % average across events within this session-block
 featureMatGroupOne = squeeze(mean(featureMatGroupOne, 1));
 featureMatGroupTwo = squeeze(mean(featureMatGroupTwo, 1));
+
+if strcmp(subj, 'NIH037')
+    elecToROI = elecToROI(:, 1:end-1);
+end
 
 roi_vals_one = elecToROI * featureMatGroupOne; % roi values for each time point
 roi_vals_two = elecToROI * featureMatGroupTwo; 

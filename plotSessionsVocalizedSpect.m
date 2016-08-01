@@ -119,7 +119,7 @@ for iChan=1:numChannels
         targetPowerMat = data.powerMatZ;
         
         % plot
-        FA{iTarget} = subplot(5, 1, iTarget);
+        FA{iTarget} = subplot(3, 2, iTarget);
         imagesc(squeeze(mean(targetPowerMat,1)));
         hold on; colormap(jet); 
         hCbar = colorbar('east');
@@ -146,15 +146,14 @@ for iChan=1:numChannels
     fig = gcf;
     fig.PaperUnits = 'inches';
     fig.Units = 'inches';
-    pos = [1.8472    0.6389   14.9861   10.5278];
-    fig.Position = pos;
+    pos = [11.9375   -7.4896   19.3021   11.3750];
     fig.PaperPosition = pos;
+    fig.Position = pos;
 
     %%- Save Image
     figureFile = fullfile(matDir, strcat(chanStr(iChan), '.png'));
     print(figureFile{:}, '-dpng', '-r0')
 
-    pause(0.01);
     close all;
 end
 end

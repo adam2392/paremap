@@ -76,8 +76,10 @@ targetWords = {targetWords(3:end).name};
 %     referenceType, '_', blocksComp, '_vocalizationWord/channels_vocalized_session/'));
 matDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/spectrograms/', typeTransform, '_', ...
     referenceType, '_targetWords/'));
-if ~exist(matDir, 'dir')
-    mkdir(matDir);
+eegWaveDir = fullfile(eegRootDir, strcat('./Figures/', subj, '/eegwaves/', typeTransform, '_', ...
+    referenceType, '_targetWords/'));
+if ~exist(eegWaveDir, 'dir')
+    mkdir(eegWaveDir);
 end
 numChannels = length(dir(fullfile(dataDir, targetWords{1}, '*.mat')));
 
@@ -101,7 +103,7 @@ for iChan=1:numChannels
         timeZero = 2000;
         
         % plot
-        FA{iTarget} = subplot(5, 1, iTarget);
+        FA{iTarget} = subplot(3,2, iTarget);
         randindice = randsample(size(targetEEG,1), 1);
         plot(squeeze(targetEEG(randindice,:)));
         hold on;
@@ -118,14 +120,14 @@ for iChan=1:numChannels
     fig = gcf;
     fig.PaperUnits = 'inches';
     fig.Units = 'inches';
-    pos = [1.8472    0.6389   14.9861   10.5278];
+    pos = [11.9375   -7.4896   19.3021   11.3750];
     fig.Position = pos;
     fig.PaperPosition = pos;
 
     %%- Save Image
-    figureFile = fullfile(matDir, strcat(chanStr(iChan), '.png'));
+    figureFile = fullfile(eegWaveDir, strcat(chanStr(iChan), '.png'));
     print(figureFile{:}, '-dpng', '-r0')
 
-    pause(0.01);
+    pause(0.05);
     close all;
 end
