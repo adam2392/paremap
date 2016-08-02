@@ -1,5 +1,28 @@
 %Brain plotting example
 
+% vert = [0 0; 1 0; 1 1; 0 1; 2 2];
+% fac = [1 2 2;
+%        2 3 4;
+%        1 5 2];
+% patch('Faces', fac, 'Vertices', vert, 'FaceColor', 'red')
+
+
+% FVCD = repmat([0.5 0.5 0.5], size(V,1),1);
+% fig = patch('Faces',F,'Vertices',V,'edgecolor', 'none','FaceColor','interp','FaceVertexCData',FVCD)
+% set(gcf,'Renderer','OpenGL')
+% set(gca,'visible','off');
+% set(gca, 'cLim', [-3 3]);
+% set(gcf,'Renderer','OpenGL')
+%   set(fig,'SpecularStrength',.1, ...
+% 	  'DiffuseStrength',.6, ...
+% 	  'SpecularColorReflectance',0, ...
+% 	  'AmbientStrength',.45)
+% 
+% lighting phong
+% view([0 0]);        camlight infinite;
+% view([180 0]);      camlight infinite;
+% view([-180 -90]);   camlight infinite;
+% % view([90 0]);       camlight infinite;
 pat_s = 'NIH034';
 
 %This loads the electrode information files from FRNU

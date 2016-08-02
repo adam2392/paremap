@@ -1,6 +1,6 @@
-function [plots,brains] = plot3brains_base(i)
+function [plots,brains] = plot3brains_base
     close all
-    figure(i)
+    figure
     load brain.mat
 
     % gray color matrix
