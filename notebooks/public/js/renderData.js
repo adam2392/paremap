@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // data files
 var faces_csv = './data/faces.csv';
 var roi_csv = './data/roi.csv';
@@ -32,6 +33,7 @@ svg.append("rect")
 var g = svg.append("g");
 
 
+// 2. Queue up the data
 d3.queue()
 	.defer(d3.csv, faces_csv)
 	.defer(d3.csv, roi_csv)
