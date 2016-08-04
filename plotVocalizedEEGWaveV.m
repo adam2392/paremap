@@ -1,3 +1,7 @@
+close all;
+clc;
+clear all;
+
 subj = 'NIH034';
 typeTransform = 'morlet';
 referenceType = 'bipolar';
@@ -86,7 +90,8 @@ numChannels = length(dir(fullfile(dataDir, targetWords{1}, '*.mat')));
 LT = 1.5;
 
 for iChan=1:numChannels
-    figure;
+    figure(1);
+    figure(2);
     FA={};
     clim = [3 -4];
     for iTarget=1:length(targetWords)
@@ -95,16 +100,46 @@ for iChan=1:numChannels
         chanFile = fullfile(dataDir, targetWords{iTarget}, chanFiles{iChan});
         data = load(chanFile);
         data = data.data;
+        powerMat = data.powerMatZ;
         targetEEG = data.eegWaveV;
         timeTicks = data.waveT(:,2);
+
+        randindice = randsample(size(targetEEG,1), 1);
+        timeTicks = data.waveT(:,2);
+        ticks = 1:5:length(timeTicks);
+        labels = timeTicks(ticks);
+        timeZero = data.timeZero;
+        
+        figure(1)
+        FA{iTarget} = subplot(3,2, iTarget);
+        imagesc(squeeze(powerMat(randindice,:,:)));
+        title(['Spectrogram for ', chanStr(iChan), ' ', targetWords{iTarget}, ' timelocked to vocalization']); %chanStr(iChan),
+        hCbar = colorbar();  colormap('jet');
+        axis square
+        hold on
+        xlabel('Time (seconds)');
+        ylabel('Time (seconds)');
+        ax = gca;
+        ax.YTick = ticks;
+        ax.YTickLabel = labels;
+        ax.XTick = ticks;
+        ax.XTickLabel = labels;
+        tempclim = get(gca, 'clim');
+        clim(1) = min(tempclim(1), clim(1));
+        clim(2) = max(tempclim(2), clim(2));
+        set(hCbar,'ycolor',[1 1 1]*.1, 'YAxisLocation', 'right')
+        set(gca,'ytick',[1:7],'yticklabel',freqBandYtickLabels)
+        set(gca,'tickdir','out','YDir','normal');
+        set(gca, 'box', 'off');
+        plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
 
         ticks = 1:1000:length(targetEEG);
         labels = [-2, -1, 0, 1, 2, 3];
         timeZero = 2000;
         
         % plot
-        FA{iTarget} = subplot(3,2, iTarget);
-        randindice = randsample(size(targetEEG,1), 1);
+        figure(2)
+        subplot(3,2, iTarget);
         plot(squeeze(targetEEG(randindice,:)));
         hold on;
         title(['EEG Voltage Trace for ', chanStr(iChan), ' ', targetWords{iTarget}, ' timelocked to vocalization']); %chanStr(iChan),
@@ -116,7 +151,14 @@ for iChan=1:numChannels
         plot([timeZero timeZero], get(gca, 'ylim'), 'k', 'LineWidth', LT)
     end
 
+    % change the color limit to the max in the group for comparison
+    for i=1:length(FA)
+        FA{i}.CLim = clim;
+    end
+
+    
     %%- SAVE THE FIGURE AFTER CHANGING IT
+    figure(1)
     fig = gcf;
     fig.PaperUnits = 'inches';
     fig.Units = 'inches';
@@ -125,9 +167,21 @@ for iChan=1:numChannels
     fig.PaperPosition = pos;
 
     %%- Save Image
-    figureFile = fullfile(eegWaveDir, strcat(chanStr(iChan), '.png'));
+    figureFile = fullfile(eegWaveDir, strcat(chanStr(iChan), '_spect.png'));
     print(figureFile{:}, '-dpng', '-r0')
 
+    figure(2)
+    fig = gcf;
+    fig.PaperUnits = 'inches';
+    fig.Units = 'inches';
+    pos = [11.9375   -7.4896   19.3021   11.3750];
+    fig.Position = pos;
+    fig.PaperPosition = pos;
+
+    %%- Save Image
+    figureFile = fullfile(eegWaveDir, strcat(chanStr(iChan), '_eeg.png'));
+    print(figureFile{:}, '-dpng', '-r0')
+  
     pause(0.05);
     close all;
 end
