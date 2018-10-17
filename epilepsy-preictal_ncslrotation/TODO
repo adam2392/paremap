@@ -1,0 +1,5 @@
+To Do List:
+1) Create separate clustering algorithms for doing different regions of interictal vs. ictal, instead of the 4 regions that Sam defined.
+2) Create a logistic regression algorithm to separate interictal vs. ictal. Use training data on half vs. other half...
+3) Look into how to do multi logistic regression.
+
